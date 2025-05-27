@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" id="top" data-scheme="{{ if .Theme.Light }}light{{ else }}dark{{ end }}">
+<head>
+    {{ block "document-head-before" . }}{{ end }}
+    <script>
+    if (navigator.platform === 'iPhone') document.documentElement.classList.add('ios');
+    const pageData = {
+        /*{{ if .Page }}*/slug: "{{ .Page.Slug }}",/*{{ end }}*/
+        baseURL: "{{ .Config.BaseURL }}",
+        theme: "{{ .Theme.Key }}",
+    };
+    </script>
+    <title>{{ block "document-title" . }}{{ end }}</title>
+    <meta charset="UTF-8">
+    <meta name="color-scheme" content="dark">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pulse">
+    <meta name="theme-color" content="{{ .Theme.BackgroundColorAsHex }}">
+    <link rel="apple-touch-icon" sizes="512x512" href='{{ .Config.FaviconURL }}'>
+    <link rel="manifest" href='{{ .Config.VersionedAssetPath "manifest.json" }}'>
+    <link rel="icon" type="{{ .Config.FaviconType }}" href="{{ .Config.FaviconURL }}" />
+    <link rel="stylesheet" href='{{ .Config.StaticAssetPath "css/bundle.css" }}'>
+    <style id="theme-style">{{ .Theme.CSS }}</style>
+    {{ block "document-head-after" . }}{{ end }}
+</head>
+<body>
+{{ template "document-body" . }}
+</body>
+</html>

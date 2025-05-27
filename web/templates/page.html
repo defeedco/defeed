@@ -1,0 +1,24 @@
+{{ template "document.html" . }}
+
+{{ define "document-title" }}{{ .Page.Title }}{{ end }}
+
+{{ define "document-head-after" }}
+<script type="module" src='{{ .Config.StaticAssetPath "js/page.js" }}'></script>
+{{ end }}
+
+{{ define "document-body" }}
+<div class="flex flex-column body-content">
+
+    <div class="content-bounds grow{{ if .Page.Width }} content-bounds-{{ .Page.Width }}{{ end }}">
+        <main class="page{{ if .Page.CenterVertically }} center-vertically{{ end }}" id="page" aria-live="polite" aria-busy="true">
+            <h1 class="visually-hidden">{{ .Page.Title }}</h1>
+            <div class="page-content" id="page-content">
+                {{ template "page-content.html" . }}
+            </div>
+        </main>
+    </div>
+
+    {{ template "footer.html" . }}
+    <div class="mobile-navigation-offset"></div>
+</div>
+{{ end }}
