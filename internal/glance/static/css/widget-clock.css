@@ -1,7 +1,0 @@
-.clock-time {
-    min-width: 8ch;
-}
-
-.clock-time span {
-    color: var(--color-text-highlight);
-}

@@ -1,0 +1,172 @@
+openapi: 3.0.0
+info:
+  title: Pulse Feed Aggregation API
+  version: 1.0.0
+  description: API for managing feed sources and retrieving aggregated content
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /sources:
+    post:
+      summary: Create a new source
+      operationId: createSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSourceRequest'
+      responses:
+        '201':
+          description: Source created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+        '400':
+          description: Invalid request
+        '409':
+          description: Source already exists
+    get:
+      summary: List all sources
+      operationId: listSources
+      responses:
+        '200':
+          description: List of sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Source'
+
+  /sources/{uid}:
+    get:
+      summary: Get source by UID
+      operationId: getSource
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Source details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+        '404':
+          description: Source not found
+    delete:
+      summary: Delete source
+      operationId: deleteSource
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Source deleted successfully
+        '404':
+          description: Source not found
+
+  /sources/activities:
+    get:
+      summary: List all activities
+      operationId: listAllActivities
+      responses:
+        '200':
+          description: Activities list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+
+  /page:
+    get:
+      summary: Get page HTML
+      operationId: getPage
+      parameters:
+        - name: config
+          in: query
+          required: true
+          description: Base64 encoded JSON string for dashboard config
+          schema:
+            type: string
+        - name: filterPrompt
+          in: query
+          description: Natural language filter prompt.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: HTML content
+          content:
+            text/html:
+              schema:
+                type: string
+
+components:
+  schemas:
+    CreateSourceRequest:
+      type: object
+      required:
+        - type
+        - config
+      properties:
+        type:
+          type: string
+        config:
+          type: object
+          additionalProperties: true
+
+    Source:
+      type: object
+      required:
+        - uid
+        - name
+        - url
+      properties:
+        uid:
+          type: string
+        name:
+          type: string
+        url:
+          type: string
+
+    Activity:
+      type: object
+      required:
+        - uid
+        - source_uid
+        - title
+        - body
+        - url
+        - image_url
+        - created_at
+      properties:
+        uid:
+          type: string
+        source_uid:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        url:
+          type: string
+          format: url
+        image_url:
+          type: string
+          format: url
+        created_at:
+          type: string
+          format: date-time
