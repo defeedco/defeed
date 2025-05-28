@@ -12,13 +12,6 @@
     transform: translateY(-0.15rem);
 }
 
-.widget-match-summary {
-    font-size: 0.9em;
-    color: var(--color-text-subdue);
-    margin: 0.3rem 0;
-    line-height: 1.4;
-}
-
 @container widget (max-width: 550px) {
     .widget-autohide {
         display: none;

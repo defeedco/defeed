@@ -2,7 +2,6 @@ package common
 
 import "time"
 
-// Activity TODO(pulse): Compute LLM summary
 type Activity interface {
 	UID() string
 	SourceUID() string
@@ -11,4 +10,9 @@ type Activity interface {
 	URL() string
 	ImageURL() string
 	CreatedAt() time.Time
+}
+
+type ActivitySummary struct {
+	ShortSummary string
+	FullSummary  string
 }

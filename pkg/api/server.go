@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/summarizer"
+	"github.com/tmc/langchaingo/llms/openai"
 	"html/template"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources"
-	sourcescommon "github.com/glanceapp/glance/pkg/sources/common"
 	"github.com/glanceapp/glance/pkg/widgets"
 	"github.com/glanceapp/glance/web"
 	"github.com/rs/zerolog"
@@ -36,7 +37,14 @@ type Server struct {
 var _ ServerInterface = (*Server)(nil)
 
 func NewServer(logger *zerolog.Logger, cfg Config) (*Server, error) {
-	registry := sources.NewRegistry(logger)
+	summarizerModel, err := openai.New(
+		openai.WithModel("gpt-4o-mini"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	registry := sources.NewRegistry(logger, summarizer.NewSummarizer(summarizerModel))
 
 	mux := http.NewServeMux()
 
@@ -152,7 +160,7 @@ func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.serializeRes(w, deserializeActivities(out))
+	s.serializeRes(w, serializeActivities(out))
 }
 
 func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
@@ -162,7 +170,7 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.serializeRes(w, deserializeSources(out))
+	s.serializeRes(w, serializeSources(out))
 }
 
 func (s *Server) CreateSource(w http.ResponseWriter, r *http.Request) {
@@ -274,28 +282,31 @@ func deserializeCreateSourceRequest(req CreateSourceRequest) (sources.Source, er
 	return source, nil
 }
 
-func deserializeActivities(in []sourcescommon.Activity) []Activity {
+func serializeActivities(in []sources.DecoratedActivity) []Activity {
 	out := make([]Activity, 0, len(in))
 
 	for _, e := range in {
-		out = append(out, deserializeActivity(e))
+		out = append(out, serializeActivity(e))
 	}
 
 	return out
 }
 
-func deserializeActivity(in sourcescommon.Activity) Activity {
+func serializeActivity(in sources.DecoratedActivity) Activity {
 	return Activity{
-		Uid:       in.UID(),
-		SourceUid: in.SourceUID(),
-		Url:       in.URL(),
-		Title:     in.Title(),
-		Body:      in.Body(),
-		CreatedAt: in.CreatedAt(),
+		Body:         in.Body(),
+		CreatedAt:    in.CreatedAt(),
+		ImageUrl:     in.ImageURL(),
+		FullSummary:  in.Summary.FullSummary,
+		ShortSummary: in.Summary.ShortSummary,
+		SourceUid:    in.SourceUID(),
+		Title:        in.Title(),
+		Uid:          in.UID(),
+		Url:          in.URL(),
 	}
 }
 
-func deserializeSources(in []sources.Source) []Source {
+func serializeSources(in []sources.Source) []Source {
 	out := make([]Source, 0, len(in))
 
 	for _, e := range in {

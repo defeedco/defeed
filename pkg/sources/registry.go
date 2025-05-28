@@ -13,14 +13,24 @@ import (
 type Registry struct {
 	sources         map[string]cancelableSource
 	sourcesMutex    sync.Mutex
-	activities      map[string]common.Activity
+	activities      map[string]DecoratedActivity
 	activitiesMutex sync.Mutex
 
 	activityQueue chan common.Activity
 	errorQueue    chan error
 	done          chan struct{}
 
-	logger *zerolog.Logger
+	logger     *zerolog.Logger
+	summarizer summarizer
+}
+
+type summarizer interface {
+	Summarize(ctx context.Context, activity common.Activity) (*common.ActivitySummary, error)
+}
+
+type DecoratedActivity struct {
+	common.Activity
+	Summary *common.ActivitySummary
 }
 
 type cancelableSource struct {
@@ -28,14 +38,15 @@ type cancelableSource struct {
 	cancel context.CancelFunc
 }
 
-func NewRegistry(logger *zerolog.Logger) *Registry {
+func NewRegistry(logger *zerolog.Logger, summarizer summarizer) *Registry {
 	r := &Registry{
 		sources:       make(map[string]cancelableSource),
-		activities:    make(map[string]common.Activity),
+		activities:    make(map[string]DecoratedActivity),
 		activityQueue: make(chan common.Activity),
 		errorQueue:    make(chan error),
 		done:          make(chan struct{}),
 		logger:        logger,
+		summarizer:    summarizer,
 	}
 
 	r.startWorkers(1)
@@ -105,11 +116,11 @@ func (r *Registry) Source(uid string) (Source, error) {
 	return s.Source, nil
 }
 
-func (r *Registry) Activities() ([]common.Activity, error) {
+func (r *Registry) Activities() ([]DecoratedActivity, error) {
 	r.activitiesMutex.Lock()
 	defer r.activitiesMutex.Unlock()
 
-	matches := make([]common.Activity, 0)
+	matches := make([]DecoratedActivity, 0)
 	for _, a := range r.activities {
 		matches = append(matches, a)
 	}
@@ -121,11 +132,11 @@ func (r *Registry) Activities() ([]common.Activity, error) {
 	return matches, nil
 }
 
-func (r *Registry) ActivitiesBySource(sourceUID string) ([]common.Activity, error) {
+func (r *Registry) ActivitiesBySource(sourceUID string) ([]DecoratedActivity, error) {
 	r.activitiesMutex.Lock()
 	defer r.activitiesMutex.Unlock()
 
-	matches := make([]common.Activity, 0)
+	matches := make([]DecoratedActivity, 0)
 	for _, a := range r.activities {
 		if a.SourceUID() == sourceUID {
 			matches = append(matches, a)
@@ -148,8 +159,18 @@ func (r *Registry) startWorkers(nWorkers int) {
 				case act := <-r.activityQueue:
 					r.logger.Info().Msgf("[Worker %d] Processing activity %s\n", workerID, act.UID())
 
+					summary, err := r.summarizer.Summarize(context.Background(), act)
+					if err != nil {
+						//r.errorQueue <- fmt.Errorf("summarize activity: %w", err)
+						r.logger.Error().Err(err).Msgf("[Worker %d] Error summarizing activity %v\n", workerID, err)
+						continue
+					}
+
 					r.activitiesMutex.Lock()
-					r.activities[act.UID()] = act
+					r.activities[act.UID()] = DecoratedActivity{
+						Activity: act,
+						Summary:  summary,
+					}
 					r.activitiesMutex.Unlock()
 
 				case err := <-r.errorQueue:

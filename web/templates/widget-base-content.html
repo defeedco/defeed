@@ -17,9 +17,7 @@
             </svg>
             {{- end }}
             <div class="grow min-width-0">
-                <a href="{{ .URL | safeURL }}" class="size-title-dynamic color-primary-if-not-visited" target="_blank" rel="noreferrer">{{ .Title }}</a>
-<!--  TODO(pulse): Display LLM summary              -->
-<!--                <div class="widget-match-summary">{{ .Body }}</div>-->
+                <a href="{{ .URL | safeURL }}" class="size-title-dynamic color-primary-if-not-visited" target="_blank" rel="noreferrer">{{ .Summary.ShortSummary }}</a>
                 <ul class="list-horizontal-text flex-nowrap text-compact">
                     <li {{ dynamicRelativeTimeAttrs .CreatedAt }}></li>
                     {{- if .URL }}

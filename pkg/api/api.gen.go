@@ -17,11 +17,17 @@ import (
 type Activity struct {
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
-	ImageUrl  string    `json:"image_url"`
-	SourceUid string    `json:"source_uid"`
-	Title     string    `json:"title"`
-	Uid       string    `json:"uid"`
-	Url       string    `json:"url"`
+
+	// FullSummary One-paragraph markdown summary.
+	FullSummary string `json:"full_summary"`
+	ImageUrl    string `json:"image_url"`
+
+	// ShortSummary One-line short plain text summary.
+	ShortSummary string `json:"short_summary"`
+	SourceUid    string `json:"source_uid"`
+	Title        string `json:"title"`
+	Uid          string `json:"uid"`
+	Url          string `json:"url"`
 }
 
 // CreateSourceRequest defines model for CreateSourceRequest.

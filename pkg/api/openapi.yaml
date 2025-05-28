@@ -148,6 +148,8 @@ components:
         - uid
         - source_uid
         - title
+        - short_summary
+        - full_summary
         - body
         - url
         - image_url
@@ -159,6 +161,12 @@ components:
           type: string
         title:
           type: string
+        short_summary:
+          type: string
+          description: One-line short plain text summary.
+        full_summary:
+          type: string
+          description: One-paragraph markdown summary.
         body:
           type: string
         url:
