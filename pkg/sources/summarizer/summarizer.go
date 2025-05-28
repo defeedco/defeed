@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/glanceapp/glance/pkg/sources/common"
 	"strings"
+	"time"
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/outputparser"
@@ -29,7 +30,10 @@ type completionResponse struct {
 }
 
 type completionInput struct {
-	Body string `json:"body" description:""`
+	Title     string `json:"title"`
+	Body      string `json:"body"`
+	URL       string `json:"url"`
+	CreatedAt string `json:"created_at"`
 }
 
 func (llm *ActivitySummarizer) Summarize(
@@ -56,7 +60,10 @@ FORMAT INSTRUCTIONS
 
 	// input
 	input := completionInput{
-		Body: activity.Body(),
+		Title:     activity.Title(),
+		Body:      activity.Body(),
+		URL:       activity.URL(),
+		CreatedAt: activity.CreatedAt().Format(time.RFC3339) + "Z",
 	}
 	serializedInput, err := json.MarshalIndent(input, "", "  ")
 	if err != nil {
