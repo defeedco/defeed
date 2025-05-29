@@ -1,14 +1,54 @@
-# Pulse - AI-based activity feed aggregator
+# Pulse
 
-![Screenshot 2025-05-19 at 13 27 14](https://github.com/user-attachments/assets/2bbce011-2098-4aca-9ff3-b8d6d5cc1a5c)
+Never Miss What Matters.
 
 ## Usage
 
-Required env variables:
-- `OPENAI_API_KEY`
-- `GITHUB_TOKEN`
+### 1. Setup environment variables
 
-To start the application with a default config, run:
+Copy the example environment file and customize the values:
 ```bash
-go run main.go --config config/root.yml
+cp .env.example .env
+```
+
+### 2. Run the application
+```bash
+docker compose up --build
+```
+
+### 3. Use the API
+
+Visit http://localhost:8080/docs to interact with the REST API.
+
+
+### 4. View the UI
+
+The page configuration is specified as a base64 encoded JSON string to the `config` query parameter.
+
+> Sources referenced in `source_id` must be manually created using the REST API.
+
+Here is an example of a page configuration:
+```json
+{
+  "name": "LLM tools",
+  "columns": [
+    {
+      "size": "full",
+      "widgets": [
+        {
+          "limit": 10,
+          "collapse_after": 3,
+          "show_thumbnails": true,
+          "source_id": "issues/browser-use/browser-use"
+        },
+        {
+          "limit": 10,
+          "collapse_after": 3,
+          "show_thumbnails": true,
+          "source_id": "releases/browser-use/browser-use"
+        }
+      ]
+    }
+  ]
+}
 ```

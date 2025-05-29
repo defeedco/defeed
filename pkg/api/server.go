@@ -2,11 +2,13 @@ package api
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	httpswagger "github.com/swaggo/http-swagger"
 	"html/template"
 	"io"
 	"net/http"
@@ -21,6 +23,9 @@ import (
 	"github.com/glanceapp/glance/web"
 	"github.com/rs/zerolog"
 )
+
+//go:embed openapi.yaml
+var openapiSpecYaml string
 
 const StaticAssetsCacheDuration = 24 * time.Hour
 
@@ -69,8 +74,24 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 
 	HandlerFromMux(server, mux)
 	server.registerFileHandlers(mux)
+	server.registerApiDocsHandlers(mux)
 
 	return server, nil
+}
+
+func (s *Server) registerApiDocsHandlers(mux *http.ServeMux) {
+	mux.Handle("/docs/", httpswagger.Handler(
+		httpswagger.URL("/docs/openapi.yaml"),
+	))
+	mux.HandleFunc("/docs/openapi.yaml", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/x-yaml")
+
+		_, err := w.Write([]byte(openapiSpecYaml))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			s.logger.Error().Err(err).Msg("response write error")
+		}
+	})
 }
 
 func (s *Server) registerFileHandlers(mux *http.ServeMux) {
