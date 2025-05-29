@@ -2,17 +2,21 @@ package github
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/common"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
+
 	"github.com/google/go-github/v72/github"
 )
 
+const TypeGithubReleases = "github-releases"
+
 type SourceRelease struct {
-	Repository       string `json:"repository"`
+	Repository       string `json:"Repository"`
 	Token            string `json:"token"`
 	IncludePreleases bool   `json:"include_prereleases"`
 	client           *github.Client
@@ -36,7 +40,11 @@ func (s *SourceRelease) URL() string {
 	return fmt.Sprintf("https://github.com/%s", s.Repository)
 }
 
-func (s *SourceRelease) Stream(ctx context.Context, feed chan<- common.Activity, errs chan<- error) {
+func (s *SourceRelease) Type() string {
+	return TypeGithubReleases
+}
+
+func (s *SourceRelease) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	release, err := s.fetchLatestGithubRelease(ctx)
 
 	if err != nil {
@@ -63,49 +71,101 @@ func (s *SourceRelease) Initialize() error {
 	return nil
 }
 
-type githubRelease struct {
-	repository string
-	raw        *github.RepositoryRelease
-	sourceUID  string
+func (s *SourceRelease) MarshalJSON() ([]byte, error) {
+	type Alias SourceRelease
+	return json.Marshal(&struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+		Type:  s.Type(),
+	})
 }
 
-func (a githubRelease) UID() string {
-	return fmt.Sprintf("%d", a.raw.GetID())
+func (s *SourceRelease) UnmarshalJSON(data []byte) error {
+	type Alias SourceRelease
+	aux := &struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (a githubRelease) SourceUID() string {
-	return a.sourceUID
+type Release struct {
+	Repository string                    `json:"repository"`
+	Release    *github.RepositoryRelease `json:"release"`
+	SourceID   string                    `json:"source_id"`
 }
 
-func (a githubRelease) Title() string {
-	return a.raw.GetName()
+func NewRelease() *Release {
+	return &Release{}
 }
 
-func (a githubRelease) Body() string {
-	return a.raw.GetBody()
+func (r *Release) SourceType() string {
+	return TypeGithubReleases
 }
 
-func (a githubRelease) URL() string {
-	return a.raw.GetHTMLURL()
+func (r *Release) MarshalJSON() ([]byte, error) {
+	type Alias Release
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(r),
+	})
 }
 
-func (a githubRelease) ImageURL() string {
+func (r *Release) UnmarshalJSON(data []byte) error {
+	type Alias Release
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(r),
+	}
+	return json.Unmarshal(data, &aux)
+}
+
+func (r *Release) UID() string {
+	return fmt.Sprintf("%d", r.Release.GetID())
+}
+
+func (r *Release) SourceUID() string {
+	return r.SourceID
+}
+
+func (r *Release) Title() string {
+	return r.Release.GetName()
+}
+
+func (r *Release) Body() string {
+	return r.Release.GetBody()
+}
+
+func (r *Release) URL() string {
+	return r.Release.GetHTMLURL()
+}
+
+func (r *Release) ImageURL() string {
 	return fmt.Sprintf(
 		"https://opengraph.githubassets.com/%d/%s/releases/tag/%s",
-		a.raw.CreatedAt.Unix(),
-		a.repository,
-		*a.raw.TagName,
+		r.Release.CreatedAt.Unix(),
+		r.Repository,
+		*r.Release.TagName,
 	)
 }
 
-func (a githubRelease) CreatedAt() time.Time {
-	return a.raw.GetPublishedAt().Time
+func (r *Release) CreatedAt() time.Time {
+	return r.Release.GetPublishedAt().Time
 }
 
-func (s *SourceRelease) fetchLatestGithubRelease(ctx context.Context) (*githubRelease, error) {
+func (s *SourceRelease) fetchLatestGithubRelease(ctx context.Context) (*Release, error) {
 	parts := strings.Split(s.Repository, "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid repository format: %s", s.Repository)
+		return nil, fmt.Errorf("invalid Repository format: %s", s.Repository)
 	}
 	owner, repo := parts[0], parts[1]
 
@@ -120,7 +180,7 @@ func (s *SourceRelease) fetchLatestGithubRelease(ctx context.Context) (*githubRe
 			return nil, err
 		}
 		if len(releases) == 0 {
-			return nil, fmt.Errorf("no releases found for repository %s", s.Repository)
+			return nil, fmt.Errorf("no releases found for Repository %s", s.Repository)
 		}
 		release = releases[0]
 	}
@@ -129,9 +189,9 @@ func (s *SourceRelease) fetchLatestGithubRelease(ctx context.Context) (*githubRe
 		return nil, err
 	}
 
-	return &githubRelease{
-		raw:        release,
-		repository: s.Repository,
-		sourceUID:  s.UID(),
+	return &Release{
+		Release:    release,
+		Repository: s.Repository,
+		SourceID:   s.UID(),
 	}, nil
 }

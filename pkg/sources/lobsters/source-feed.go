@@ -2,9 +2,13 @@ package lobsters
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/common"
+
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 )
+
+const TypeLobstersFeed = "lobsters-feed"
 
 type SourceFeed struct {
 	InstanceURL string `json:"instance_url"`
@@ -31,6 +35,10 @@ func (s *SourceFeed) URL() string {
 	return fmt.Sprintf("https://lobste.rs/%s", s.FeedName)
 }
 
+func (s *SourceFeed) Type() string {
+	return TypeLobstersFeed
+}
+
 func (s *SourceFeed) Initialize() error {
 	if s.FeedName != "hottest" && s.FeedName != "newest" {
 		return fmt.Errorf("feed name must be one of: 'hottest', 'newest'")
@@ -41,7 +49,7 @@ func (s *SourceFeed) Initialize() error {
 	return nil
 }
 
-func (s *SourceFeed) Stream(ctx context.Context, feed chan<- common.Activity, errs chan<- error) {
+func (s *SourceFeed) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	var stories []*Story
 	var err error
 
@@ -57,7 +65,32 @@ func (s *SourceFeed) Stream(ctx context.Context, feed chan<- common.Activity, er
 	}
 
 	for _, story := range stories {
-		feed <- &lobstersPost{raw: story, sourceUID: s.UID()}
+		feed <- &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
 	}
 
+}
+
+func (s *SourceFeed) MarshalJSON() ([]byte, error) {
+	type Alias SourceFeed
+	return json.Marshal(&struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+		Type:  s.Type(),
+	})
+}
+
+func (s *SourceFeed) UnmarshalJSON(data []byte) error {
+	type Alias SourceFeed
+	aux := &struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	return nil
 }

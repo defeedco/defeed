@@ -2,9 +2,13 @@ package lobsters
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/common"
+
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 )
+
+const TypeLobstersTag = "lobsters-tag"
 
 type SourceTag struct {
 	InstanceURL string `json:"instance_url"`
@@ -31,7 +35,11 @@ func (s *SourceTag) URL() string {
 	return fmt.Sprintf("https://lobste.rs/t/%s", s.Tag)
 }
 
-func (s *SourceTag) Stream(ctx context.Context, feed chan<- common.Activity, errs chan<- error) {
+func (s *SourceTag) Type() string {
+	return TypeLobstersTag
+}
+
+func (s *SourceTag) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	var stories []*Story
 	var err error
 
@@ -47,7 +55,7 @@ func (s *SourceTag) Stream(ctx context.Context, feed chan<- common.Activity, err
 	}
 
 	for _, story := range stories {
-		feed <- &lobstersPost{raw: story, sourceUID: s.UID()}
+		feed <- &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
 	}
 }
 
@@ -58,5 +66,30 @@ func (s *SourceTag) Initialize() error {
 
 	s.client = NewLobstersClient(s.InstanceURL)
 
+	return nil
+}
+
+func (s *SourceTag) MarshalJSON() ([]byte, error) {
+	type Alias SourceTag
+	return json.Marshal(&struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+		Type:  s.Type(),
+	})
+}
+
+func (s *SourceTag) UnmarshalJSON(data []byte) error {
+	type Alias SourceTag
+	aux := &struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
 	return nil
 }

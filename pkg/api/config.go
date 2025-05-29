@@ -10,20 +10,18 @@ import (
 )
 
 type Config struct {
-	AppName    string `yaml:"app-name"`
-	Host       string `yaml:"host"`
-	Port       uint16 `yaml:"port"`
-	Proxied    bool   `yaml:"proxied"`
-	AssetsPath string `yaml:"assets-path"`
-	BaseURL    string `yaml:"base-url"`
-	FaviconURL string `yaml:"favicon-url"`
+	Host       string `env:"SERVER_HOST,default=localhost"`
+	Port       uint16 `env:"SERVER_PORT,default=8080"`
+	Proxied    bool   `env:"SERVER_PROXIED,default=false"`
+	AssetsPath string `env:"SERVER_ASSETS_PATH,default=./assets"`
+	BaseURL    string `env:"SERVER_BASE_URL,default=/"`
+	FaviconURL string `env:"SERVER_FAVICON_URL,default="`
 
 	createdAt time.Time
 }
 
 func NewDefaultConfig() Config {
 	c := Config{
-		AppName:    "Pulse",
 		Host:       "localhost",
 		Port:       8080,
 		Proxied:    false,
@@ -36,6 +34,12 @@ func NewDefaultConfig() Config {
 	c.FaviconURL = c.StaticAssetPath("favicon.png")
 
 	return c
+}
+
+func (c *Config) Init() {
+	if c.FaviconURL == "" {
+		c.FaviconURL = c.StaticAssetPath("favicon.png")
+	}
 }
 
 func (c *Config) FaviconType() string {

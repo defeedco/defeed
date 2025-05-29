@@ -1,50 +1,79 @@
 package lobsters
 
 import (
+	"encoding/json"
 	"log/slog"
 	"time"
 
 	"github.com/go-shiori/go-readability"
 )
 
-type lobstersPost struct {
-	raw       *Story
-	sourceUID string
+type Post struct {
+	Post      *Story `json:"post"`
+	SourceID  string `json:"source_id"`
+	SourceTyp string `json:"source_type"`
 }
 
-func (p *lobstersPost) UID() string {
-	return p.raw.ID
+func NewPost() *Post {
+	return &Post{}
 }
 
-func (p *lobstersPost) SourceUID() string {
-	return p.sourceUID
+func (p *Post) SourceType() string {
+	return p.SourceTyp
 }
 
-func (p *lobstersPost) Title() string {
-	return p.raw.Title
+func (p *Post) MarshalJSON() ([]byte, error) {
+	type Alias Post
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(p),
+	})
 }
 
-func (p *lobstersPost) Body() string {
-	body := p.raw.Title
-	if p.raw.URL != "" {
-		article, err := readability.FromURL(p.raw.URL, 5*time.Second)
+func (p *Post) UnmarshalJSON(data []byte) error {
+	type Alias Post
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(p),
+	}
+	return json.Unmarshal(data, &aux)
+}
+
+func (p *Post) UID() string {
+	return p.Post.ID
+}
+
+func (p *Post) SourceUID() string {
+	return p.SourceID
+}
+
+func (p *Post) Title() string {
+	return p.Post.Title
+}
+
+func (p *Post) Body() string {
+	body := p.Post.Title
+	if p.Post.URL != "" {
+		article, err := readability.FromURL(p.Post.URL, 5*time.Second)
 		if err == nil {
 			body += "\n\nReferenced article: \n" + article.TextContent
 		} else {
-			slog.Error("Failed to fetch lobster article", "error", err, "url", p.raw.URL)
+			slog.Error("Failed to fetch lobster article", "error", err, "url", p.Post.URL)
 		}
 	}
 	return body
 }
 
-func (p *lobstersPost) URL() string {
-	return p.raw.URL
+func (p *Post) URL() string {
+	return p.Post.URL
 }
 
-func (p *lobstersPost) ImageURL() string {
+func (p *Post) ImageURL() string {
 	return ""
 }
 
-func (p *lobstersPost) CreatedAt() time.Time {
-	return p.raw.ParsedTime
+func (p *Post) CreatedAt() time.Time {
+	return p.Post.ParsedTime
 }

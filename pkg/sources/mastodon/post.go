@@ -1,6 +1,7 @@
 package mastodon
 
 import (
+	"encoding/json"
 	"regexp"
 	"strings"
 	"time"
@@ -10,44 +11,72 @@ import (
 	"golang.org/x/net/html"
 )
 
-type mastodonPost struct {
-	raw       *mastodon.Status
-	sourceUID string
+type Post struct {
+	Status    *mastodon.Status `json:"status"`
+	SourceID  string           `json:"source_id"`
+	SourceTyp string           `json:"source_type"`
 }
 
-func (p *mastodonPost) UID() string {
-	return string(p.raw.ID)
+func NewPost() *Post {
+	return &Post{}
 }
 
-func (p *mastodonPost) SourceUID() string {
-	return p.sourceUID
+func (p *Post) SourceType() string {
+	return p.SourceTyp
 }
 
-func (p *mastodonPost) Title() string {
-	if p.raw.Card != nil {
-		return p.raw.Card.Title
+func (p *Post) MarshalJSON() ([]byte, error) {
+	type Alias Post
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(p),
+	})
+}
+
+func (p *Post) UnmarshalJSON(data []byte) error {
+	type Alias Post
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(p),
+	}
+	return json.Unmarshal(data, &aux)
+}
+
+func (p *Post) UID() string {
+	return string(p.Status.ID)
+}
+
+func (p *Post) SourceUID() string {
+	return p.SourceID
+}
+
+func (p *Post) Title() string {
+	if p.Status.Card != nil {
+		return p.Status.Card.Title
 	}
 
 	return oneLineTitle(p.Body(), 50)
 }
 
-func (p *mastodonPost) Body() string {
-	return extractTextFromHTML(p.raw.Content)
+func (p *Post) Body() string {
+	return extractTextFromHTML(p.Status.Content)
 }
 
-func (p *mastodonPost) URL() string {
-	return p.raw.URL
+func (p *Post) URL() string {
+	return p.Status.URL
 }
 
-func (p *mastodonPost) ImageURL() string {
-	if len(p.raw.MediaAttachments) > 0 {
-		return p.raw.MediaAttachments[0].URL
+func (p *Post) ImageURL() string {
+	if len(p.Status.MediaAttachments) > 0 {
+		return p.Status.MediaAttachments[0].URL
 	}
 	return ""
 }
 
-func (p *mastodonPost) CreatedAt() time.Time {
-	return p.raw.CreatedAt
+func (p *Post) CreatedAt() time.Time {
+	return p.Status.CreatedAt
 }
 
 func extractTextFromHTML(htmlStr string) string {

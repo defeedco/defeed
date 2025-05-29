@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/glanceapp/glance/pkg/api"
+	"github.com/glanceapp/glance/pkg/config"
+	"github.com/glanceapp/glance/pkg/storage/postgres"
+	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"log"
 	"os"
@@ -15,15 +19,32 @@ func main() {
 	}
 }
 
-func run() (err error) {
+func run() error {
+	err := godotenv.Load()
+	if err != nil {
+		return fmt.Errorf("load .env: %w", err)
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	logger := zerolog.New(os.Stdout)
-	server, err := api.NewServer(&logger, api.NewDefaultConfig())
+
+	db := postgres.NewDB(&cfg.DBConfig)
+	err = db.Connect(context.Background())
+	if err != nil {
+		return fmt.Errorf("connect to database: %w", err)
+	}
+
+	server, err := api.NewServer(&logger, &cfg.APIConfig, db)
 	if err != nil {
 		return fmt.Errorf("create server: %w", err)
 	}
 
 	if err := server.Start(); err != nil {
-		log.Printf("Failed to start server: %v", err)
+		return fmt.Errorf("start server: %w", err)
 	}
 
 	return nil

@@ -3,7 +3,7 @@ package lobsters
 import (
 	"context"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/common"
+	"github.com/glanceapp/glance/pkg/utils"
 	"net/http"
 	"strings"
 	"time"
@@ -23,7 +23,7 @@ func NewLobstersClient(baseURL string) *LobstersClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 
 	return &LobstersClient{
-		httpClient: common.DefaultHTTPClient,
+		httpClient: utils.DefaultHTTPClient,
 		baseURL:    baseURL,
 	}
 }
@@ -57,7 +57,7 @@ func (c *LobstersClient) fetchStories(ctx context.Context, url string) ([]*Story
 	}
 
 	var stories []*Story
-	stories, err = common.DecodeJSONFromRequest[[]*Story](c.httpClient, req)
+	stories, err = utils.DecodeJSONFromRequest[[]*Story](c.httpClient, req)
 	if err != nil {
 		return nil, fmt.Errorf("fetching stories: %v", err)
 	}
@@ -81,7 +81,7 @@ func (c *LobstersClient) GetStoriesFromCustomURL(ctx context.Context, url string
 	}
 
 	var stories []*Story
-	stories, err = common.DecodeJSONFromRequest[[]*Story](c.httpClient, req)
+	stories, err = utils.DecodeJSONFromRequest[[]*Story](c.httpClient, req)
 	if err != nil {
 		return nil, fmt.Errorf("fetching stories: %v", err)
 	}

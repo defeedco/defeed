@@ -2,15 +2,18 @@ package hackernews
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/sources/common"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/alexferrari88/gohn/pkg/gohn"
 	"github.com/go-shiori/go-readability"
 )
+
+const TypeHackerNewsPosts = "hackernews-posts"
 
 type SourcePosts struct {
 	FeedName string `json:"feed_name"`
@@ -33,49 +36,80 @@ func (s *SourcePosts) URL() string {
 	return fmt.Sprintf("https://news.ycombinator.com/%s", s.FeedName)
 }
 
-type hackerNewsPost struct {
-	raw       *gohn.Item
-	sourceUID string
+func (s *SourcePosts) Type() string {
+	return TypeHackerNewsPosts
 }
 
-func (p *hackerNewsPost) UID() string {
-	return fmt.Sprintf("%d", *p.raw.ID)
+type Post struct {
+	Post     *gohn.Item `json:"post"`
+	SourceID string     `json:"source_id"`
 }
 
-func (p *hackerNewsPost) SourceUID() string {
-	return p.sourceUID
+func NewPost() *Post {
+	return &Post{}
 }
 
-func (p *hackerNewsPost) Title() string {
-	return *p.raw.Title
+func (p *Post) SourceType() string {
+	return TypeHackerNewsPosts
 }
 
-func (p *hackerNewsPost) Body() string {
-	body := *p.raw.Title
-	if p.raw.URL != nil {
-		article, err := readability.FromURL(*p.raw.URL, 5*time.Second)
+func (p *Post) MarshalJSON() ([]byte, error) {
+	type Alias Post
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(p),
+	})
+}
+
+func (p *Post) UnmarshalJSON(data []byte) error {
+	type Alias Post
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(p),
+	}
+	return json.Unmarshal(data, &aux)
+}
+
+func (p *Post) UID() string {
+	return fmt.Sprintf("%d", *p.Post.ID)
+}
+
+func (p *Post) SourceUID() string {
+	return p.SourceID
+}
+
+func (p *Post) Title() string {
+	return *p.Post.Title
+}
+
+func (p *Post) Body() string {
+	body := *p.Post.Title
+	if p.Post.URL != nil {
+		article, err := readability.FromURL(*p.Post.URL, 5*time.Second)
 		if err == nil {
 			body += fmt.Sprintf("\n\nReferenced article: \n%s", article.TextContent)
 		} else {
-			slog.Error("Failed to fetch hacker news article", "error", err, "url", *p.raw.URL)
+			slog.Error("Failed to fetch hacker news article", "error", err, "url", *p.Post.URL)
 		}
 	}
 	return body
 }
 
-func (p *hackerNewsPost) URL() string {
-	if p.raw.URL != nil {
-		return *p.raw.URL
+func (p *Post) URL() string {
+	if p.Post.URL != nil {
+		return *p.Post.URL
 	}
-	return fmt.Sprintf("https://news.ycombinator.com/item?id=%d", *p.raw.ID)
+	return fmt.Sprintf("https://news.ycombinator.com/item?id=%d", *p.Post.ID)
 }
 
-func (p *hackerNewsPost) ImageURL() string {
+func (p *Post) ImageURL() string {
 	return ""
 }
 
-func (p *hackerNewsPost) CreatedAt() time.Time {
-	return time.Unix(int64(*p.raw.Time), 0)
+func (p *Post) CreatedAt() time.Time {
+	return time.Unix(int64(*p.Post.Time), 0)
 }
 
 func (s *SourcePosts) Initialize() error {
@@ -92,7 +126,7 @@ func (s *SourcePosts) Initialize() error {
 	return nil
 }
 
-func (s *SourcePosts) Stream(ctx context.Context, feed chan<- common.Activity, errs chan<- error) {
+func (s *SourcePosts) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	posts, err := s.fetchHackerNewsPosts(ctx)
 
 	if err != nil {
@@ -106,7 +140,7 @@ func (s *SourcePosts) Stream(ctx context.Context, feed chan<- common.Activity, e
 
 }
 
-func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context) ([]*hackerNewsPost, error) {
+func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context) ([]*Post, error) {
 	var storyIDs []*int
 	var err error
 
@@ -129,7 +163,7 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context) ([]*hackerNewsPo
 		return nil, fmt.Errorf("no stories found")
 	}
 
-	posts := make([]*hackerNewsPost, 0, len(storyIDs))
+	posts := make([]*Post, 0, len(storyIDs))
 	for _, id := range storyIDs {
 		if id == nil {
 			continue
@@ -145,7 +179,7 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context) ([]*hackerNewsPo
 			continue
 		}
 
-		posts = append(posts, &hackerNewsPost{raw: story, sourceUID: s.UID()})
+		posts = append(posts, &Post{Post: story, SourceID: s.UID()})
 	}
 
 	if len(posts) == 0 {
@@ -153,4 +187,29 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context) ([]*hackerNewsPo
 	}
 
 	return posts, nil
+}
+
+func (s *SourcePosts) MarshalJSON() ([]byte, error) {
+	type Alias SourcePosts
+	return json.Marshal(&struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+		Type:  s.Type(),
+	})
+}
+
+func (s *SourcePosts) UnmarshalJSON(data []byte) error {
+	type Alias SourcePosts
+	aux := &struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	return nil
 }

@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/common"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"strings"
 	"time"
 
@@ -38,8 +38,8 @@ type completionInput struct {
 
 func (llm *ActivitySummarizer) Summarize(
 	ctx context.Context,
-	activity common.Activity,
-) (*common.ActivitySummary, error) {
+	activity types.Activity,
+) (*types.ActivitySummary, error) {
 	prompt := strings.Builder{}
 
 	// static system prompt
@@ -98,7 +98,7 @@ INPUT ACTIVITY TO PROCESS
 		return nil, fmt.Errorf("parse response: %w", err)
 	}
 
-	return &common.ActivitySummary{
+	return &types.ActivitySummary{
 		FullSummary:  response.FullSummary,
 		ShortSummary: response.ShortSummary,
 	}, nil

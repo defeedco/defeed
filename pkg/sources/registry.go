@@ -3,46 +3,53 @@ package sources
 import (
 	"context"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"sort"
 	"sync"
 
-	"github.com/glanceapp/glance/pkg/sources/common"
 	"github.com/rs/zerolog"
 )
 
 type Registry struct {
-	sources         map[string]cancelableSource
-	sourcesMutex    sync.Mutex
-	activities      map[string]DecoratedActivity
-	activitiesMutex sync.Mutex
+	sourceRepo   sourceStore
+	activityRepo activityStore
 
-	activityQueue chan common.Activity
-	errorQueue    chan error
-	done          chan struct{}
+	cancelBySourceID sync.Map
+	activityQueue    chan types.Activity
+	errorQueue       chan error
+	done             chan struct{}
 
 	logger     *zerolog.Logger
 	summarizer summarizer
 }
 
+type sourceStore interface {
+	Add(source Source) error
+	Remove(uid string) error
+	List() ([]Source, error)
+	GetByID(uid string) (Source, error)
+}
+
+type activityStore interface {
+	Add(activity *types.DecoratedActivity) error
+	Remove(uid string) error
+	List() ([]*types.DecoratedActivity, error)
+}
+
 type summarizer interface {
-	Summarize(ctx context.Context, activity common.Activity) (*common.ActivitySummary, error)
+	Summarize(ctx context.Context, activity types.Activity) (*types.ActivitySummary, error)
 }
 
-type DecoratedActivity struct {
-	common.Activity
-	Summary *common.ActivitySummary
-}
-
-type cancelableSource struct {
-	Source
-	cancel context.CancelFunc
-}
-
-func NewRegistry(logger *zerolog.Logger, summarizer summarizer) *Registry {
+func NewRegistry(
+	logger *zerolog.Logger,
+	summarizer summarizer,
+	activityRepo activityStore,
+	sourceRepo sourceStore,
+) *Registry {
 	r := &Registry{
-		sources:       make(map[string]cancelableSource),
-		activities:    make(map[string]DecoratedActivity),
-		activityQueue: make(chan common.Activity),
+		activityRepo:  activityRepo,
+		sourceRepo:    sourceRepo,
+		activityQueue: make(chan types.Activity),
 		errorQueue:    make(chan error),
 		done:          make(chan struct{}),
 		logger:        logger,
@@ -55,10 +62,9 @@ func NewRegistry(logger *zerolog.Logger, summarizer summarizer) *Registry {
 }
 
 func (r *Registry) Add(source Source) error {
-	r.sourcesMutex.Lock()
-	defer r.sourcesMutex.Unlock()
+	existing, _ := r.sourceRepo.GetByID(source.UID())
 
-	if _, exists := r.sources[source.UID()]; exists {
+	if existing != nil {
 		return fmt.Errorf("source '%s' already exists", source.UID())
 	}
 
@@ -70,59 +76,50 @@ func (r *Registry) Add(source Source) error {
 
 	go source.Stream(ctx, r.activityQueue, r.errorQueue)
 
-	r.sources[source.UID()] = cancelableSource{
-		Source: source,
-		cancel: cancel,
+	err := r.sourceRepo.Add(source)
+	if err != nil {
+		cancel()
+		return fmt.Errorf("add source: %w", err)
 	}
+	r.cancelBySourceID.Store(source.UID(), cancel)
 
 	return nil
 }
 
 func (r *Registry) Remove(uid string) error {
-	r.sourcesMutex.Lock()
-	defer r.sourcesMutex.Unlock()
+	existing, _ := r.sourceRepo.GetByID(uid)
 
-	h, ok := r.sources[uid]
-	if !ok {
+	if existing != nil {
 		return fmt.Errorf("source '%s' not found", uid)
 	}
 
-	h.cancel()
-	delete(r.sources, uid)
+	cancel, ok := r.cancelBySourceID.Load(uid)
+	if !ok {
+		return fmt.Errorf("source '%s' cancel func not found", uid)
+	}
+	cancel.(context.CancelFunc)()
+	r.cancelBySourceID.Delete(uid)
+
+	err := r.sourceRepo.Remove(uid)
+	if err != nil {
+		return fmt.Errorf("remove source: %w", err)
+	}
 
 	return nil
 }
 
 func (r *Registry) Sources() ([]Source, error) {
-	r.sourcesMutex.Lock()
-	defer r.sourcesMutex.Unlock()
-
-	out := make([]Source, 0, len(r.sources))
-	for _, s := range r.sources {
-		out = append(out, s.Source)
-	}
-	return out, nil
+	return r.sourceRepo.List()
 }
 
 func (r *Registry) Source(uid string) (Source, error) {
-	r.sourcesMutex.Lock()
-	defer r.sourcesMutex.Unlock()
-
-	s, ok := r.sources[uid]
-	if !ok {
-		return nil, fmt.Errorf("source '%s' not found", uid)
-	}
-
-	return s.Source, nil
+	return r.sourceRepo.GetByID(uid)
 }
 
-func (r *Registry) Activities() ([]DecoratedActivity, error) {
-	r.activitiesMutex.Lock()
-	defer r.activitiesMutex.Unlock()
-
-	matches := make([]DecoratedActivity, 0)
-	for _, a := range r.activities {
-		matches = append(matches, a)
+func (r *Registry) Activities() ([]*types.DecoratedActivity, error) {
+	matches, err := r.activityRepo.List()
+	if err != nil {
+		return nil, fmt.Errorf("repo list: %w", err)
 	}
 
 	sort.Slice(matches, func(i, j int) bool {
@@ -132,12 +129,14 @@ func (r *Registry) Activities() ([]DecoratedActivity, error) {
 	return matches, nil
 }
 
-func (r *Registry) ActivitiesBySource(sourceUID string) ([]DecoratedActivity, error) {
-	r.activitiesMutex.Lock()
-	defer r.activitiesMutex.Unlock()
+func (r *Registry) ActivitiesBySource(sourceUID string) ([]*types.DecoratedActivity, error) {
+	activities, err := r.Activities()
+	if err != nil {
+		return nil, fmt.Errorf("list activities: %w", err)
+	}
 
-	matches := make([]DecoratedActivity, 0)
-	for _, a := range r.activities {
+	matches := make([]*types.DecoratedActivity, 0)
+	for _, a := range activities {
 		if a.SourceUID() == sourceUID {
 			matches = append(matches, a)
 		}
@@ -161,17 +160,19 @@ func (r *Registry) startWorkers(nWorkers int) {
 
 					summary, err := r.summarizer.Summarize(context.Background(), act)
 					if err != nil {
+						// TODO(pulse): Better way to handle errors here?
 						//r.errorQueue <- fmt.Errorf("summarize activity: %w", err)
 						r.logger.Error().Err(err).Msgf("[Worker %d] Error summarizing activity %v\n", workerID, err)
 						continue
 					}
 
-					r.activitiesMutex.Lock()
-					r.activities[act.UID()] = DecoratedActivity{
+					err = r.activityRepo.Add(&types.DecoratedActivity{
 						Activity: act,
 						Summary:  summary,
+					})
+					if err != nil {
+						r.logger.Error().Err(err).Msgf("[Worker %d] Error storing activity %v\n", workerID, err)
 					}
-					r.activitiesMutex.Unlock()
 
 				case err := <-r.errorQueue:
 					r.logger.Error().Err(err).Msgf("[Worker %d] Error processing activity %v\n", workerID, err)
@@ -188,9 +189,10 @@ func (r *Registry) startWorkers(nWorkers int) {
 func (r *Registry) Shutdown() {
 	close(r.done)
 
-	r.sourcesMutex.Lock()
-	for _, source := range r.sources {
-		source.cancel()
-	}
-	r.sourcesMutex.Unlock()
+	r.cancelBySourceID.Range(func(key, value interface{}) bool {
+		cancel := value.(context.CancelFunc)
+		cancel()
+		return true
+	})
+	r.cancelBySourceID.Clear()
 }

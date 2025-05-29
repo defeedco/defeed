@@ -3,6 +3,7 @@ package widgets
 import (
 	"bytes"
 	"github.com/glanceapp/glance/pkg/sources"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/web"
 	"html/template"
 )
@@ -49,7 +50,7 @@ var widgetBaseContentTemplate = web.MustParseTemplate("widget-base-content.html"
 
 type renderData struct {
 	*widgetBase
-	Activities []sources.DecoratedActivity
+	Activities []*types.DecoratedActivity
 }
 
 func (w *widgetBase) Render(registry *sources.Registry) template.HTML {

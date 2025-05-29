@@ -1,16 +1,31 @@
-FROM golang:1.24.2-alpine3.21 AS builder
+FROM golang:1.23.3 AS builder
 
 WORKDIR /app
-COPY . /app
-RUN CGO_ENABLED=0 go build .
 
-FROM alpine:3.21
+# Copy only the go.mod and go.sum files to leverage caching.
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the source code
+COPY . .
+
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -o /dist/server ./cmd/server
+
+# Use a minimal alpine image for the final stage
+FROM alpine:latest
 
 WORKDIR /app
-COPY --from=builder /app/glance .
 
-HEALTHCHECK --timeout=10s --start-period=60s --interval=60s \
-  CMD wget --spider -q http://localhost:8080/api/healthz
+RUN apk --no-cache add ca-certificates
 
-EXPOSE 8080/tcp
-ENTRYPOINT ["/app/glance", "--config", "/app/config/glance.yml"]
+# Copy the binary from builder
+COPY --from=builder /dist/server .
+
+# Expose the port
+EXPOSE 8080
+
+# Run the application
+CMD ["./server"]

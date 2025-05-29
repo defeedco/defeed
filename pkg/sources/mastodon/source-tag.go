@@ -2,10 +2,15 @@ package mastodon
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/common"
+
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
+
 	"github.com/mattn/go-mastodon"
 )
+
+const TypeMastodonTag = "mastodon-tag"
 
 type SourceTag struct {
 	InstanceURL string `json:"instance_url"`
@@ -30,6 +35,10 @@ func (s *SourceTag) URL() string {
 	return fmt.Sprintf("%s/tags/%s", s.InstanceURL, s.Tag)
 }
 
+func (s *SourceTag) Type() string {
+	return TypeMastodonTag
+}
+
 func (s *SourceTag) Initialize() error {
 	if s.InstanceURL == "" {
 		return fmt.Errorf("instance URL is required")
@@ -41,7 +50,7 @@ func (s *SourceTag) Initialize() error {
 	return nil
 }
 
-func (s *SourceTag) Stream(ctx context.Context, feed chan<- common.Activity, errs chan<- error) {
+func (s *SourceTag) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	client := mastodon.NewClient(&mastodon.Config{
 		Server:       s.InstanceURL,
 		ClientID:     "pulse-feed-aggregation",
@@ -60,7 +69,7 @@ func (s *SourceTag) Stream(ctx context.Context, feed chan<- common.Activity, err
 	}
 }
 
-func (s *SourceTag) fetchHashtagPosts(client *mastodon.Client, limit int) ([]*mastodonPost, error) {
+func (s *SourceTag) fetchHashtagPosts(client *mastodon.Client, limit int) ([]*Post, error) {
 	statuses, err := client.GetTimelineHashtag(context.Background(), s.Tag, false, &mastodon.Pagination{
 		Limit: int64(limit),
 	})
@@ -68,10 +77,35 @@ func (s *SourceTag) fetchHashtagPosts(client *mastodon.Client, limit int) ([]*ma
 		return nil, fmt.Errorf("failed to get hashtag timeline: %w", err)
 	}
 
-	posts := make([]*mastodonPost, len(statuses))
+	posts := make([]*Post, len(statuses))
 	for i, status := range statuses {
-		posts[i] = &mastodonPost{raw: status, sourceUID: s.UID()}
+		posts[i] = &Post{Status: status, SourceTyp: s.Type(), SourceID: s.UID()}
 	}
 
 	return posts, nil
+}
+
+func (s *SourceTag) MarshalJSON() ([]byte, error) {
+	type Alias SourceTag
+	return json.Marshal(&struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+		Type:  s.Type(),
+	})
+}
+
+func (s *SourceTag) UnmarshalJSON(data []byte) error {
+	type Alias SourceTag
+	aux := &struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	return nil
 }

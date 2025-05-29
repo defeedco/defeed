@@ -1,10 +1,16 @@
-package common
+package types
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Activity interface {
+	json.Marshaler
+	json.Unmarshaler
 	UID() string
 	SourceUID() string
+	SourceType() string
 	Title() string
 	Body() string
 	URL() string
@@ -15,4 +21,9 @@ type Activity interface {
 type ActivitySummary struct {
 	ShortSummary string
 	FullSummary  string
+}
+
+type DecoratedActivity struct {
+	Activity
+	Summary *ActivitySummary
 }

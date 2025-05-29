@@ -2,10 +2,15 @@ package mastodon
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/common"
+
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
+
 	"github.com/mattn/go-mastodon"
 )
+
+const TypeMastodonAccount = "mastodon-account"
 
 type SourceAccount struct {
 	InstanceURL string `json:"instance_url"`
@@ -31,6 +36,10 @@ func (s *SourceAccount) URL() string {
 	return fmt.Sprintf("%s/tags/%s", s.InstanceURL, s.Account)
 }
 
+func (s *SourceAccount) Type() string {
+	return TypeMastodonAccount
+}
+
 func (s *SourceAccount) Initialize() error {
 	s.client = mastodon.NewClient(&mastodon.Config{
 		Server:       s.InstanceURL,
@@ -41,7 +50,7 @@ func (s *SourceAccount) Initialize() error {
 	return nil
 }
 
-func (s *SourceAccount) Stream(ctx context.Context, feed chan<- common.Activity, errs chan<- error) {
+func (s *SourceAccount) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	account, err := s.fetchAccount(ctx)
 	if err != nil {
 		errs <- fmt.Errorf("fetch account: %w", err)
@@ -73,7 +82,7 @@ func (s *SourceAccount) fetchAccount(ctx context.Context) (*mastodon.Account, er
 	return accounts.Accounts[0], nil
 }
 
-func (s *SourceAccount) fetchAccountPosts(ctx context.Context, accountID mastodon.ID, limit int64) ([]*mastodonPost, error) {
+func (s *SourceAccount) fetchAccountPosts(ctx context.Context, accountID mastodon.ID, limit int64) ([]*Post, error) {
 	statuses, err := s.client.GetAccountStatuses(ctx, accountID, &mastodon.Pagination{
 		Limit: limit,
 	})
@@ -81,10 +90,35 @@ func (s *SourceAccount) fetchAccountPosts(ctx context.Context, accountID mastodo
 		return nil, fmt.Errorf("fetch account statuses: %w", err)
 	}
 
-	posts := make([]*mastodonPost, len(statuses))
+	posts := make([]*Post, len(statuses))
 	for i, status := range statuses {
-		posts[i] = &mastodonPost{raw: status, sourceUID: s.UID()}
+		posts[i] = &Post{Status: status, SourceTyp: s.Type(), SourceID: s.UID()}
 	}
 
 	return posts, nil
+}
+
+func (s *SourceAccount) MarshalJSON() ([]byte, error) {
+	type Alias SourceAccount
+	return json.Marshal(&struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+		Type:  s.Type(),
+	})
+}
+
+func (s *SourceAccount) UnmarshalJSON(data []byte) error {
+	type Alias SourceAccount
+	aux := &struct {
+		*Alias
+		Type string `json:"type"`
+	}{
+		Alias: (*Alias)(s),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	return nil
 }
