@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
+	pgvector "github.com/pgvector/pgvector-go"
 )
 
 // ActivityCreate is the builder for creating a Activity entity.
@@ -83,6 +84,20 @@ func (ac *ActivityCreate) SetFullSummary(s string) *ActivityCreate {
 // SetRawJSON sets the "raw_json" field.
 func (ac *ActivityCreate) SetRawJSON(s string) *ActivityCreate {
 	ac.mutation.SetRawJSON(s)
+	return ac
+}
+
+// SetEmbedding sets the "embedding" field.
+func (ac *ActivityCreate) SetEmbedding(pg pgvector.Vector) *ActivityCreate {
+	ac.mutation.SetEmbedding(pg)
+	return ac
+}
+
+// SetNillableEmbedding sets the "embedding" field if the given value is not nil.
+func (ac *ActivityCreate) SetNillableEmbedding(pg *pgvector.Vector) *ActivityCreate {
+	if pg != nil {
+		ac.SetEmbedding(*pg)
+	}
 	return ac
 }
 
@@ -237,6 +252,10 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 	if value, ok := ac.mutation.RawJSON(); ok {
 		_spec.SetField(activity.FieldRawJSON, field.TypeString, value)
 		_node.RawJSON = value
+	}
+	if value, ok := ac.mutation.Embedding(); ok {
+		_spec.SetField(activity.FieldEmbedding, field.TypeOther, value)
+		_node.Embedding = &value
 	}
 	return _node, _spec
 }

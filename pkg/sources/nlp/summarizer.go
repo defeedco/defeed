@@ -1,19 +1,20 @@
-package summarizer
+package nlp
 
 import (
 	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"strings"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/outputparser"
 )
 
-//go:embed prompt.md
+//go:embed summarize-prompt.md
 var systemPrompt string
 
 type ActivitySummarizer struct {

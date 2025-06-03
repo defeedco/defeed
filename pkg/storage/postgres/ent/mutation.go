@@ -14,6 +14,7 @@ import (
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
+	pgvector "github.com/pgvector/pgvector-go"
 )
 
 const (
@@ -46,6 +47,7 @@ type ActivityMutation struct {
 	short_summary *string
 	full_summary  *string
 	raw_json      *string
+	embedding     *pgvector.Vector
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Activity, error)
@@ -552,6 +554,55 @@ func (m *ActivityMutation) ResetRawJSON() {
 	m.raw_json = nil
 }
 
+// SetEmbedding sets the "embedding" field.
+func (m *ActivityMutation) SetEmbedding(pg pgvector.Vector) {
+	m.embedding = &pg
+}
+
+// Embedding returns the value of the "embedding" field in the mutation.
+func (m *ActivityMutation) Embedding() (r pgvector.Vector, exists bool) {
+	v := m.embedding
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmbedding returns the old "embedding" field's value of the Activity entity.
+// If the Activity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ActivityMutation) OldEmbedding(ctx context.Context) (v *pgvector.Vector, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmbedding is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmbedding requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmbedding: %w", err)
+	}
+	return oldValue.Embedding, nil
+}
+
+// ClearEmbedding clears the value of the "embedding" field.
+func (m *ActivityMutation) ClearEmbedding() {
+	m.embedding = nil
+	m.clearedFields[activity.FieldEmbedding] = struct{}{}
+}
+
+// EmbeddingCleared returns if the "embedding" field was cleared in this mutation.
+func (m *ActivityMutation) EmbeddingCleared() bool {
+	_, ok := m.clearedFields[activity.FieldEmbedding]
+	return ok
+}
+
+// ResetEmbedding resets all changes to the "embedding" field.
+func (m *ActivityMutation) ResetEmbedding() {
+	m.embedding = nil
+	delete(m.clearedFields, activity.FieldEmbedding)
+}
+
 // Where appends a list predicates to the ActivityMutation builder.
 func (m *ActivityMutation) Where(ps ...predicate.Activity) {
 	m.predicates = append(m.predicates, ps...)
@@ -586,7 +637,7 @@ func (m *ActivityMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ActivityMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.uid != nil {
 		fields = append(fields, activity.FieldUID)
 	}
@@ -620,6 +671,9 @@ func (m *ActivityMutation) Fields() []string {
 	if m.raw_json != nil {
 		fields = append(fields, activity.FieldRawJSON)
 	}
+	if m.embedding != nil {
+		fields = append(fields, activity.FieldEmbedding)
+	}
 	return fields
 }
 
@@ -650,6 +704,8 @@ func (m *ActivityMutation) Field(name string) (ent.Value, bool) {
 		return m.FullSummary()
 	case activity.FieldRawJSON:
 		return m.RawJSON()
+	case activity.FieldEmbedding:
+		return m.Embedding()
 	}
 	return nil, false
 }
@@ -681,6 +737,8 @@ func (m *ActivityMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldFullSummary(ctx)
 	case activity.FieldRawJSON:
 		return m.OldRawJSON(ctx)
+	case activity.FieldEmbedding:
+		return m.OldEmbedding(ctx)
 	}
 	return nil, fmt.Errorf("unknown Activity field %s", name)
 }
@@ -767,6 +825,13 @@ func (m *ActivityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRawJSON(v)
 		return nil
+	case activity.FieldEmbedding:
+		v, ok := value.(pgvector.Vector)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmbedding(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Activity field %s", name)
 }
@@ -796,7 +861,11 @@ func (m *ActivityMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *ActivityMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(activity.FieldEmbedding) {
+		fields = append(fields, activity.FieldEmbedding)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -809,6 +878,11 @@ func (m *ActivityMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *ActivityMutation) ClearField(name string) error {
+	switch name {
+	case activity.FieldEmbedding:
+		m.ClearEmbedding()
+		return nil
+	}
 	return fmt.Errorf("unknown Activity nullable field %s", name)
 }
 
@@ -848,6 +922,9 @@ func (m *ActivityMutation) ResetField(name string) error {
 		return nil
 	case activity.FieldRawJSON:
 		m.ResetRawJSON()
+		return nil
+	case activity.FieldEmbedding:
+		m.ResetEmbedding()
 		return nil
 	}
 	return fmt.Errorf("unknown Activity field %s", name)

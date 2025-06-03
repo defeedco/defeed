@@ -7,14 +7,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	httpswagger "github.com/swaggo/http-swagger"
 	"html/template"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/sources/summarizer"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/sources/nlp"
+	httpswagger "github.com/swaggo/http-swagger"
+
 	"github.com/glanceapp/glance/pkg/storage/postgres"
 	"github.com/tmc/langchaingo/llms/openai"
 
@@ -49,12 +51,20 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		openai.WithModel("gpt-4o-mini"),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create summarizer model: %w", err)
+	}
+
+	embedderModel, err := openai.New(
+		openai.WithEmbeddingModel("text-embedding-3-large"),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("create embedder model: %w", err)
 	}
 
 	registry := sources.NewRegistry(
 		logger,
-		summarizer.NewSummarizer(summarizerModel),
+		nlp.NewSummarizer(summarizerModel),
+		nlp.NewEmbedder(embedderModel),
 		postgres.NewActivityRepository(db),
 		postgres.NewSourceRepository(db),
 	)
@@ -245,6 +255,46 @@ func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
 	s.serializeRes(w, deserializeSource(out))
 }
 
+func (s *Server) SearchActivities(w http.ResponseWriter, r *http.Request, params SearchActivitiesParams) {
+	var sourceUIDs []string
+	if params.Sources != nil {
+		sourceUIDs = strings.Split(*params.Sources, ",")
+	}
+
+	var minSimilarity float32
+	if params.MinSimilarity != nil {
+		minSimilarity = *params.MinSimilarity
+	}
+
+	var query string
+	if params.Query != nil {
+		query = *params.Query
+	}
+
+	limit := 20
+	if params.Limit != nil {
+		if *params.Limit < 1 || *params.Limit > 100 {
+			s.badRequest(w, fmt.Errorf("limit must be between 1 and 100"), "validate limit")
+			return
+		}
+		limit = *params.Limit
+	}
+
+	sortBy, err := deserializeSortBy(params.SortBy)
+	if err != nil {
+		s.badRequest(w, err, "deserialize sort by")
+		return
+	}
+
+	results, err := s.registry.Search(r.Context(), query, sourceUIDs, minSimilarity, limit, sortBy)
+	if err != nil {
+		s.internalError(w, err, "search activities")
+		return
+	}
+
+	s.serializeRes(w, serializeActivities(results))
+}
+
 func deserializeReq[Req any](r *http.Request, req *Req) error {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
@@ -332,6 +382,7 @@ func serializeActivity(in *types.DecoratedActivity) Activity {
 		Title:        in.Title(),
 		Uid:          in.UID(),
 		Url:          in.URL(),
+		Similarity:   &in.Similarity,
 	}
 }
 
@@ -352,6 +403,21 @@ func deserializeSource(in sources.Source) Source {
 		Url:  in.URL(),
 		Name: in.Name(),
 	}
+}
+
+func deserializeSortBy(in *SearchActivitiesParamsSortBy) (types.SortBy, error) {
+	if in == nil {
+		return types.SortByDate, nil
+	}
+
+	switch *in {
+	case CreatedDate:
+		return types.SortByDate, nil
+	case Similarity:
+		return types.SortBySimilarity, nil
+	}
+
+	return "", fmt.Errorf("unknown sort by: %s", *in)
 }
 
 func fileServerWithCache(fs http.FileSystem, cacheDuration time.Duration) http.Handler {

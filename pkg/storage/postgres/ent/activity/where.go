@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
+	pgvector "github.com/pgvector/pgvector-go"
 )
 
 // ID filters vertices based on their ID field.
@@ -117,6 +118,11 @@ func FullSummary(v string) predicate.Activity {
 // RawJSON applies equality check predicate on the "raw_json" field. It's identical to RawJSONEQ.
 func RawJSON(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldEQ(FieldRawJSON, v))
+}
+
+// Embedding applies equality check predicate on the "embedding" field. It's identical to EmbeddingEQ.
+func Embedding(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldEmbedding, v))
 }
 
 // UIDEQ applies the EQ predicate on the "uid" field.
@@ -807,6 +813,56 @@ func RawJSONEqualFold(v string) predicate.Activity {
 // RawJSONContainsFold applies the ContainsFold predicate on the "raw_json" field.
 func RawJSONContainsFold(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldContainsFold(FieldRawJSON, v))
+}
+
+// EmbeddingEQ applies the EQ predicate on the "embedding" field.
+func EmbeddingEQ(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldEmbedding, v))
+}
+
+// EmbeddingNEQ applies the NEQ predicate on the "embedding" field.
+func EmbeddingNEQ(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldNEQ(FieldEmbedding, v))
+}
+
+// EmbeddingIn applies the In predicate on the "embedding" field.
+func EmbeddingIn(vs ...pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldIn(FieldEmbedding, vs...))
+}
+
+// EmbeddingNotIn applies the NotIn predicate on the "embedding" field.
+func EmbeddingNotIn(vs ...pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldNotIn(FieldEmbedding, vs...))
+}
+
+// EmbeddingGT applies the GT predicate on the "embedding" field.
+func EmbeddingGT(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldGT(FieldEmbedding, v))
+}
+
+// EmbeddingGTE applies the GTE predicate on the "embedding" field.
+func EmbeddingGTE(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldGTE(FieldEmbedding, v))
+}
+
+// EmbeddingLT applies the LT predicate on the "embedding" field.
+func EmbeddingLT(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldLT(FieldEmbedding, v))
+}
+
+// EmbeddingLTE applies the LTE predicate on the "embedding" field.
+func EmbeddingLTE(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldLTE(FieldEmbedding, v))
+}
+
+// EmbeddingIsNil applies the IsNil predicate on the "embedding" field.
+func EmbeddingIsNil() predicate.Activity {
+	return predicate.Activity(sql.FieldIsNull(FieldEmbedding))
+}
+
+// EmbeddingNotNil applies the NotNil predicate on the "embedding" field.
+func EmbeddingNotNil() predicate.Activity {
+	return predicate.Activity(sql.FieldNotNull(FieldEmbedding))
 }
 
 // And groups predicates with the AND operator between them.

@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
+	pgvector "github.com/pgvector/pgvector-go"
 )
 
 // Activity is the model entity for the Activity schema.
@@ -38,7 +39,9 @@ type Activity struct {
 	// FullSummary holds the value of the "full_summary" field.
 	FullSummary string `json:"full_summary,omitempty"`
 	// RawJSON holds the value of the "raw_json" field.
-	RawJSON      string `json:"raw_json,omitempty"`
+	RawJSON string `json:"raw_json,omitempty"`
+	// Embedding holds the value of the "embedding" field.
+	Embedding    *pgvector.Vector `json:"embedding,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -47,6 +50,8 @@ func (*Activity) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case activity.FieldEmbedding:
+			values[i] = &sql.NullScanner{S: new(pgvector.Vector)}
 		case activity.FieldID, activity.FieldUID, activity.FieldSourceUID, activity.FieldSourceType, activity.FieldTitle, activity.FieldBody, activity.FieldURL, activity.FieldImageURL, activity.FieldShortSummary, activity.FieldFullSummary, activity.FieldRawJSON:
 			values[i] = new(sql.NullString)
 		case activity.FieldCreatedAt:
@@ -138,6 +143,13 @@ func (a *Activity) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.RawJSON = value.String
 			}
+		case activity.FieldEmbedding:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field embedding", values[i])
+			} else if value.Valid {
+				a.Embedding = new(pgvector.Vector)
+				*a.Embedding = *value.S.(*pgvector.Vector)
+			}
 		default:
 			a.selectValues.Set(columns[i], values[i])
 		}
@@ -206,6 +218,11 @@ func (a *Activity) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("raw_json=")
 	builder.WriteString(a.RawJSON)
+	builder.WriteString(", ")
+	if v := a.Embedding; v != nil {
+		builder.WriteString("embedding=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

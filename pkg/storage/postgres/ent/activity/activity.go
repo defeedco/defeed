@@ -33,6 +33,8 @@ const (
 	FieldFullSummary = "full_summary"
 	// FieldRawJSON holds the string denoting the raw_json field in the database.
 	FieldRawJSON = "raw_json"
+	// FieldEmbedding holds the string denoting the embedding field in the database.
+	FieldEmbedding = "embedding"
 	// Table holds the table name of the activity in the database.
 	Table = "activities"
 )
@@ -51,6 +53,7 @@ var Columns = []string{
 	FieldShortSummary,
 	FieldFullSummary,
 	FieldRawJSON,
+	FieldEmbedding,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -124,4 +127,9 @@ func ByFullSummary(opts ...sql.OrderTermOption) OrderOption {
 // ByRawJSON orders the results by the raw_json field.
 func ByRawJSON(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRawJSON, opts...).ToFunc()
+}
+
+// ByEmbedding orders the results by the embedding field.
+func ByEmbedding(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmbedding, opts...).ToFunc()
 }

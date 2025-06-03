@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
+	pgvector "github.com/pgvector/pgvector-go"
 )
 
 // ActivityUpdate is the builder for updating Activity entities.
@@ -182,6 +183,26 @@ func (au *ActivityUpdate) SetNillableRawJSON(s *string) *ActivityUpdate {
 	return au
 }
 
+// SetEmbedding sets the "embedding" field.
+func (au *ActivityUpdate) SetEmbedding(pg pgvector.Vector) *ActivityUpdate {
+	au.mutation.SetEmbedding(pg)
+	return au
+}
+
+// SetNillableEmbedding sets the "embedding" field if the given value is not nil.
+func (au *ActivityUpdate) SetNillableEmbedding(pg *pgvector.Vector) *ActivityUpdate {
+	if pg != nil {
+		au.SetEmbedding(*pg)
+	}
+	return au
+}
+
+// ClearEmbedding clears the value of the "embedding" field.
+func (au *ActivityUpdate) ClearEmbedding() *ActivityUpdate {
+	au.mutation.ClearEmbedding()
+	return au
+}
+
 // Mutation returns the ActivityMutation object of the builder.
 func (au *ActivityUpdate) Mutation() *ActivityMutation {
 	return au.mutation
@@ -255,6 +276,12 @@ func (au *ActivityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := au.mutation.RawJSON(); ok {
 		_spec.SetField(activity.FieldRawJSON, field.TypeString, value)
+	}
+	if value, ok := au.mutation.Embedding(); ok {
+		_spec.SetField(activity.FieldEmbedding, field.TypeOther, value)
+	}
+	if au.mutation.EmbeddingCleared() {
+		_spec.ClearField(activity.FieldEmbedding, field.TypeOther)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -430,6 +457,26 @@ func (auo *ActivityUpdateOne) SetNillableRawJSON(s *string) *ActivityUpdateOne {
 	return auo
 }
 
+// SetEmbedding sets the "embedding" field.
+func (auo *ActivityUpdateOne) SetEmbedding(pg pgvector.Vector) *ActivityUpdateOne {
+	auo.mutation.SetEmbedding(pg)
+	return auo
+}
+
+// SetNillableEmbedding sets the "embedding" field if the given value is not nil.
+func (auo *ActivityUpdateOne) SetNillableEmbedding(pg *pgvector.Vector) *ActivityUpdateOne {
+	if pg != nil {
+		auo.SetEmbedding(*pg)
+	}
+	return auo
+}
+
+// ClearEmbedding clears the value of the "embedding" field.
+func (auo *ActivityUpdateOne) ClearEmbedding() *ActivityUpdateOne {
+	auo.mutation.ClearEmbedding()
+	return auo
+}
+
 // Mutation returns the ActivityMutation object of the builder.
 func (auo *ActivityUpdateOne) Mutation() *ActivityMutation {
 	return auo.mutation
@@ -533,6 +580,12 @@ func (auo *ActivityUpdateOne) sqlSave(ctx context.Context) (_node *Activity, err
 	}
 	if value, ok := auo.mutation.RawJSON(); ok {
 		_spec.SetField(activity.FieldRawJSON, field.TypeString, value)
+	}
+	if value, ok := auo.mutation.Embedding(); ok {
+		_spec.SetField(activity.FieldEmbedding, field.TypeOther, value)
+	}
+	if auo.mutation.EmbeddingCleared() {
+		_spec.ClearField(activity.FieldEmbedding, field.TypeOther)
 	}
 	_node = &Activity{config: auo.config}
 	_spec.Assign = _node.assignValues

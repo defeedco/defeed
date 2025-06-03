@@ -90,6 +90,54 @@ paths:
                 items:
                   $ref: '#/components/schemas/Activity'
 
+  /activities/search:
+    get:
+      summary: Search activities
+      operationId: searchActivities
+      parameters:
+        - name: query
+          in: query
+          description: Semantic search query text
+          schema:
+            type: string
+        - name: sources
+          in: query
+          description: Filter by source UIDs (comma-separated)
+          schema:
+            type: string
+        - name: min_similarity
+          in: query
+          description: Minimum similarity score (0-1). Can only be used when `query` is provided.
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            maximum: 1
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort_by
+          in: query
+          description: Field to sort results by 
+          schema:
+            type: string
+            enum: [similarity, created_date]
+            default: similarity
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+
   /page:
     get:
       summary: Get page HTML
@@ -178,3 +226,7 @@ components:
         created_at:
           type: string
           format: date-time
+        similarity:
+          type: number
+          format: float
+          description: Similarity score (0-1) when using semantic search

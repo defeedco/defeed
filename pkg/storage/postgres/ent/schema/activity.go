@@ -2,7 +2,9 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/schema/field"
+	"github.com/pgvector/pgvector-go"
 )
 
 type Activity struct {
@@ -23,6 +25,13 @@ func (Activity) Fields() []ent.Field {
 		field.String("short_summary"),
 		field.String("full_summary"),
 		field.String("raw_json"),
+		field.Other("embedding", pgvector.Vector{}).
+			SchemaType(map[string]string{
+				// Use text-embedding-3-large output dimensions
+				dialect.Postgres: "vector(3072)",
+			}).
+			Nillable().
+			Optional(),
 	}
 }
 
