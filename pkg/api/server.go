@@ -149,7 +149,6 @@ type templateData struct {
 	Theme          widgets.Theme
 	ThemePresets   []widgets.Theme
 	SourceRegistry *sources.Registry
-	FilterPrompt   string
 }
 
 func (s *Server) GetPage(w http.ResponseWriter, r *http.Request, params GetPageParams) {
@@ -164,18 +163,12 @@ func (s *Server) GetPage(w http.ResponseWriter, r *http.Request, params GetPageP
 		s.badRequest(w, err, "deserialize page")
 	}
 
-	filterPrompt := ""
-	if params.FilterPrompt != nil {
-		filterPrompt = *params.FilterPrompt
-	}
-
 	themePresets := widgets.DefaultThemePresets()
 	data := templateData{
 		Page:           page,
 		Config:         s.config,
 		Theme:          themePresets[0],
 		ThemePresets:   themePresets,
-		FilterPrompt:   filterPrompt,
 		SourceRegistry: s.registry,
 	}
 

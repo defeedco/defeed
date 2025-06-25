@@ -60,14 +60,14 @@ type SearchActivitiesParams struct {
 	// Sources Filter by source UIDs (comma-separated)
 	Sources *string `form:"sources,omitempty" json:"sources,omitempty"`
 
-	// MinSimilarity Minimum similarity score (0-1)
+	// MinSimilarity Minimum similarity score (0-1). Can only be used when `query` is provided.
 	MinSimilarity *float32 `form:"min_similarity,omitempty" json:"min_similarity,omitempty"`
 
 	// Limit Maximum number of results to return
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
 	// SortBy Field to sort results by
-		SortBy *SearchActivitiesParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
+	SortBy *SearchActivitiesParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
 }
 
 // SearchActivitiesParamsSortBy defines parameters for SearchActivities.
@@ -75,11 +75,8 @@ type SearchActivitiesParamsSortBy string
 
 // GetPageParams defines parameters for GetPage.
 type GetPageParams struct {
-	// Config Base64 encoded JSON string for dashboard config
+	// Config Base64 encoded JSON string for feed config
 	Config string `form:"config" json:"config"`
-
-	// FilterPrompt Natural language filter prompt.
-	FilterPrompt *string `form:"filterPrompt,omitempty" json:"filterPrompt,omitempty"`
 }
 
 // CreateSourceJSONRequestBody defines body for CreateSource for application/json ContentType.
@@ -198,14 +195,6 @@ func (siw *ServerInterfaceWrapper) GetPage(w http.ResponseWriter, r *http.Reques
 	err = runtime.BindQueryParameter("form", true, true, "config", r.URL.Query(), &params.Config)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "config", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "filterPrompt" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "filterPrompt", r.URL.Query(), &params.FilterPrompt)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "filterPrompt", Err: err})
 		return
 	}
 

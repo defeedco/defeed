@@ -12,6 +12,8 @@ paths:
     post:
       summary: Create a new source
       operationId: createSource
+      tags:
+        - sources
       requestBody:
         required: true
         content:
@@ -32,6 +34,8 @@ paths:
     get:
       summary: List all sources
       operationId: listSources
+      tags:
+        - sources
       responses:
         '200':
           description: List of sources
@@ -46,6 +50,8 @@ paths:
     get:
       summary: Get source by UID
       operationId: getSource
+      tags:
+        - sources
       parameters:
         - name: uid
           in: path
@@ -64,6 +70,8 @@ paths:
     delete:
       summary: Delete source
       operationId: deleteSource
+      tags:
+        - sources
       parameters:
         - name: uid
           in: path
@@ -80,6 +88,8 @@ paths:
     get:
       summary: List all activities
       operationId: listAllActivities
+      tags:
+        - activities
       responses:
         '200':
           description: Activities list
@@ -94,6 +104,8 @@ paths:
     get:
       summary: Search activities
       operationId: searchActivities
+      tags:
+        - activities
       parameters:
         - name: query
           in: query
@@ -123,7 +135,7 @@ paths:
             default: 20
         - name: sort_by
           in: query
-          description: Field to sort results by 
+          description: Field to sort results by
           schema:
             type: string
             enum: [similarity, created_date]
@@ -142,16 +154,13 @@ paths:
     get:
       summary: Get page HTML
       operationId: getPage
+      tags:
+        - pages
       parameters:
         - name: config
           in: query
           required: true
-          description: Base64 encoded JSON string for dashboard config
-          schema:
-            type: string
-        - name: filterPrompt
-          in: query
-          description: Natural language filter prompt.
+          description: Base64 encoded JSON string for feed config
           schema:
             type: string
       responses:

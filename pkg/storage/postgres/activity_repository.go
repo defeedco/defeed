@@ -83,7 +83,7 @@ type activityWithSimilarity struct {
 func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.DecoratedActivity, error) {
 	ctx := context.Background()
 
-	query := r.db.Client().Debug().Activity.Query()
+	query := r.db.Client().Activity.Query()
 
 	if len(req.SourceUIDs) > 0 {
 		query = query.Where(activity.SourceUIDIn(req.SourceUIDs...))

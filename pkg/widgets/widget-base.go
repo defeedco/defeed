@@ -2,20 +2,28 @@ package widgets
 
 import (
 	"bytes"
+	"context"
+	"html/template"
+
 	"github.com/glanceapp/glance/pkg/sources"
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/web"
-	"html/template"
 )
 
 type widgetBase struct {
 	id            uint64
-	Typ           string `json:"typ"`
+	Typ           string
 	HideHeader    bool   `json:"hide_header"`
 	CSSClass      string `json:"css_class"`
 	CollapseAfter int    `json:"collapse_after"`
 	// SourceID is the filter parameter for fetching activities.
-	SourceID       string `json:"source_id"`
+	SourceID string `json:"source_id"`
+	// Query is the search query for filtering with natural language.
+	Query string `json:"query"`
+	// MinSimilarity is the minimum similarity (0-1) for filtering with natural language.
+	MinSimilarity float32 `json:"min_similarity"`
+	// Limit for the number of activities to show.
+	Limit          int `json:"limit" default:"10"`
 	Error          error
 	Notice         error
 	templateBuffer bytes.Buffer
@@ -54,7 +62,18 @@ type renderData struct {
 }
 
 func (w *widgetBase) Render(registry *sources.Registry) template.HTML {
-	activities, err := registry.ActivitiesBySource(w.SourceID)
+	sortBy := types.SortByDate
+	if w.Query != "" {
+		sortBy = types.SortBySimilarity
+	}
+	activities, err := registry.Search(
+		context.Background(),
+		w.Query,
+		[]string{w.SourceID},
+		w.MinSimilarity,
+		w.Limit,
+		sortBy,
+	)
 	w.Error = err
 	return w.renderTemplate(renderData{w, activities}, widgetBaseContentTemplate)
 }
