@@ -12,12 +12,6 @@
     transform: translateY(-0.15rem);
 }
 
-@container widget (max-width: 550px) {
-    .widget-autohide {
-        display: none;
-    }
-}
-
 .widget-error-header {
     display: flex;
     align-items: center;
