@@ -29,7 +29,7 @@ func NewReleaseSource() *SourceRelease {
 }
 
 func (s *SourceRelease) UID() string {
-	return fmt.Sprintf("releases/%s", s.Repository)
+	return fmt.Sprintf("%s/%s", s.Type(), s.Repository)
 }
 
 func (s *SourceRelease) Name() string {

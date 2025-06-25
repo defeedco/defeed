@@ -25,7 +25,7 @@ func NewSourceWebsiteChange() *SourceWebsiteChange {
 }
 
 func (s *SourceWebsiteChange) UID() string {
-	return fmt.Sprintf("change-detection/%s", s.WatchUUID)
+	return fmt.Sprintf("%s/%s/%s", s.Type(), s.InstanceURL, s.WatchUUID)
 }
 
 func (s *SourceWebsiteChange) Name() string {

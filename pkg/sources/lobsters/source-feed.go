@@ -24,7 +24,7 @@ func NewSourceFeed() *SourceFeed {
 }
 
 func (s *SourceFeed) UID() string {
-	return fmt.Sprintf("lobsters-feed/%s/%s", s.InstanceURL, s.FeedName)
+	return fmt.Sprintf("%s/%s/%s", s.Type(), s.InstanceURL, s.FeedName)
 }
 
 func (s *SourceFeed) Name() string {

@@ -37,7 +37,7 @@ func NewSourceSubreddit() *SourceSubreddit {
 }
 
 func (s *SourceSubreddit) UID() string {
-	return fmt.Sprintf("reddit/%s/%s/%s/%s", s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
+	return fmt.Sprintf("%s/%s/%s/%s/%s", TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
 }
 
 func (s *SourceSubreddit) Name() string {

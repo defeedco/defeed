@@ -25,7 +25,7 @@ func NewSourceAccount() *SourceAccount {
 }
 
 func (s *SourceAccount) UID() string {
-	return fmt.Sprintf("mastodon/%s/%s", s.InstanceURL, s.Account)
+	return fmt.Sprintf("%s/%s/%s", s.Type(), s.InstanceURL, s.Account)
 }
 
 func (s *SourceAccount) Name() string {

@@ -24,7 +24,7 @@ func NewSourceTag() *SourceTag {
 }
 
 func (s *SourceTag) UID() string {
-	return fmt.Sprintf("mastodon/%s/%s", s.InstanceURL, s.Tag)
+	return fmt.Sprintf("%s/%s/%s", s.Type(), s.InstanceURL, s.Tag)
 }
 
 func (s *SourceTag) Name() string {

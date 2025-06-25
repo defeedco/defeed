@@ -26,7 +26,7 @@ func NewIssuesSource() *SourceIssues {
 }
 
 func (s *SourceIssues) UID() string {
-	return fmt.Sprintf("issues/%s", s.Repository)
+	return fmt.Sprintf("%s/%s", s.Type(), s.Repository)
 }
 
 func (s *SourceIssues) Name() string {

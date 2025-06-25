@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -43,7 +42,7 @@ func NewSourceFeed() *SourceFeed {
 }
 
 func (s *SourceFeed) UID() string {
-	return fmt.Sprintf("rss/%s", s.FeedURL)
+	return fmt.Sprintf("%s/%s", s.Type(), s.FeedURL)
 }
 
 func (s *SourceFeed) Name() string {
@@ -203,15 +202,6 @@ func (e *FeedItem) Categories() []string {
 		}
 	}
 	return categories
-}
-
-type rssFeedItemList []*FeedItem
-
-func (f rssFeedItemList) sortByNewest() rssFeedItemList {
-	sort.Slice(f, func(i, j int) bool {
-		return f[i].CreatedAt().After(f[j].CreatedAt())
-	})
-	return f
 }
 
 func findThumbnailInItemExtensions(item *gofeed.Item) string {
