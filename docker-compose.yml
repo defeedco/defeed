@@ -26,6 +26,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: on-failure:3
     volumes:
       - "./.env:/app/.env:ro"
     depends_on:
