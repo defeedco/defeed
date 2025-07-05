@@ -6,16 +6,16 @@ services:
     container_name: defeed-engine-db-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-defeed-prod}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-defeed-prod}
-      POSTGRES_DB: ${DB_NAME:-defeed}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "${DB_PORT}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/pgvector-init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-defeed-prod} -d ${DB_NAME:-defeed}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -26,7 +26,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: on-failure:3
     volumes:
       - "./.env:/app/.env:ro"
     depends_on:
@@ -34,7 +33,7 @@ services:
         condition: service_healthy
     environment:
       DB_HOST: postgres
-      DB_PORT: ${DB_PORT}
+      DB_PORT: 5432
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
