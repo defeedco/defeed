@@ -3,14 +3,14 @@ version: '3.8'
 services:
   postgres:
     image: pgvector/pgvector:0.8.0-pg17
-    container_name: pulse_postgres
+    container_name: defeed-engine-db-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/pgvector-init.sql
@@ -22,7 +22,7 @@ services:
       start_period: 5s
 
   app:
-    container_name: pulse_app
+    container_name: defeed-engine
     build:
       context: .
       dockerfile: Dockerfile
@@ -34,9 +34,9 @@ services:
     environment:
       DB_HOST: postgres
       SERVER_HOST: "0.0.0.0"
-      SERVER_PORT: "8080"
+      SERVER_PORT: "${SERVER_PORT:-8080}"
     ports:
-      - "8080:8080"
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
 
 volumes:
   db_data:
