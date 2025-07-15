@@ -7,9 +7,9 @@ install:
 	@go install entgo.io/ent/cmd/ent@latest
 	@go install ariga.io/atlas/cmd/atlas@latest
 
-.PHONY: api-clients
-api-docs:
-	@echo ">>> Generating OpenAPI documentation..."
+.PHONY: rest-api
+rest-api:
+	@echo ">>> Generating REST API..."
 	@go generate ./pkg/api
 
 .PHONY: ent-generate
