@@ -78,7 +78,7 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		registry:  registry,
 		http: http.Server{
 			Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
-			Handler: mux,
+			Handler: corsMiddleware(mux),
 		},
 	}
 
@@ -87,6 +87,21 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 	server.registerApiDocsHandlers(mux)
 
 	return server, nil
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) registerApiDocsHandlers(mux *http.ServeMux) {
