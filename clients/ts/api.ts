@@ -93,24 +93,519 @@ export interface Activity {
 /**
  * 
  * @export
- * @interface CreateSourceRequest
+ * @interface ChangedetectionWebsiteConfig
  */
-export interface CreateSourceRequest {
+export interface ChangedetectionWebsiteConfig {
+    /**
+     * 
+     * @type {string}
+     * @memberof ChangedetectionWebsiteConfig
+     */
+    'watch': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChangedetectionWebsiteConfig
+     */
+    'instance_url'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChangedetectionWebsiteConfig
+     */
+    'token'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ChangedetectionWebsiteConfig
+     */
+    'limit'?: number;
+}
+/**
+ * @type CreateSourceRequest
+ * @export
+ */
+export type CreateSourceRequest = { type: 'changedetection_website' } & CreateSourceRequestChangedetectionWebsite | { type: 'github_issues' } & CreateSourceRequestGithubIssues | { type: 'github_releases' } & CreateSourceRequestGithubReleases | { type: 'hackernews_posts' } & CreateSourceRequestHackernewsPosts | { type: 'lobsters_feed' } & CreateSourceRequestLobstersFeed | { type: 'lobsters_tag' } & CreateSourceRequestLobstersTag | { type: 'mastodon_account' } & CreateSourceRequestMastodonAccount | { type: 'mastodon_tag' } & CreateSourceRequestMastodonTag | { type: 'reddit_subreddit' } & CreateSourceRequestRedditSubreddit | { type: 'rss_feed' } & CreateSourceRequestRssFeed;
+
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestChangedetectionWebsite
+ */
+export interface CreateSourceRequestChangedetectionWebsite {
     /**
      * 
      * @type {SourceType}
-     * @memberof CreateSourceRequest
+     * @memberof CreateSourceRequestChangedetectionWebsite
      */
     'type': SourceType;
     /**
      * 
-     * @type {{ [key: string]: any; }}
-     * @memberof CreateSourceRequest
+     * @type {ChangedetectionWebsiteConfig}
+     * @memberof CreateSourceRequestChangedetectionWebsite
      */
-    'config': { [key: string]: any; };
+    'changedetection_website': ChangedetectionWebsiteConfig;
 }
 
 
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestGithubIssues
+ */
+export interface CreateSourceRequestGithubIssues {
+    /**
+     * 
+     * @type {SourceType}
+     * @memberof CreateSourceRequestGithubIssues
+     */
+    'type': SourceType;
+    /**
+     * 
+     * @type {GithubIssuesConfig}
+     * @memberof CreateSourceRequestGithubIssues
+     */
+    'github_issues': GithubIssuesConfig;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestGithubReleases
+ */
+export interface CreateSourceRequestGithubReleases {
+    /**
+     * 
+     * @type {SourceType}
+     * @memberof CreateSourceRequestGithubReleases
+     */
+    'type': SourceType;
+    /**
+     * 
+     * @type {GithubReleasesConfig}
+     * @memberof CreateSourceRequestGithubReleases
+     */
+    'github_releases': GithubReleasesConfig;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestHackernewsPosts
+ */
+export interface CreateSourceRequestHackernewsPosts {
+    /**
+     * 
+     * @type {SourceType}
+     * @memberof CreateSourceRequestHackernewsPosts
+     */
+    'type': SourceType;
+    /**
+     * 
+     * @type {HackernewsPostsConfig}
+     * @memberof CreateSourceRequestHackernewsPosts
+     */
+    'hackernews_posts': HackernewsPostsConfig;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestLobstersFeed
+ */
+export interface CreateSourceRequestLobstersFeed {
+    /**
+     * 
+     * @type {SourceType}
+     * @memberof CreateSourceRequestLobstersFeed
+     */
+    'type': SourceType;
+    /**
+     * 
+     * @type {LobstersFeedConfig}
+     * @memberof CreateSourceRequestLobstersFeed
+     */
+    'lobsters_feed': LobstersFeedConfig;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestLobstersTag
+ */
+export interface CreateSourceRequestLobstersTag {
+    /**
+     * 
+     * @type {SourceType}
+     * @memberof CreateSourceRequestLobstersTag
+     */
+    'type': SourceType;
+    /**
+     * 
+     * @type {LobstersTagConfig}
+     * @memberof CreateSourceRequestLobstersTag
+     */
+    'lobsters_tag': LobstersTagConfig;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestMastodonAccount
+ */
+export interface CreateSourceRequestMastodonAccount {
+    /**
+     * 
+     * @type {SourceType}
+     * @memberof CreateSourceRequestMastodonAccount
+     */
+    'type': SourceType;
+    /**
+     * 
+     * @type {MastodonAccountConfig}
+     * @memberof CreateSourceRequestMastodonAccount
+     */
+    'mastodon_account': MastodonAccountConfig;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestMastodonTag
+ */
+export interface CreateSourceRequestMastodonTag {
+    /**
+     * 
+     * @type {SourceType}
+     * @memberof CreateSourceRequestMastodonTag
+     */
+    'type': SourceType;
+    /**
+     * 
+     * @type {MastodonTagConfig}
+     * @memberof CreateSourceRequestMastodonTag
+     */
+    'mastodon_tag': MastodonTagConfig;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestRedditSubreddit
+ */
+export interface CreateSourceRequestRedditSubreddit {
+    /**
+     * 
+     * @type {SourceType}
+     * @memberof CreateSourceRequestRedditSubreddit
+     */
+    'type': SourceType;
+    /**
+     * 
+     * @type {RedditSubredditConfig}
+     * @memberof CreateSourceRequestRedditSubreddit
+     */
+    'reddit_subreddit': RedditSubredditConfig;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface CreateSourceRequestRssFeed
+ */
+export interface CreateSourceRequestRssFeed {
+    /**
+     * 
+     * @type {SourceType}
+     * @memberof CreateSourceRequestRssFeed
+     */
+    'type': SourceType;
+    /**
+     * 
+     * @type {RssFeedConfig}
+     * @memberof CreateSourceRequestRssFeed
+     */
+    'rss_feed': RssFeedConfig;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface GithubIssuesConfig
+ */
+export interface GithubIssuesConfig {
+    /**
+     * owner/repo
+     * @type {string}
+     * @memberof GithubIssuesConfig
+     */
+    'Repository': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GithubIssuesConfig
+     */
+    'token'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface GithubReleasesConfig
+ */
+export interface GithubReleasesConfig {
+    /**
+     * owner/repo
+     * @type {string}
+     * @memberof GithubReleasesConfig
+     */
+    'Repository': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GithubReleasesConfig
+     */
+    'token'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof GithubReleasesConfig
+     */
+    'include_prereleases'?: boolean;
+}
+/**
+ * 
+ * @export
+ * @interface HackernewsPostsConfig
+ */
+export interface HackernewsPostsConfig {
+    /**
+     * 
+     * @type {string}
+     * @memberof HackernewsPostsConfig
+     */
+    'feed_name': HackernewsPostsConfigFeedNameEnum;
+}
+
+export const HackernewsPostsConfigFeedNameEnum = {
+    Top: 'top',
+    New: 'new',
+    Best: 'best'
+} as const;
+
+export type HackernewsPostsConfigFeedNameEnum = typeof HackernewsPostsConfigFeedNameEnum[keyof typeof HackernewsPostsConfigFeedNameEnum];
+
+/**
+ * 
+ * @export
+ * @interface LobstersFeedConfig
+ */
+export interface LobstersFeedConfig {
+    /**
+     * 
+     * @type {string}
+     * @memberof LobstersFeedConfig
+     */
+    'instance_url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LobstersFeedConfig
+     */
+    'custom_url'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LobstersFeedConfig
+     */
+    'feed': LobstersFeedConfigFeedEnum;
+}
+
+export const LobstersFeedConfigFeedEnum = {
+    Hottest: 'hottest',
+    Newest: 'newest'
+} as const;
+
+export type LobstersFeedConfigFeedEnum = typeof LobstersFeedConfigFeedEnum[keyof typeof LobstersFeedConfigFeedEnum];
+
+/**
+ * 
+ * @export
+ * @interface LobstersTagConfig
+ */
+export interface LobstersTagConfig {
+    /**
+     * 
+     * @type {string}
+     * @memberof LobstersTagConfig
+     */
+    'instance_url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LobstersTagConfig
+     */
+    'custom_url'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LobstersTagConfig
+     */
+    'tag': string;
+}
+/**
+ * 
+ * @export
+ * @interface MastodonAccountConfig
+ */
+export interface MastodonAccountConfig {
+    /**
+     * 
+     * @type {string}
+     * @memberof MastodonAccountConfig
+     */
+    'instance_url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MastodonAccountConfig
+     */
+    'account': string;
+}
+/**
+ * 
+ * @export
+ * @interface MastodonTagConfig
+ */
+export interface MastodonTagConfig {
+    /**
+     * 
+     * @type {string}
+     * @memberof MastodonTagConfig
+     */
+    'instance_url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MastodonTagConfig
+     */
+    'tag': string;
+}
+/**
+ * 
+ * @export
+ * @interface RedditSubredditConfig
+ */
+export interface RedditSubredditConfig {
+    /**
+     * 
+     * @type {string}
+     * @memberof RedditSubredditConfig
+     */
+    'subreddit': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RedditSubredditConfig
+     */
+    'sort-by': RedditSubredditConfigSortByEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof RedditSubredditConfig
+     */
+    'top-period': RedditSubredditConfigTopPeriodEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof RedditSubredditConfig
+     */
+    'search'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RedditSubredditConfig
+     */
+    'request-url-template'?: string;
+    /**
+     * 
+     * @type {RedditSubredditConfigAuth}
+     * @memberof RedditSubredditConfig
+     */
+    'auth'?: RedditSubredditConfigAuth;
+}
+
+export const RedditSubredditConfigSortByEnum = {
+    Hot: 'hot',
+    New: 'new',
+    Top: 'top',
+    Rising: 'rising'
+} as const;
+
+export type RedditSubredditConfigSortByEnum = typeof RedditSubredditConfigSortByEnum[keyof typeof RedditSubredditConfigSortByEnum];
+export const RedditSubredditConfigTopPeriodEnum = {
+    Hour: 'hour',
+    Day: 'day',
+    Week: 'week',
+    Month: 'month',
+    Year: 'year',
+    All: 'all'
+} as const;
+
+export type RedditSubredditConfigTopPeriodEnum = typeof RedditSubredditConfigTopPeriodEnum[keyof typeof RedditSubredditConfigTopPeriodEnum];
+
+/**
+ * 
+ * @export
+ * @interface RedditSubredditConfigAuth
+ */
+export interface RedditSubredditConfigAuth {
+    /**
+     * 
+     * @type {string}
+     * @memberof RedditSubredditConfigAuth
+     */
+    'name'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RedditSubredditConfigAuth
+     */
+    'ID'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RedditSubredditConfigAuth
+     */
+    'secret'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface RssFeedConfig
+ */
+export interface RssFeedConfig {
+    /**
+     * 
+     * @type {string}
+     * @memberof RssFeedConfig
+     */
+    'url': string;
+    /**
+     * 
+     * @type {{ [key: string]: string; }}
+     * @memberof RssFeedConfig
+     */
+    'headers'?: { [key: string]: string; };
+}
 /**
  * 
  * @export

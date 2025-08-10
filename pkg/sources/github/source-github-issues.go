@@ -16,7 +16,7 @@ import (
 const TypeGithubIssues = "github-issues"
 
 type SourceIssues struct {
-	Repository string `json:"Repository"`
+	Repository string `json:"repository"`
 	Token      string `json:"token"`
 	client     *github.Client
 }

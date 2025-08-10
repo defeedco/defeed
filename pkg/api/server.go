@@ -354,7 +354,12 @@ func (s *Server) badRequest(w http.ResponseWriter, err error, msg string) {
 }
 
 func deserializeCreateSourceRequest(req CreateSourceRequest) (sources.Source, error) {
-	sourceType, err := deserializeSourceType(req.Type)
+	disc, err := req.Discriminator()
+	if err != nil {
+		return nil, fmt.Errorf("read discriminator: %w", err)
+	}
+
+	sourceType, err := deserializeSourceType(SourceType(disc))
 	if err != nil {
 		return nil, fmt.Errorf("deserialize source type: %w", err)
 	}
@@ -364,7 +369,36 @@ func deserializeCreateSourceRequest(req CreateSourceRequest) (sources.Source, er
 		return nil, fmt.Errorf("create source: %w", err)
 	}
 
-	configBytes, err := json.Marshal(req.Config)
+	val, err := req.ValueByDiscriminator()
+	if err != nil {
+		return nil, fmt.Errorf("extract typed request by discriminator: %w", err)
+	}
+
+	var configBytes []byte
+	switch v := val.(type) {
+	case CreateSourceRequestMastodonAccount:
+		configBytes, err = json.Marshal(v.MastodonAccount)
+	case CreateSourceRequestMastodonTag:
+		configBytes, err = json.Marshal(v.MastodonTag)
+	case CreateSourceRequestHackernewsPosts:
+		configBytes, err = json.Marshal(v.HackernewsPosts)
+	case CreateSourceRequestRedditSubreddit:
+		configBytes, err = json.Marshal(v.RedditSubreddit)
+	case CreateSourceRequestLobstersTag:
+		configBytes, err = json.Marshal(v.LobstersTag)
+	case CreateSourceRequestLobstersFeed:
+		configBytes, err = json.Marshal(v.LobstersFeed)
+	case CreateSourceRequestRssFeed:
+		configBytes, err = json.Marshal(v.RssFeed)
+	case CreateSourceRequestGithubReleases:
+		configBytes, err = json.Marshal(v.GithubReleases)
+	case CreateSourceRequestGithubIssues:
+		configBytes, err = json.Marshal(v.GithubIssues)
+	case CreateSourceRequestChangedetectionWebsite:
+		configBytes, err = json.Marshal(v.ChangedetectionWebsite)
+	default:
+		return nil, fmt.Errorf("unsupported source type: %s", disc)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("marshal config: %w", err)
 	}

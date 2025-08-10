@@ -16,7 +16,7 @@ import (
 const TypeGithubReleases = "github-releases"
 
 type SourceRelease struct {
-	Repository       string `json:"Repository"`
+	Repository       string `json:"repository"`
 	Token            string `json:"token"`
 	IncludePreleases bool   `json:"include_prereleases"`
 	client           *github.Client

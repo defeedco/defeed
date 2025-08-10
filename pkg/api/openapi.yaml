@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: Pulse Feed Aggregation API
   version: 1.0.0
@@ -174,16 +174,242 @@ paths:
 components:
   schemas:
     CreateSourceRequest:
+      oneOf:
+        - $ref: '#/components/schemas/CreateSourceRequestMastodonAccount'
+        - $ref: '#/components/schemas/CreateSourceRequestMastodonTag'
+        - $ref: '#/components/schemas/CreateSourceRequestHackernewsPosts'
+        - $ref: '#/components/schemas/CreateSourceRequestRedditSubreddit'
+        - $ref: '#/components/schemas/CreateSourceRequestLobstersTag'
+        - $ref: '#/components/schemas/CreateSourceRequestLobstersFeed'
+        - $ref: '#/components/schemas/CreateSourceRequestRssFeed'
+        - $ref: '#/components/schemas/CreateSourceRequestGithubReleases'
+        - $ref: '#/components/schemas/CreateSourceRequestGithubIssues'
+        - $ref: '#/components/schemas/CreateSourceRequestChangedetectionWebsite'
+      discriminator:
+        propertyName: type
+        mapping:
+          mastodon_account: '#/components/schemas/CreateSourceRequestMastodonAccount'
+          mastodon_tag: '#/components/schemas/CreateSourceRequestMastodonTag'
+          hackernews_posts: '#/components/schemas/CreateSourceRequestHackernewsPosts'
+          reddit_subreddit: '#/components/schemas/CreateSourceRequestRedditSubreddit'
+          lobsters_tag: '#/components/schemas/CreateSourceRequestLobstersTag'
+          lobsters_feed: '#/components/schemas/CreateSourceRequestLobstersFeed'
+          rss_feed: '#/components/schemas/CreateSourceRequestRssFeed'
+          github_releases: '#/components/schemas/CreateSourceRequestGithubReleases'
+          github_issues: '#/components/schemas/CreateSourceRequestGithubIssues'
+          changedetection_website: '#/components/schemas/CreateSourceRequestChangedetectionWebsite'
+
+    CreateSourceRequestMastodonAccount:
       type: object
-      required:
-        - type
-        - config
+      required: [type, mastodon_account]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        config:
+        mastodon_account:
+          $ref: '#/components/schemas/MastodonAccountConfig'
+
+    CreateSourceRequestMastodonTag:
+      type: object
+      required: [type, mastodon_tag]
+      properties:
+        type:
+          $ref: '#/components/schemas/SourceType'
+        mastodon_tag:
+          $ref: '#/components/schemas/MastodonTagConfig'
+
+    CreateSourceRequestHackernewsPosts:
+      type: object
+      required: [type, hackernews_posts]
+      properties:
+        type:
+          $ref: '#/components/schemas/SourceType'
+        hackernews_posts:
+          $ref: '#/components/schemas/HackernewsPostsConfig'
+
+    CreateSourceRequestRedditSubreddit:
+      type: object
+      required: [type, reddit_subreddit]
+      properties:
+        type:
+          $ref: '#/components/schemas/SourceType'
+        reddit_subreddit:
+          $ref: '#/components/schemas/RedditSubredditConfig'
+
+    CreateSourceRequestLobstersTag:
+      type: object
+      required: [type, lobsters_tag]
+      properties:
+        type:
+          $ref: '#/components/schemas/SourceType'
+        lobsters_tag:
+          $ref: '#/components/schemas/LobstersTagConfig'
+
+    CreateSourceRequestLobstersFeed:
+      type: object
+      required: [type, lobsters_feed]
+      properties:
+        type:
+          $ref: '#/components/schemas/SourceType'
+        lobsters_feed:
+          $ref: '#/components/schemas/LobstersFeedConfig'
+
+    CreateSourceRequestRssFeed:
+      type: object
+      required: [type, rss_feed]
+      properties:
+        type:
+          $ref: '#/components/schemas/SourceType'
+        rss_feed:
+          $ref: '#/components/schemas/RssFeedConfig'
+
+    CreateSourceRequestGithubReleases:
+      type: object
+      required: [type, github_releases]
+      properties:
+        type:
+          $ref: '#/components/schemas/SourceType'
+        github_releases:
+          $ref: '#/components/schemas/GithubReleasesConfig'
+
+    CreateSourceRequestGithubIssues:
+      type: object
+      required: [type, github_issues]
+      properties:
+        type:
+          $ref: '#/components/schemas/SourceType'
+        github_issues:
+          $ref: '#/components/schemas/GithubIssuesConfig'
+
+    CreateSourceRequestChangedetectionWebsite:
+      type: object
+      required: [type, changedetection_website]
+      properties:
+        type:
+          $ref: '#/components/schemas/SourceType'
+        changedetection_website:
+          $ref: '#/components/schemas/ChangedetectionWebsiteConfig'
+
+    MastodonAccountConfig:
+      type: object
+      required: [instance_url, account]
+      properties:
+        instance_url:
+          type: string
+        account:
+          type: string
+
+    MastodonTagConfig:
+      type: object
+      required: [instance_url, tag]
+      properties:
+        instance_url:
+          type: string
+        tag:
+          type: string
+
+    HackernewsPostsConfig:
+      type: object
+      required: [feed_name]
+      properties:
+        feed_name:
+          type: string
+          enum: [top, new, best]
+
+    RedditSubredditConfig:
+      type: object
+      required: [subreddit, sort-by, top-period]
+      properties:
+        subreddit:
+          type: string
+        sort-by:
+          type: string
+          enum: [hot, new, top, rising]
+        top-period:
+          type: string
+          enum: [hour, day, week, month, year, all]
+        search:
+          type: string
+        request-url-template:
+          type: string
+        auth:
           type: object
-          additionalProperties: true
+          properties:
+            name:
+              type: string
+            ID:
+              type: string
+            secret:
+              type: string
+
+    LobstersTagConfig:
+      type: object
+      required: [instance_url, tag]
+      properties:
+        instance_url:
+          type: string
+        custom_url:
+          type: string
+        tag:
+          type: string
+
+    LobstersFeedConfig:
+      type: object
+      required: [instance_url, feed]
+      properties:
+        instance_url:
+          type: string
+        custom_url:
+          type: string
+        feed:
+          type: string
+          enum: [hottest, newest]
+
+    RssFeedConfig:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+
+    GithubReleasesConfig:
+      type: object
+      required: [repository]
+      properties:
+        repository:
+          type: string
+          description: owner/repo
+        token:
+          type: string
+        include_prereleases:
+          type: boolean
+
+    GithubIssuesConfig:
+      type: object
+      required: [repository]
+      properties:
+        repository:
+          type: string
+          description: owner/repo
+        token:
+          type: string
+
+    ChangedetectionWebsiteConfig:
+      type: object
+      required: [watch]
+      properties:
+        watch:
+          type: string
+        instance_url:
+          type: string
+        token:
+          type: string
+        limit:
+          type: integer
 
     Source:
       type: object
