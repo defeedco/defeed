@@ -39,8 +39,7 @@ var openapiSpecYaml string
 const StaticAssetsCacheDuration = 24 * time.Hour
 
 var (
-	pageTemplate        = web.MustParseTemplate("page.html", "document.html", "footer.html", "page-content.html")
-	pageContentTemplate = web.MustParseTemplate("page-content.html")
+	pageTemplate = web.MustParseTemplate("page.html", "document.html", "footer.html", "page-content.html")
 )
 
 type Server struct {
@@ -224,7 +223,13 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.serializeRes(w, serializeSources(out))
+	sources, err := serializeSources(out)
+	if err != nil {
+		s.internalError(w, err, "serialize sources")
+		return
+	}
+
+	s.serializeRes(w, sources)
 }
 
 func (s *Server) CreateSource(w http.ResponseWriter, r *http.Request) {
@@ -247,7 +252,13 @@ func (s *Server) CreateSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.serializeRes(w, deserializeSource(out))
+	source, err := serializeSource(out)
+	if err != nil {
+		s.internalError(w, err, "serialize source")
+		return
+	}
+
+	s.serializeRes(w, source)
 }
 
 func (s *Server) DeleteSource(w http.ResponseWriter, r *http.Request, uid string) {
@@ -267,7 +278,13 @@ func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
 		return
 	}
 
-	s.serializeRes(w, deserializeSource(out))
+	source, err := serializeSource(out)
+	if err != nil {
+		s.internalError(w, err, "serialize source")
+		return
+	}
+
+	s.serializeRes(w, source)
 }
 
 func (s *Server) SearchActivities(w http.ResponseWriter, r *http.Request, params SearchActivitiesParams) {
@@ -474,23 +491,59 @@ func serializeActivity(in *types.DecoratedActivity) Activity {
 	}
 }
 
-func serializeSources(in []sources.Source) []Source {
+func serializeSources(in []sources.Source) ([]Source, error) {
 	out := make([]Source, 0, len(in))
 
 	for _, e := range in {
-		out = append(out, deserializeSource(e))
+		source, err := serializeSource(e)
+		if err != nil {
+			return nil, fmt.Errorf("serialize source: %w", err)
+		}
+		out = append(out, source)
 	}
 
-	return out
-
+	return out, nil
 }
 
-func deserializeSource(in sources.Source) Source {
+func serializeSource(in sources.Source) (Source, error) {
+	sourceType, err := serializeSourceType(in.Type())
+	if err != nil {
+		return Source{}, fmt.Errorf("serialize source type: %w", err)
+	}
+
 	return Source{
 		Uid:  in.UID(),
+		Type: sourceType,
 		Url:  in.URL(),
 		Name: in.Name(),
+	}, nil
+}
+
+func serializeSourceType(in string) (SourceType, error) {
+	switch in {
+	case mastodon.TypeMastodonAccount:
+		return MastodonAccount, nil
+	case mastodon.TypeMastodonTag:
+		return MastodonTag, nil
+	case hackernews.TypeHackerNewsPosts:
+		return HackernewsPosts, nil
+	case reddit.TypeRedditSubreddit:
+		return RedditSubreddit, nil
+	case lobsters.TypeLobstersTag:
+		return LobstersTag, nil
+	case lobsters.TypeLobstersFeed:
+		return LobstersFeed, nil
+	case rss.TypeRSSFeed:
+		return RssFeed, nil
+	case github.TypeGithubReleases:
+		return GithubReleases, nil
+	case github.TypeGithubIssues:
+		return GithubIssues, nil
+	case changedetection.TypeChangedetectionWebsite:
+		return ChangedetectionWebsite, nil
 	}
+
+	return "", fmt.Errorf("unknown source type: %s", in)
 }
 
 func deserializeSortBy(in *SearchActivitiesParamsSortBy) (types.SortBy, error) {
@@ -499,7 +552,7 @@ func deserializeSortBy(in *SearchActivitiesParamsSortBy) (types.SortBy, error) {
 	}
 
 	switch *in {
-	case CreatedDate:
+	case CreationDate:
 		return types.SortByDate, nil
 	case Similarity:
 		return types.SortBySimilarity, nil

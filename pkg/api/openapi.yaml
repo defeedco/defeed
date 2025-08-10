@@ -138,7 +138,7 @@ paths:
           description: Field to sort results by
           schema:
             type: string
-            enum: [similarity, created_date]
+            enum: [similarity, creationDate]
             default: similarity
       responses:
         '200':
@@ -188,105 +188,105 @@ components:
       discriminator:
         propertyName: type
         mapping:
-          mastodon_account: '#/components/schemas/CreateSourceRequestMastodonAccount'
-          mastodon_tag: '#/components/schemas/CreateSourceRequestMastodonTag'
-          hackernews_posts: '#/components/schemas/CreateSourceRequestHackernewsPosts'
-          reddit_subreddit: '#/components/schemas/CreateSourceRequestRedditSubreddit'
-          lobsters_tag: '#/components/schemas/CreateSourceRequestLobstersTag'
-          lobsters_feed: '#/components/schemas/CreateSourceRequestLobstersFeed'
-          rss_feed: '#/components/schemas/CreateSourceRequestRssFeed'
-          github_releases: '#/components/schemas/CreateSourceRequestGithubReleases'
-          github_issues: '#/components/schemas/CreateSourceRequestGithubIssues'
-          changedetection_website: '#/components/schemas/CreateSourceRequestChangedetectionWebsite'
+          mastodonAccount: '#/components/schemas/CreateSourceRequestMastodonAccount'
+          mastodonTag: '#/components/schemas/CreateSourceRequestMastodonTag'
+          hackernewsPosts: '#/components/schemas/CreateSourceRequestHackernewsPosts'
+          redditSubreddit: '#/components/schemas/CreateSourceRequestRedditSubreddit'
+          lobstersTag: '#/components/schemas/CreateSourceRequestLobstersTag'
+          lobstersFeed: '#/components/schemas/CreateSourceRequestLobstersFeed'
+          rssFeed: '#/components/schemas/CreateSourceRequestRssFeed'
+          githubReleases: '#/components/schemas/CreateSourceRequestGithubReleases'
+          githubIssues: '#/components/schemas/CreateSourceRequestGithubIssues'
+          changedetectionWebsite: '#/components/schemas/CreateSourceRequestChangedetectionWebsite'
 
     CreateSourceRequestMastodonAccount:
       type: object
-      required: [type, mastodon_account]
+      required: [type, mastodonAccount]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        mastodon_account:
+        mastodonAccount:
           $ref: '#/components/schemas/MastodonAccountConfig'
 
     CreateSourceRequestMastodonTag:
       type: object
-      required: [type, mastodon_tag]
+      required: [type, mastodonTag]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        mastodon_tag:
+        mastodonTag:
           $ref: '#/components/schemas/MastodonTagConfig'
 
     CreateSourceRequestHackernewsPosts:
       type: object
-      required: [type, hackernews_posts]
+      required: [type, hackernewsPosts]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        hackernews_posts:
+        hackernewsPosts:
           $ref: '#/components/schemas/HackernewsPostsConfig'
 
     CreateSourceRequestRedditSubreddit:
       type: object
-      required: [type, reddit_subreddit]
+      required: [type, redditSubreddit]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        reddit_subreddit:
+        redditSubreddit:
           $ref: '#/components/schemas/RedditSubredditConfig'
 
     CreateSourceRequestLobstersTag:
       type: object
-      required: [type, lobsters_tag]
+      required: [type, lobstersTag]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        lobsters_tag:
+        lobstersTag:
           $ref: '#/components/schemas/LobstersTagConfig'
 
     CreateSourceRequestLobstersFeed:
       type: object
-      required: [type, lobsters_feed]
+      required: [type, lobstersFeed]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        lobsters_feed:
+        lobstersFeed:
           $ref: '#/components/schemas/LobstersFeedConfig'
 
     CreateSourceRequestRssFeed:
       type: object
-      required: [type, rss_feed]
+      required: [type, rssFeed]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        rss_feed:
+        rssFeed:
           $ref: '#/components/schemas/RssFeedConfig'
 
     CreateSourceRequestGithubReleases:
       type: object
-      required: [type, github_releases]
+      required: [type, githubReleases]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        github_releases:
+        githubReleases:
           $ref: '#/components/schemas/GithubReleasesConfig'
 
     CreateSourceRequestGithubIssues:
       type: object
-      required: [type, github_issues]
+      required: [type, githubIssues]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        github_issues:
+        githubIssues:
           $ref: '#/components/schemas/GithubIssuesConfig'
 
     CreateSourceRequestChangedetectionWebsite:
       type: object
-      required: [type, changedetection_website]
+      required: [type, changedetectionWebsite]
       properties:
         type:
           $ref: '#/components/schemas/SourceType'
-        changedetection_website:
+        changedetectionWebsite:
           $ref: '#/components/schemas/ChangedetectionWebsiteConfig'
 
     MastodonAccountConfig:
@@ -429,16 +429,16 @@ components:
     SourceType:
       type: string
       enum:
-        - mastodon_account
-        - mastodon_tag
-        - hackernews_posts
-        - reddit_subreddit
-        - lobsters_tag
-        - lobsters_feed
-        - rss_feed
-        - github_releases
-        - github_issues
-        - changedetection_website
+        - mastodonAccount
+        - mastodonTag
+        - hackernewsPosts
+        - redditSubreddit
+        - lobstersTag
+        - lobstersFeed
+        - rssFeed
+        - githubReleases
+        - githubIssues
+        - changedetectionWebsite
 
     Activity:
       type: object

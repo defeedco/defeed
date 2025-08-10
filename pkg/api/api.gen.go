@@ -48,22 +48,22 @@ const (
 
 // Defines values for SourceType.
 const (
-	ChangedetectionWebsite SourceType = "changedetection_website"
-	GithubIssues           SourceType = "github_issues"
-	GithubReleases         SourceType = "github_releases"
-	HackernewsPosts        SourceType = "hackernews_posts"
-	LobstersFeed           SourceType = "lobsters_feed"
-	LobstersTag            SourceType = "lobsters_tag"
-	MastodonAccount        SourceType = "mastodon_account"
-	MastodonTag            SourceType = "mastodon_tag"
-	RedditSubreddit        SourceType = "reddit_subreddit"
-	RssFeed                SourceType = "rss_feed"
+	ChangedetectionWebsite SourceType = "changedetectionWebsite"
+	GithubIssues           SourceType = "githubIssues"
+	GithubReleases         SourceType = "githubReleases"
+	HackernewsPosts        SourceType = "hackernewsPosts"
+	LobstersFeed           SourceType = "lobstersFeed"
+	LobstersTag            SourceType = "lobstersTag"
+	MastodonAccount        SourceType = "mastodonAccount"
+	MastodonTag            SourceType = "mastodonTag"
+	RedditSubreddit        SourceType = "redditSubreddit"
+	RssFeed                SourceType = "rssFeed"
 )
 
 // Defines values for SearchActivitiesParamsSortBy.
 const (
-	CreatedDate SearchActivitiesParamsSortBy = "created_date"
-	Similarity  SearchActivitiesParamsSortBy = "similarity"
+	CreationDate SearchActivitiesParamsSortBy = "creationDate"
+	Similarity   SearchActivitiesParamsSortBy = "similarity"
 )
 
 // Activity defines model for Activity.
@@ -101,61 +101,61 @@ type CreateSourceRequest struct {
 
 // CreateSourceRequestChangedetectionWebsite defines model for CreateSourceRequestChangedetectionWebsite.
 type CreateSourceRequestChangedetectionWebsite struct {
-	ChangedetectionWebsite ChangedetectionWebsiteConfig `json:"changedetection_website"`
+	ChangedetectionWebsite ChangedetectionWebsiteConfig `json:"changedetectionWebsite"`
 	Type                   SourceType                   `json:"type"`
 }
 
 // CreateSourceRequestGithubIssues defines model for CreateSourceRequestGithubIssues.
 type CreateSourceRequestGithubIssues struct {
-	GithubIssues GithubIssuesConfig `json:"github_issues"`
+	GithubIssues GithubIssuesConfig `json:"githubIssues"`
 	Type         SourceType         `json:"type"`
 }
 
 // CreateSourceRequestGithubReleases defines model for CreateSourceRequestGithubReleases.
 type CreateSourceRequestGithubReleases struct {
-	GithubReleases GithubReleasesConfig `json:"github_releases"`
+	GithubReleases GithubReleasesConfig `json:"githubReleases"`
 	Type           SourceType           `json:"type"`
 }
 
 // CreateSourceRequestHackernewsPosts defines model for CreateSourceRequestHackernewsPosts.
 type CreateSourceRequestHackernewsPosts struct {
-	HackernewsPosts HackernewsPostsConfig `json:"hackernews_posts"`
+	HackernewsPosts HackernewsPostsConfig `json:"hackernewsPosts"`
 	Type            SourceType            `json:"type"`
 }
 
 // CreateSourceRequestLobstersFeed defines model for CreateSourceRequestLobstersFeed.
 type CreateSourceRequestLobstersFeed struct {
-	LobstersFeed LobstersFeedConfig `json:"lobsters_feed"`
+	LobstersFeed LobstersFeedConfig `json:"lobstersFeed"`
 	Type         SourceType         `json:"type"`
 }
 
 // CreateSourceRequestLobstersTag defines model for CreateSourceRequestLobstersTag.
 type CreateSourceRequestLobstersTag struct {
-	LobstersTag LobstersTagConfig `json:"lobsters_tag"`
+	LobstersTag LobstersTagConfig `json:"lobstersTag"`
 	Type        SourceType        `json:"type"`
 }
 
 // CreateSourceRequestMastodonAccount defines model for CreateSourceRequestMastodonAccount.
 type CreateSourceRequestMastodonAccount struct {
-	MastodonAccount MastodonAccountConfig `json:"mastodon_account"`
+	MastodonAccount MastodonAccountConfig `json:"mastodonAccount"`
 	Type            SourceType            `json:"type"`
 }
 
 // CreateSourceRequestMastodonTag defines model for CreateSourceRequestMastodonTag.
 type CreateSourceRequestMastodonTag struct {
-	MastodonTag MastodonTagConfig `json:"mastodon_tag"`
+	MastodonTag MastodonTagConfig `json:"mastodonTag"`
 	Type        SourceType        `json:"type"`
 }
 
 // CreateSourceRequestRedditSubreddit defines model for CreateSourceRequestRedditSubreddit.
 type CreateSourceRequestRedditSubreddit struct {
-	RedditSubreddit RedditSubredditConfig `json:"reddit_subreddit"`
+	RedditSubreddit RedditSubredditConfig `json:"redditSubreddit"`
 	Type            SourceType            `json:"type"`
 }
 
 // CreateSourceRequestRssFeed defines model for CreateSourceRequestRssFeed.
 type CreateSourceRequestRssFeed struct {
-	RssFeed RssFeedConfig `json:"rss_feed"`
+	RssFeed RssFeedConfig `json:"rssFeed"`
 	Type    SourceType    `json:"type"`
 }
 
@@ -287,7 +287,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestMastodonAccount() (CreateSourc
 
 // FromCreateSourceRequestMastodonAccount overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestMastodonAccount
 func (t *CreateSourceRequest) FromCreateSourceRequestMastodonAccount(v CreateSourceRequestMastodonAccount) error {
-	v.Type = "mastodon_account"
+	v.Type = "mastodonAccount"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -295,7 +295,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestMastodonAccount(v CreateSou
 
 // MergeCreateSourceRequestMastodonAccount performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestMastodonAccount
 func (t *CreateSourceRequest) MergeCreateSourceRequestMastodonAccount(v CreateSourceRequestMastodonAccount) error {
-	v.Type = "mastodon_account"
+	v.Type = "mastodonAccount"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -315,7 +315,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestMastodonTag() (CreateSourceReq
 
 // FromCreateSourceRequestMastodonTag overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestMastodonTag
 func (t *CreateSourceRequest) FromCreateSourceRequestMastodonTag(v CreateSourceRequestMastodonTag) error {
-	v.Type = "mastodon_tag"
+	v.Type = "mastodonTag"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -323,7 +323,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestMastodonTag(v CreateSourceR
 
 // MergeCreateSourceRequestMastodonTag performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestMastodonTag
 func (t *CreateSourceRequest) MergeCreateSourceRequestMastodonTag(v CreateSourceRequestMastodonTag) error {
-	v.Type = "mastodon_tag"
+	v.Type = "mastodonTag"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -343,7 +343,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestHackernewsPosts() (CreateSourc
 
 // FromCreateSourceRequestHackernewsPosts overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestHackernewsPosts
 func (t *CreateSourceRequest) FromCreateSourceRequestHackernewsPosts(v CreateSourceRequestHackernewsPosts) error {
-	v.Type = "hackernews_posts"
+	v.Type = "hackernewsPosts"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -351,7 +351,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestHackernewsPosts(v CreateSou
 
 // MergeCreateSourceRequestHackernewsPosts performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestHackernewsPosts
 func (t *CreateSourceRequest) MergeCreateSourceRequestHackernewsPosts(v CreateSourceRequestHackernewsPosts) error {
-	v.Type = "hackernews_posts"
+	v.Type = "hackernewsPosts"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -371,7 +371,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestRedditSubreddit() (CreateSourc
 
 // FromCreateSourceRequestRedditSubreddit overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestRedditSubreddit
 func (t *CreateSourceRequest) FromCreateSourceRequestRedditSubreddit(v CreateSourceRequestRedditSubreddit) error {
-	v.Type = "reddit_subreddit"
+	v.Type = "redditSubreddit"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -379,7 +379,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestRedditSubreddit(v CreateSou
 
 // MergeCreateSourceRequestRedditSubreddit performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestRedditSubreddit
 func (t *CreateSourceRequest) MergeCreateSourceRequestRedditSubreddit(v CreateSourceRequestRedditSubreddit) error {
-	v.Type = "reddit_subreddit"
+	v.Type = "redditSubreddit"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -399,7 +399,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestLobstersTag() (CreateSourceReq
 
 // FromCreateSourceRequestLobstersTag overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestLobstersTag
 func (t *CreateSourceRequest) FromCreateSourceRequestLobstersTag(v CreateSourceRequestLobstersTag) error {
-	v.Type = "lobsters_tag"
+	v.Type = "lobstersTag"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -407,7 +407,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestLobstersTag(v CreateSourceR
 
 // MergeCreateSourceRequestLobstersTag performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestLobstersTag
 func (t *CreateSourceRequest) MergeCreateSourceRequestLobstersTag(v CreateSourceRequestLobstersTag) error {
-	v.Type = "lobsters_tag"
+	v.Type = "lobstersTag"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -427,7 +427,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestLobstersFeed() (CreateSourceRe
 
 // FromCreateSourceRequestLobstersFeed overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestLobstersFeed
 func (t *CreateSourceRequest) FromCreateSourceRequestLobstersFeed(v CreateSourceRequestLobstersFeed) error {
-	v.Type = "lobsters_feed"
+	v.Type = "lobstersFeed"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -435,7 +435,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestLobstersFeed(v CreateSource
 
 // MergeCreateSourceRequestLobstersFeed performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestLobstersFeed
 func (t *CreateSourceRequest) MergeCreateSourceRequestLobstersFeed(v CreateSourceRequestLobstersFeed) error {
-	v.Type = "lobsters_feed"
+	v.Type = "lobstersFeed"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -455,7 +455,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestRssFeed() (CreateSourceRequest
 
 // FromCreateSourceRequestRssFeed overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestRssFeed
 func (t *CreateSourceRequest) FromCreateSourceRequestRssFeed(v CreateSourceRequestRssFeed) error {
-	v.Type = "rss_feed"
+	v.Type = "rssFeed"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -463,7 +463,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestRssFeed(v CreateSourceReque
 
 // MergeCreateSourceRequestRssFeed performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestRssFeed
 func (t *CreateSourceRequest) MergeCreateSourceRequestRssFeed(v CreateSourceRequestRssFeed) error {
-	v.Type = "rss_feed"
+	v.Type = "rssFeed"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -483,7 +483,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestGithubReleases() (CreateSource
 
 // FromCreateSourceRequestGithubReleases overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestGithubReleases
 func (t *CreateSourceRequest) FromCreateSourceRequestGithubReleases(v CreateSourceRequestGithubReleases) error {
-	v.Type = "github_releases"
+	v.Type = "githubReleases"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -491,7 +491,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestGithubReleases(v CreateSour
 
 // MergeCreateSourceRequestGithubReleases performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestGithubReleases
 func (t *CreateSourceRequest) MergeCreateSourceRequestGithubReleases(v CreateSourceRequestGithubReleases) error {
-	v.Type = "github_releases"
+	v.Type = "githubReleases"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -511,7 +511,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestGithubIssues() (CreateSourceRe
 
 // FromCreateSourceRequestGithubIssues overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestGithubIssues
 func (t *CreateSourceRequest) FromCreateSourceRequestGithubIssues(v CreateSourceRequestGithubIssues) error {
-	v.Type = "github_issues"
+	v.Type = "githubIssues"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -519,7 +519,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestGithubIssues(v CreateSource
 
 // MergeCreateSourceRequestGithubIssues performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestGithubIssues
 func (t *CreateSourceRequest) MergeCreateSourceRequestGithubIssues(v CreateSourceRequestGithubIssues) error {
-	v.Type = "github_issues"
+	v.Type = "githubIssues"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -539,7 +539,7 @@ func (t CreateSourceRequest) AsCreateSourceRequestChangedetectionWebsite() (Crea
 
 // FromCreateSourceRequestChangedetectionWebsite overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestChangedetectionWebsite
 func (t *CreateSourceRequest) FromCreateSourceRequestChangedetectionWebsite(v CreateSourceRequestChangedetectionWebsite) error {
-	v.Type = "changedetection_website"
+	v.Type = "changedetectionWebsite"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -547,7 +547,7 @@ func (t *CreateSourceRequest) FromCreateSourceRequestChangedetectionWebsite(v Cr
 
 // MergeCreateSourceRequestChangedetectionWebsite performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestChangedetectionWebsite
 func (t *CreateSourceRequest) MergeCreateSourceRequestChangedetectionWebsite(v CreateSourceRequestChangedetectionWebsite) error {
-	v.Type = "changedetection_website"
+	v.Type = "changedetectionWebsite"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -572,25 +572,25 @@ func (t CreateSourceRequest) ValueByDiscriminator() (interface{}, error) {
 		return nil, err
 	}
 	switch discriminator {
-	case "changedetection_website":
+	case "changedetectionWebsite":
 		return t.AsCreateSourceRequestChangedetectionWebsite()
-	case "github_issues":
+	case "githubIssues":
 		return t.AsCreateSourceRequestGithubIssues()
-	case "github_releases":
+	case "githubReleases":
 		return t.AsCreateSourceRequestGithubReleases()
-	case "hackernews_posts":
+	case "hackernewsPosts":
 		return t.AsCreateSourceRequestHackernewsPosts()
-	case "lobsters_feed":
+	case "lobstersFeed":
 		return t.AsCreateSourceRequestLobstersFeed()
-	case "lobsters_tag":
+	case "lobstersTag":
 		return t.AsCreateSourceRequestLobstersTag()
-	case "mastodon_account":
+	case "mastodonAccount":
 		return t.AsCreateSourceRequestMastodonAccount()
-	case "mastodon_tag":
+	case "mastodonTag":
 		return t.AsCreateSourceRequestMastodonTag()
-	case "reddit_subreddit":
+	case "redditSubreddit":
 		return t.AsCreateSourceRequestRedditSubreddit()
-	case "rss_feed":
+	case "rssFeed":
 		return t.AsCreateSourceRequestRssFeed()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)

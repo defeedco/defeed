@@ -125,7 +125,7 @@ export interface ChangedetectionWebsiteConfig {
  * @type CreateSourceRequest
  * @export
  */
-export type CreateSourceRequest = { type: 'changedetection_website' } & CreateSourceRequestChangedetectionWebsite | { type: 'github_issues' } & CreateSourceRequestGithubIssues | { type: 'github_releases' } & CreateSourceRequestGithubReleases | { type: 'hackernews_posts' } & CreateSourceRequestHackernewsPosts | { type: 'lobsters_feed' } & CreateSourceRequestLobstersFeed | { type: 'lobsters_tag' } & CreateSourceRequestLobstersTag | { type: 'mastodon_account' } & CreateSourceRequestMastodonAccount | { type: 'mastodon_tag' } & CreateSourceRequestMastodonTag | { type: 'reddit_subreddit' } & CreateSourceRequestRedditSubreddit | { type: 'rss_feed' } & CreateSourceRequestRssFeed;
+export type CreateSourceRequest = { type: 'changedetectionWebsite' } & CreateSourceRequestChangedetectionWebsite | { type: 'githubIssues' } & CreateSourceRequestGithubIssues | { type: 'githubReleases' } & CreateSourceRequestGithubReleases | { type: 'hackernewsPosts' } & CreateSourceRequestHackernewsPosts | { type: 'lobstersFeed' } & CreateSourceRequestLobstersFeed | { type: 'lobstersTag' } & CreateSourceRequestLobstersTag | { type: 'mastodonAccount' } & CreateSourceRequestMastodonAccount | { type: 'mastodonTag' } & CreateSourceRequestMastodonTag | { type: 'redditSubreddit' } & CreateSourceRequestRedditSubreddit | { type: 'rssFeed' } & CreateSourceRequestRssFeed;
 
 /**
  * 
@@ -144,7 +144,7 @@ export interface CreateSourceRequestChangedetectionWebsite {
      * @type {ChangedetectionWebsiteConfig}
      * @memberof CreateSourceRequestChangedetectionWebsite
      */
-    'changedetection_website': ChangedetectionWebsiteConfig;
+    'changedetectionWebsite': ChangedetectionWebsiteConfig;
 }
 
 
@@ -165,7 +165,7 @@ export interface CreateSourceRequestGithubIssues {
      * @type {GithubIssuesConfig}
      * @memberof CreateSourceRequestGithubIssues
      */
-    'github_issues': GithubIssuesConfig;
+    'githubIssues': GithubIssuesConfig;
 }
 
 
@@ -186,7 +186,7 @@ export interface CreateSourceRequestGithubReleases {
      * @type {GithubReleasesConfig}
      * @memberof CreateSourceRequestGithubReleases
      */
-    'github_releases': GithubReleasesConfig;
+    'githubReleases': GithubReleasesConfig;
 }
 
 
@@ -207,7 +207,7 @@ export interface CreateSourceRequestHackernewsPosts {
      * @type {HackernewsPostsConfig}
      * @memberof CreateSourceRequestHackernewsPosts
      */
-    'hackernews_posts': HackernewsPostsConfig;
+    'hackernewsPosts': HackernewsPostsConfig;
 }
 
 
@@ -228,7 +228,7 @@ export interface CreateSourceRequestLobstersFeed {
      * @type {LobstersFeedConfig}
      * @memberof CreateSourceRequestLobstersFeed
      */
-    'lobsters_feed': LobstersFeedConfig;
+    'lobstersFeed': LobstersFeedConfig;
 }
 
 
@@ -249,7 +249,7 @@ export interface CreateSourceRequestLobstersTag {
      * @type {LobstersTagConfig}
      * @memberof CreateSourceRequestLobstersTag
      */
-    'lobsters_tag': LobstersTagConfig;
+    'lobstersTag': LobstersTagConfig;
 }
 
 
@@ -270,7 +270,7 @@ export interface CreateSourceRequestMastodonAccount {
      * @type {MastodonAccountConfig}
      * @memberof CreateSourceRequestMastodonAccount
      */
-    'mastodon_account': MastodonAccountConfig;
+    'mastodonAccount': MastodonAccountConfig;
 }
 
 
@@ -291,7 +291,7 @@ export interface CreateSourceRequestMastodonTag {
      * @type {MastodonTagConfig}
      * @memberof CreateSourceRequestMastodonTag
      */
-    'mastodon_tag': MastodonTagConfig;
+    'mastodonTag': MastodonTagConfig;
 }
 
 
@@ -312,7 +312,7 @@ export interface CreateSourceRequestRedditSubreddit {
      * @type {RedditSubredditConfig}
      * @memberof CreateSourceRequestRedditSubreddit
      */
-    'reddit_subreddit': RedditSubredditConfig;
+    'redditSubreddit': RedditSubredditConfig;
 }
 
 
@@ -333,7 +333,7 @@ export interface CreateSourceRequestRssFeed {
      * @type {RssFeedConfig}
      * @memberof CreateSourceRequestRssFeed
      */
-    'rss_feed': RssFeedConfig;
+    'rssFeed': RssFeedConfig;
 }
 
 
@@ -640,16 +640,16 @@ export interface Source {
  */
 
 export const SourceType = {
-    MastodonAccount: 'mastodon_account',
-    MastodonTag: 'mastodon_tag',
-    HackernewsPosts: 'hackernews_posts',
-    RedditSubreddit: 'reddit_subreddit',
-    LobstersTag: 'lobsters_tag',
-    LobstersFeed: 'lobsters_feed',
-    RssFeed: 'rss_feed',
-    GithubReleases: 'github_releases',
-    GithubIssues: 'github_issues',
-    ChangedetectionWebsite: 'changedetection_website'
+    MastodonAccount: 'mastodonAccount',
+    MastodonTag: 'mastodonTag',
+    HackernewsPosts: 'hackernewsPosts',
+    RedditSubreddit: 'redditSubreddit',
+    LobstersTag: 'lobstersTag',
+    LobstersFeed: 'lobstersFeed',
+    RssFeed: 'rssFeed',
+    GithubReleases: 'githubReleases',
+    GithubIssues: 'githubIssues',
+    ChangedetectionWebsite: 'changedetectionWebsite'
 } as const;
 
 export type SourceType = typeof SourceType[keyof typeof SourceType];
@@ -862,7 +862,7 @@ export class ActivitiesApi extends BaseAPI {
  */
 export const SearchActivitiesSortByEnum = {
     Similarity: 'similarity',
-    CreatedDate: 'created_date'
+    CreationDate: 'creationDate'
 } as const;
 export type SearchActivitiesSortByEnum = typeof SearchActivitiesSortByEnum[keyof typeof SearchActivitiesSortByEnum];
 
