@@ -98,10 +98,10 @@ export interface Activity {
 export interface CreateSourceRequest {
     /**
      * 
-     * @type {string}
+     * @type {SourceType}
      * @memberof CreateSourceRequest
      */
-    'type': string;
+    'type': SourceType;
     /**
      * 
      * @type {{ [key: string]: any; }}
@@ -109,6 +109,8 @@ export interface CreateSourceRequest {
      */
     'config': { [key: string]: any; };
 }
+
+
 /**
  * 
  * @export
@@ -123,6 +125,12 @@ export interface Source {
     'uid': string;
     /**
      * 
+     * @type {SourceType}
+     * @memberof Source
+     */
+    'type': SourceType;
+    /**
+     * 
      * @type {string}
      * @memberof Source
      */
@@ -134,6 +142,30 @@ export interface Source {
      */
     'url': string;
 }
+
+
+/**
+ * 
+ * @export
+ * @enum {string}
+ */
+
+export const SourceType = {
+    MastodonAccount: 'mastodon_account',
+    MastodonTag: 'mastodon_tag',
+    HackernewsPosts: 'hackernews_posts',
+    RedditSubreddit: 'reddit_subreddit',
+    LobstersTag: 'lobsters_tag',
+    LobstersFeed: 'lobsters_feed',
+    RssFeed: 'rss_feed',
+    GithubReleases: 'github_releases',
+    GithubIssues: 'github_issues',
+    ChangedetectionWebsite: 'changedetection_website'
+} as const;
+
+export type SourceType = typeof SourceType[keyof typeof SourceType];
+
+
 
 /**
  * ActivitiesApi - axios parameter creator

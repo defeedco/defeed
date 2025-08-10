@@ -13,6 +13,20 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for SourceType.
+const (
+	ChangedetectionWebsite SourceType = "changedetection_website"
+	GithubIssues           SourceType = "github_issues"
+	GithubReleases         SourceType = "github_releases"
+	HackernewsPosts        SourceType = "hackernews_posts"
+	LobstersFeed           SourceType = "lobsters_feed"
+	LobstersTag            SourceType = "lobsters_tag"
+	MastodonAccount        SourceType = "mastodon_account"
+	MastodonTag            SourceType = "mastodon_tag"
+	RedditSubreddit        SourceType = "reddit_subreddit"
+	RssFeed                SourceType = "rss_feed"
+)
+
 // Defines values for SearchActivitiesParamsSortBy.
 const (
 	CreatedDate SearchActivitiesParamsSortBy = "created_date"
@@ -42,15 +56,19 @@ type Activity struct {
 // CreateSourceRequest defines model for CreateSourceRequest.
 type CreateSourceRequest struct {
 	Config map[string]interface{} `json:"config"`
-	Type   string                 `json:"type"`
+	Type   SourceType             `json:"type"`
 }
 
 // Source defines model for Source.
 type Source struct {
-	Name string `json:"name"`
-	Uid  string `json:"uid"`
-	Url  string `json:"url"`
+	Name string     `json:"name"`
+	Type SourceType `json:"type"`
+	Uid  string     `json:"uid"`
+	Url  string     `json:"url"`
 }
+
+// SourceType defines model for SourceType.
+type SourceType string
 
 // SearchActivitiesParams defines parameters for SearchActivities.
 type SearchActivitiesParams struct {

@@ -180,7 +180,7 @@ components:
         - config
       properties:
         type:
-          type: string
+          $ref: '#/components/schemas/SourceType'
         config:
           type: object
           additionalProperties: true
@@ -189,15 +189,32 @@ components:
       type: object
       required:
         - uid
+        - type
         - name
         - url
       properties:
         uid:
           type: string
+        type:
+          $ref: '#/components/schemas/SourceType'
         name:
           type: string
         url:
           type: string
+
+    SourceType:
+      type: string
+      enum:
+        - mastodon_account
+        - mastodon_tag
+        - hackernews_posts
+        - reddit_subreddit
+        - lobsters_tag
+        - lobsters_feed
+        - rss_feed
+        - github_releases
+        - github_issues
+        - changedetection_website
 
     Activity:
       type: object

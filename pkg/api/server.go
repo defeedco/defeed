@@ -14,7 +14,14 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/sources/changedetection"
+	"github.com/glanceapp/glance/pkg/sources/github"
+	"github.com/glanceapp/glance/pkg/sources/hackernews"
+	"github.com/glanceapp/glance/pkg/sources/lobsters"
+	"github.com/glanceapp/glance/pkg/sources/mastodon"
 	"github.com/glanceapp/glance/pkg/sources/nlp"
+	"github.com/glanceapp/glance/pkg/sources/reddit"
+	"github.com/glanceapp/glance/pkg/sources/rss"
 	httpswagger "github.com/swaggo/http-swagger"
 
 	"github.com/glanceapp/glance/pkg/storage/postgres"
@@ -346,13 +353,13 @@ func (s *Server) badRequest(w http.ResponseWriter, err error, msg string) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
 }
 
-func (s *Server) notFound(w http.ResponseWriter, err error, msg string) {
-	s.logger.Err(err).Msg(msg)
-	http.Error(w, err.Error(), http.StatusNotFound)
-}
-
 func deserializeCreateSourceRequest(req CreateSourceRequest) (sources.Source, error) {
-	source, err := sources.NewSource(req.Type)
+	sourceType, err := deserializeSourceType(req.Type)
+	if err != nil {
+		return nil, fmt.Errorf("deserialize source type: %w", err)
+	}
+
+	source, err := sources.NewSource(sourceType)
 	if err != nil {
 		return nil, fmt.Errorf("create source: %w", err)
 	}
@@ -367,6 +374,33 @@ func deserializeCreateSourceRequest(req CreateSourceRequest) (sources.Source, er
 	}
 
 	return source, nil
+}
+
+func deserializeSourceType(in SourceType) (string, error) {
+	switch in {
+	case MastodonAccount:
+		return mastodon.TypeMastodonAccount, nil
+	case MastodonTag:
+		return mastodon.TypeMastodonTag, nil
+	case HackernewsPosts:
+		return hackernews.TypeHackerNewsPosts, nil
+	case RedditSubreddit:
+		return reddit.TypeRedditSubreddit, nil
+	case LobstersTag:
+		return lobsters.TypeLobstersTag, nil
+	case LobstersFeed:
+		return lobsters.TypeLobstersFeed, nil
+	case RssFeed:
+		return rss.TypeRSSFeed, nil
+	case GithubReleases:
+		return github.TypeGithubReleases, nil
+	case GithubIssues:
+		return github.TypeGithubIssues, nil
+	case ChangedetectionWebsite:
+		return changedetection.TypeChangedetectionWebsite, nil
+	}
+
+	return "", fmt.Errorf("unknown source type: %s", in)
 }
 
 func serializeActivities(in []*types.DecoratedActivity) []Activity {
