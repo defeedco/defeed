@@ -117,7 +117,7 @@ paths:
           description: Filter by source UIDs (comma-separated)
           schema:
             type: string
-        - name: min_similarity
+        - name: minSimilarity
           in: query
           description: Minimum similarity score (0-1). Can only be used when `query` is provided.
           schema:
@@ -133,7 +133,7 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
-        - name: sort_by
+        - name: sortBy
           in: query
           description: Field to sort results by
           schema:
@@ -291,45 +291,45 @@ components:
 
     MastodonAccountConfig:
       type: object
-      required: [instance_url, account]
+      required: [instanceUrl, account]
       properties:
-        instance_url:
+        instanceUrl:
           type: string
         account:
           type: string
 
     MastodonTagConfig:
       type: object
-      required: [instance_url, tag]
+      required: [instanceUrl, tag]
       properties:
-        instance_url:
+        instanceUrl:
           type: string
         tag:
           type: string
 
     HackernewsPostsConfig:
       type: object
-      required: [feed_name]
+      required: [feedName]
       properties:
-        feed_name:
+        feedName:
           type: string
           enum: [top, new, best]
 
     RedditSubredditConfig:
       type: object
-      required: [subreddit, sort-by, top-period]
+      required: [subreddit, sortBy, topPeriod]
       properties:
         subreddit:
           type: string
-        sort-by:
+        sortBy:
           type: string
           enum: [hot, new, top, rising]
-        top-period:
+        topPeriod:
           type: string
           enum: [hour, day, week, month, year, all]
         search:
           type: string
-        request-url-template:
+        requestUrlTemplate:
           type: string
         auth:
           type: object
@@ -343,22 +343,22 @@ components:
 
     LobstersTagConfig:
       type: object
-      required: [instance_url, tag]
+      required: [instanceUrl, tag]
       properties:
-        instance_url:
+        instanceUrl:
           type: string
-        custom_url:
+        customUrl:
           type: string
         tag:
           type: string
 
     LobstersFeedConfig:
       type: object
-      required: [instance_url, feed]
+      required: [instanceUrl, feed]
       properties:
-        instance_url:
+        instanceUrl:
           type: string
-        custom_url:
+        customUrl:
           type: string
         feed:
           type: string
@@ -385,7 +385,7 @@ components:
           description: owner/repo
         token:
           type: string
-        include_prereleases:
+        includePrereleases:
           type: boolean
 
     GithubIssuesConfig:
@@ -404,7 +404,7 @@ components:
       properties:
         watch:
           type: string
-        instance_url:
+        instanceUrl:
           type: string
         token:
           type: string
@@ -446,25 +446,25 @@ components:
       type: object
       required:
         - uid
-        - source_uid
+        - sourceUid
         - title
-        - short_summary
-        - full_summary
+        - shortSummary
+        - fullSummary
         - body
         - url
-        - image_url
-        - created_at
+        - imageUrl
+        - createdAt
       properties:
         uid:
           type: string
-        source_uid:
+        sourceUid:
           type: string
         title:
           type: string
-        short_summary:
+        shortSummary:
           type: string
           description: One-line short plain text summary.
-        full_summary:
+        fullSummary:
           type: string
           description: One-paragraph markdown summary.
         body:
@@ -472,10 +472,10 @@ components:
         url:
           type: string
           format: url
-        image_url:
+        imageUrl:
           type: string
           format: url
-        created_at:
+        createdAt:
           type: string
           format: date-time
         similarity:

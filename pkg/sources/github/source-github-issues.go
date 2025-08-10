@@ -67,7 +67,7 @@ func (s *SourceIssues) UnmarshalJSON(data []byte) error {
 }
 
 type Issue struct {
-	Repository string        `json:"Repository"`
+	Repository string        `json:"repository"`
 	Issue      *github.Issue `json:"issue"`
 	SourceID   string        `json:"source_id"`
 }

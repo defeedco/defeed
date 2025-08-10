@@ -16,7 +16,7 @@ import (
 const TypeHackerNewsPosts = "hackernews-posts"
 
 type SourcePosts struct {
-	FeedName string `json:"feed_name"`
+	FeedName string `json:"feedName"`
 	client   *gohn.Client
 }
 

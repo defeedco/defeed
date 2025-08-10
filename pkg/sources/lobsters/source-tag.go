@@ -11,8 +11,8 @@ import (
 const TypeLobstersTag = "lobsters-tag"
 
 type SourceTag struct {
-	InstanceURL string `json:"instance_url"`
-	CustomURL   string `json:"custom_url"`
+	InstanceURL string `json:"instanceUrl"`
+	CustomURL   string `json:"customUrl"`
 	Tag         string `json:"tag"`
 	client      *LobstersClient
 }

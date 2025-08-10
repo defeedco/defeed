@@ -20,10 +20,10 @@ const TypeRedditSubreddit = "reddit-subreddit"
 
 type SourceSubreddit struct {
 	Subreddit          string `json:"subreddit"`
-	SortBy             string `json:"sort-by"`
-	TopPeriod          string `json:"top-period"`
+	SortBy             string `json:"sortBy"`
+	TopPeriod          string `json:"topPeriod"`
 	Search             string `json:"search"`
-	RequestURLTemplate string `json:"request-url-template"`
+	RequestURLTemplate string `json:"requestUrlTemplate"`
 	client             *reddit.Client
 	AppAuth            struct {
 		Name   string `json:"name"`

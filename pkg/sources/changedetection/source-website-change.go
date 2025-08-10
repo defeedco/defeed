@@ -15,7 +15,7 @@ const TypeChangedetectionWebsite = "changedetection-website-change"
 
 type SourceWebsiteChange struct {
 	WatchUUID   string `json:"watch"`
-	InstanceURL string `json:"instance_url"`
+	InstanceURL string `json:"instanceUrl"`
 	Token       string `json:"token"`
 	Limit       int    `json:"limit"`
 }

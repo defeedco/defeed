@@ -11,8 +11,8 @@ import (
 const TypeLobstersFeed = "lobsters-feed"
 
 type SourceFeed struct {
-	InstanceURL string `json:"instance_url"`
-	CustomURL   string `json:"custom_url"`
+	InstanceURL string `json:"instanceUrl"`
+	CustomURL   string `json:"customUrl"`
 	FeedName    string `json:"feed"`
 	client      *LobstersClient
 }

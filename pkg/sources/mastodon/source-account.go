@@ -13,7 +13,7 @@ import (
 const TypeMastodonAccount = "mastodon-account"
 
 type SourceAccount struct {
-	InstanceURL string `json:"instance_url"`
+	InstanceURL string `json:"instanceUrl"`
 	Account     string `json:"account"`
 	client      *mastodon.Client
 }

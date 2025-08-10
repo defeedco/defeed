@@ -40,7 +40,7 @@ export interface Activity {
      * @type {string}
      * @memberof Activity
      */
-    'source_uid': string;
+    'sourceUid': string;
     /**
      * 
      * @type {string}
@@ -52,13 +52,13 @@ export interface Activity {
      * @type {string}
      * @memberof Activity
      */
-    'short_summary': string;
+    'shortSummary': string;
     /**
      * One-paragraph markdown summary.
      * @type {string}
      * @memberof Activity
      */
-    'full_summary': string;
+    'fullSummary': string;
     /**
      * 
      * @type {string}
@@ -76,13 +76,13 @@ export interface Activity {
      * @type {string}
      * @memberof Activity
      */
-    'image_url': string;
+    'imageUrl': string;
     /**
      * 
      * @type {string}
      * @memberof Activity
      */
-    'created_at': string;
+    'createdAt': string;
     /**
      * Similarity score (0-1) when using semantic search
      * @type {number}
@@ -107,7 +107,7 @@ export interface ChangedetectionWebsiteConfig {
      * @type {string}
      * @memberof ChangedetectionWebsiteConfig
      */
-    'instance_url'?: string;
+    'instanceUrl'?: string;
     /**
      * 
      * @type {string}
@@ -348,7 +348,7 @@ export interface GithubIssuesConfig {
      * @type {string}
      * @memberof GithubIssuesConfig
      */
-    'Repository': string;
+    'repository': string;
     /**
      * 
      * @type {string}
@@ -367,7 +367,7 @@ export interface GithubReleasesConfig {
      * @type {string}
      * @memberof GithubReleasesConfig
      */
-    'Repository': string;
+    'repository': string;
     /**
      * 
      * @type {string}
@@ -379,7 +379,7 @@ export interface GithubReleasesConfig {
      * @type {boolean}
      * @memberof GithubReleasesConfig
      */
-    'include_prereleases'?: boolean;
+    'includePrereleases'?: boolean;
 }
 /**
  * 
@@ -392,7 +392,7 @@ export interface HackernewsPostsConfig {
      * @type {string}
      * @memberof HackernewsPostsConfig
      */
-    'feed_name': HackernewsPostsConfigFeedNameEnum;
+    'feedName': HackernewsPostsConfigFeedNameEnum;
 }
 
 export const HackernewsPostsConfigFeedNameEnum = {
@@ -414,13 +414,13 @@ export interface LobstersFeedConfig {
      * @type {string}
      * @memberof LobstersFeedConfig
      */
-    'instance_url': string;
+    'instanceUrl': string;
     /**
      * 
      * @type {string}
      * @memberof LobstersFeedConfig
      */
-    'custom_url'?: string;
+    'customUrl'?: string;
     /**
      * 
      * @type {string}
@@ -447,13 +447,13 @@ export interface LobstersTagConfig {
      * @type {string}
      * @memberof LobstersTagConfig
      */
-    'instance_url': string;
+    'instanceUrl': string;
     /**
      * 
      * @type {string}
      * @memberof LobstersTagConfig
      */
-    'custom_url'?: string;
+    'customUrl'?: string;
     /**
      * 
      * @type {string}
@@ -472,7 +472,7 @@ export interface MastodonAccountConfig {
      * @type {string}
      * @memberof MastodonAccountConfig
      */
-    'instance_url': string;
+    'instanceUrl': string;
     /**
      * 
      * @type {string}
@@ -491,7 +491,7 @@ export interface MastodonTagConfig {
      * @type {string}
      * @memberof MastodonTagConfig
      */
-    'instance_url': string;
+    'instanceUrl': string;
     /**
      * 
      * @type {string}
@@ -516,13 +516,13 @@ export interface RedditSubredditConfig {
      * @type {string}
      * @memberof RedditSubredditConfig
      */
-    'sort-by': RedditSubredditConfigSortByEnum;
+    'sortBy': RedditSubredditConfigSortByEnum;
     /**
      * 
      * @type {string}
      * @memberof RedditSubredditConfig
      */
-    'top-period': RedditSubredditConfigTopPeriodEnum;
+    'topPeriod': RedditSubredditConfigTopPeriodEnum;
     /**
      * 
      * @type {string}
@@ -534,7 +534,7 @@ export interface RedditSubredditConfig {
      * @type {string}
      * @memberof RedditSubredditConfig
      */
-    'request-url-template'?: string;
+    'requestUrlTemplate'?: string;
     /**
      * 
      * @type {RedditSubredditConfigAuth}
@@ -731,7 +731,7 @@ export const ActivitiesApiAxiosParamCreator = function (configuration?: Configur
             }
 
             if (minSimilarity !== undefined) {
-                localVarQueryParameter['min_similarity'] = minSimilarity;
+                localVarQueryParameter['minSimilarity'] = minSimilarity;
             }
 
             if (limit !== undefined) {
@@ -739,7 +739,7 @@ export const ActivitiesApiAxiosParamCreator = function (configuration?: Configur
             }
 
             if (sortBy !== undefined) {
-                localVarQueryParameter['sort_by'] = sortBy;
+                localVarQueryParameter['sortBy'] = sortBy;
             }
 
 

@@ -69,18 +69,18 @@ const (
 // Activity defines model for Activity.
 type Activity struct {
 	Body      string    `json:"body"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"createdAt"`
 
 	// FullSummary One-paragraph markdown summary.
-	FullSummary string `json:"full_summary"`
-	ImageUrl    string `json:"image_url"`
+	FullSummary string `json:"fullSummary"`
+	ImageUrl    string `json:"imageUrl"`
 
 	// ShortSummary One-line short plain text summary.
-	ShortSummary string `json:"short_summary"`
+	ShortSummary string `json:"shortSummary"`
 
 	// Similarity Similarity score (0-1) when using semantic search
 	Similarity *float32 `json:"similarity,omitempty"`
-	SourceUid  string   `json:"source_uid"`
+	SourceUid  string   `json:"sourceUid"`
 	Title      string   `json:"title"`
 	Uid        string   `json:"uid"`
 	Url        string   `json:"url"`
@@ -88,7 +88,7 @@ type Activity struct {
 
 // ChangedetectionWebsiteConfig defines model for ChangedetectionWebsiteConfig.
 type ChangedetectionWebsiteConfig struct {
-	InstanceUrl *string `json:"instance_url,omitempty"`
+	InstanceUrl *string `json:"instanceUrl,omitempty"`
 	Limit       *int    `json:"limit,omitempty"`
 	Token       *string `json:"token,omitempty"`
 	Watch       string  `json:"watch"`
@@ -162,21 +162,22 @@ type CreateSourceRequestRssFeed struct {
 // GithubIssuesConfig defines model for GithubIssuesConfig.
 type GithubIssuesConfig struct {
 	// Repository owner/repo
-	Repository string  `json:"Repository"`
+	Repository string  `json:"repository"`
 	Token      *string `json:"token,omitempty"`
 }
 
 // GithubReleasesConfig defines model for GithubReleasesConfig.
 type GithubReleasesConfig struct {
+	IncludePrereleases *bool `json:"includePrereleases,omitempty"`
+
 	// Repository owner/repo
-	Repository         string  `json:"Repository"`
-	IncludePrereleases *bool   `json:"include_prereleases,omitempty"`
-	Token              *string `json:"token,omitempty"`
+	Repository string  `json:"repository"`
+	Token      *string `json:"token,omitempty"`
 }
 
 // HackernewsPostsConfig defines model for HackernewsPostsConfig.
 type HackernewsPostsConfig struct {
-	FeedName HackernewsPostsConfigFeedName `json:"feed_name"`
+	FeedName HackernewsPostsConfigFeedName `json:"feedName"`
 }
 
 // HackernewsPostsConfigFeedName defines model for HackernewsPostsConfig.FeedName.
@@ -184,9 +185,9 @@ type HackernewsPostsConfigFeedName string
 
 // LobstersFeedConfig defines model for LobstersFeedConfig.
 type LobstersFeedConfig struct {
-	CustomUrl   *string                `json:"custom_url,omitempty"`
+	CustomUrl   *string                `json:"customUrl,omitempty"`
 	Feed        LobstersFeedConfigFeed `json:"feed"`
-	InstanceUrl string                 `json:"instance_url"`
+	InstanceUrl string                 `json:"instanceUrl"`
 }
 
 // LobstersFeedConfigFeed defines model for LobstersFeedConfig.Feed.
@@ -194,20 +195,20 @@ type LobstersFeedConfigFeed string
 
 // LobstersTagConfig defines model for LobstersTagConfig.
 type LobstersTagConfig struct {
-	CustomUrl   *string `json:"custom_url,omitempty"`
-	InstanceUrl string  `json:"instance_url"`
+	CustomUrl   *string `json:"customUrl,omitempty"`
+	InstanceUrl string  `json:"instanceUrl"`
 	Tag         string  `json:"tag"`
 }
 
 // MastodonAccountConfig defines model for MastodonAccountConfig.
 type MastodonAccountConfig struct {
 	Account     string `json:"account"`
-	InstanceUrl string `json:"instance_url"`
+	InstanceUrl string `json:"instanceUrl"`
 }
 
 // MastodonTagConfig defines model for MastodonTagConfig.
 type MastodonTagConfig struct {
-	InstanceUrl string `json:"instance_url"`
+	InstanceUrl string `json:"instanceUrl"`
 	Tag         string `json:"tag"`
 }
 
@@ -218,11 +219,11 @@ type RedditSubredditConfig struct {
 		Name   *string `json:"name,omitempty"`
 		Secret *string `json:"secret,omitempty"`
 	} `json:"auth,omitempty"`
-	RequestUrlTemplate *string                        `json:"request-url-template,omitempty"`
+	RequestUrlTemplate *string                        `json:"requestUrlTemplate,omitempty"`
 	Search             *string                        `json:"search,omitempty"`
-	SortBy             RedditSubredditConfigSortBy    `json:"sort-by"`
+	SortBy             RedditSubredditConfigSortBy    `json:"sortBy"`
 	Subreddit          string                         `json:"subreddit"`
-	TopPeriod          RedditSubredditConfigTopPeriod `json:"top-period"`
+	TopPeriod          RedditSubredditConfigTopPeriod `json:"topPeriod"`
 }
 
 // RedditSubredditConfigSortBy defines model for RedditSubredditConfig.SortBy.
@@ -257,13 +258,13 @@ type SearchActivitiesParams struct {
 	Sources *string `form:"sources,omitempty" json:"sources,omitempty"`
 
 	// MinSimilarity Minimum similarity score (0-1). Can only be used when `query` is provided.
-	MinSimilarity *float32 `form:"min_similarity,omitempty" json:"min_similarity,omitempty"`
+	MinSimilarity *float32 `form:"minSimilarity,omitempty" json:"minSimilarity,omitempty"`
 
 	// Limit Maximum number of results to return
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
 	// SortBy Field to sort results by
-	SortBy *SearchActivitiesParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
+	SortBy *SearchActivitiesParamsSortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
 
 // SearchActivitiesParamsSortBy defines parameters for SearchActivities.
@@ -665,11 +666,11 @@ func (siw *ServerInterfaceWrapper) SearchActivities(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// ------------- Optional query parameter "min_similarity" -------------
+	// ------------- Optional query parameter "minSimilarity" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "min_similarity", r.URL.Query(), &params.MinSimilarity)
+	err = runtime.BindQueryParameter("form", true, false, "minSimilarity", r.URL.Query(), &params.MinSimilarity)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "min_similarity", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "minSimilarity", Err: err})
 		return
 	}
 
@@ -681,11 +682,11 @@ func (siw *ServerInterfaceWrapper) SearchActivities(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// ------------- Optional query parameter "sort_by" -------------
+	// ------------- Optional query parameter "sortBy" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "sort_by", r.URL.Query(), &params.SortBy)
+	err = runtime.BindQueryParameter("form", true, false, "sortBy", r.URL.Query(), &params.SortBy)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort_by", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sortBy", Err: err})
 		return
 	}
 

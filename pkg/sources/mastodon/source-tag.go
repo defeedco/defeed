@@ -13,7 +13,7 @@ import (
 const TypeMastodonTag = "mastodon-tag"
 
 type SourceTag struct {
-	InstanceURL string `json:"instance_url"`
+	InstanceURL string `json:"instanceUrl"`
 	Tag         string `json:"tag"`
 }
 
