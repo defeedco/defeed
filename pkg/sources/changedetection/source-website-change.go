@@ -14,8 +14,8 @@ import (
 const TypeChangedetectionWebsite = "changedetection-website-change"
 
 type SourceWebsiteChange struct {
-	WatchUUID   string `json:"watch"`
-	InstanceURL string `json:"instanceUrl"`
+	WatchUUID   string `json:"watch" validate:"required"`
+	InstanceURL string `json:"instanceUrl" validate:"omitempty,url"`
 	Token       string `json:"token"`
 	Limit       int    `json:"limit"`
 }
@@ -39,6 +39,8 @@ func (s *SourceWebsiteChange) URL() string {
 func (s *SourceWebsiteChange) Type() string {
 	return TypeChangedetectionWebsite
 }
+
+func (s *SourceWebsiteChange) Validate() []error { return utils.ValidateStruct(s) }
 
 func (s *SourceWebsiteChange) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	initial, err := s.fetchWatchFromChangeDetection()

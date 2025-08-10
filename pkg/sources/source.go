@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/sources/changedetection"
@@ -55,6 +56,9 @@ type Source interface {
 	Name() string
 	// URL is a web resource representation of UID.
 	URL() string
+	// Validate returns a list of configuration validation errors.
+	// When non-empty, the caller should not proceed to Initialize.
+	Validate() []error
 	Initialize() error
 	Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error)
 }

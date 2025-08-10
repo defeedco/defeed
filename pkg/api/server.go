@@ -407,6 +407,18 @@ func deserializeCreateSourceRequest(req CreateSourceRequest) (sources.Source, er
 		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
 
+	if verrs := source.Validate(); len(verrs) > 0 {
+		// join all validation errors into one error
+		var sb strings.Builder
+		for i, e := range verrs {
+			if i > 0 {
+				sb.WriteString("; ")
+			}
+			sb.WriteString(e.Error())
+		}
+		return nil, fmt.Errorf("invalid source config: %s", sb.String())
+	}
+
 	return source, nil
 }
 

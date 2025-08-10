@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/utils"
 
 	"github.com/google/go-github/v72/github"
 )
@@ -16,7 +17,7 @@ import (
 const TypeGithubReleases = "github-releases"
 
 type SourceRelease struct {
-	Repository       string `json:"repository"`
+	Repository       string `json:"repository" validate:"required,contains=/"`
 	Token            string `json:"token"`
 	IncludePreleases bool   `json:"includePrereleases"`
 	client           *github.Client
@@ -43,6 +44,8 @@ func (s *SourceRelease) URL() string {
 func (s *SourceRelease) Type() string {
 	return TypeGithubReleases
 }
+
+func (s *SourceRelease) Validate() []error { return utils.ValidateStruct(s) }
 
 func (s *SourceRelease) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	release, err := s.fetchLatestGithubRelease(ctx)

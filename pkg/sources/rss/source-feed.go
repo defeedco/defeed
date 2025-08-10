@@ -33,7 +33,7 @@ func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type SourceFeed struct {
-	FeedURL string            `json:"url"`
+	FeedURL string            `json:"url" validate:"required,url"`
 	Headers map[string]string `json:"headers"`
 }
 
@@ -57,13 +57,9 @@ func (s *SourceFeed) Type() string {
 	return TypeRSSFeed
 }
 
-func (s *SourceFeed) Initialize() error {
-	if s.FeedURL == "" {
-		return fmt.Errorf("URL is required")
-	}
+func (s *SourceFeed) Validate() []error { return utils.ValidateStruct(s) }
 
-	return nil
-}
+func (s *SourceFeed) Initialize() error { return nil }
 
 func (s *SourceFeed) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	parser := gofeed.NewParser()

@@ -6,14 +6,15 @@ import (
 	"fmt"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/utils"
 )
 
 const TypeLobstersFeed = "lobsters-feed"
 
 type SourceFeed struct {
-	InstanceURL string `json:"instanceUrl"`
-	CustomURL   string `json:"customUrl"`
-	FeedName    string `json:"feed"`
+	InstanceURL string `json:"instanceUrl" validate:"required,url"`
+	CustomURL   string `json:"customUrl" validate:"omitempty,url"`
+	FeedName    string `json:"feed" validate:"required,oneof=hottest newest"`
 	client      *LobstersClient
 }
 
@@ -39,13 +40,10 @@ func (s *SourceFeed) Type() string {
 	return TypeLobstersFeed
 }
 
+func (s *SourceFeed) Validate() []error { return utils.ValidateStruct(s) }
+
 func (s *SourceFeed) Initialize() error {
-	if s.FeedName != "hottest" && s.FeedName != "newest" {
-		return fmt.Errorf("feed name must be one of: 'hottest', 'newest'")
-	}
-
 	s.client = NewLobstersClient(s.InstanceURL)
-
 	return nil
 }
 

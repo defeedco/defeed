@@ -531,12 +531,6 @@ export interface RedditSubredditConfig {
     'search'?: string;
     /**
      * 
-     * @type {string}
-     * @memberof RedditSubredditConfig
-     */
-    'requestUrlTemplate'?: string;
-    /**
-     * 
      * @type {RedditSubredditConfigAuth}
      * @memberof RedditSubredditConfig
      */

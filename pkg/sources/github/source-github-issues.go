@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/utils"
 
 	"github.com/google/go-github/v72/github"
 )
@@ -16,7 +17,7 @@ import (
 const TypeGithubIssues = "github-issues"
 
 type SourceIssues struct {
-	Repository string `json:"repository"`
+	Repository string `json:"repository" validate:"required,contains=/"`
 	Token      string `json:"token"`
 	client     *github.Client
 }
@@ -40,6 +41,8 @@ func (s *SourceIssues) URL() string {
 func (s *SourceIssues) Type() string {
 	return TypeGithubIssues
 }
+
+func (s *SourceIssues) Validate() []error { return utils.ValidateStruct(s) }
 
 func (s *SourceIssues) MarshalJSON() ([]byte, error) {
 	type Alias SourceIssues

@@ -10,13 +10,14 @@ import (
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/alexferrari88/gohn/pkg/gohn"
+	"github.com/glanceapp/glance/pkg/utils"
 	"github.com/go-shiori/go-readability"
 )
 
 const TypeHackerNewsPosts = "hackernews-posts"
 
 type SourcePosts struct {
-	FeedName string `json:"feedName"`
+	FeedName string `json:"feedName" validate:"required,oneof=top new best"`
 	client   *gohn.Client
 }
 
@@ -39,6 +40,8 @@ func (s *SourcePosts) URL() string {
 func (s *SourcePosts) Type() string {
 	return TypeHackerNewsPosts
 }
+
+func (s *SourcePosts) Validate() []error { return utils.ValidateStruct(s) }
 
 type Post struct {
 	Post     *gohn.Item `json:"post"`
@@ -113,10 +116,6 @@ func (p *Post) CreatedAt() time.Time {
 }
 
 func (s *SourcePosts) Initialize() error {
-	if s.FeedName != "top" && s.FeedName != "new" && s.FeedName != "best" {
-		return fmt.Errorf("feed name must be one of: 'top', 'new', 'best'")
-	}
-
 	var err error
 	s.client, err = gohn.NewClient(nil)
 	if err != nil {

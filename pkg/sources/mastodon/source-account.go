@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/utils"
 
 	"github.com/mattn/go-mastodon"
 )
@@ -13,8 +14,8 @@ import (
 const TypeMastodonAccount = "mastodon-account"
 
 type SourceAccount struct {
-	InstanceURL string `json:"instanceUrl"`
-	Account     string `json:"account"`
+	InstanceURL string `json:"instanceUrl" validate:"required,url"`
+	Account     string `json:"account" validate:"required"`
 	client      *mastodon.Client
 }
 
@@ -39,6 +40,8 @@ func (s *SourceAccount) URL() string {
 func (s *SourceAccount) Type() string {
 	return TypeMastodonAccount
 }
+
+func (s *SourceAccount) Validate() []error { return utils.ValidateStruct(s) }
 
 func (s *SourceAccount) Initialize() error {
 	s.client = mastodon.NewClient(&mastodon.Config{

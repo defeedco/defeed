@@ -6,14 +6,15 @@ import (
 	"fmt"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/utils"
 )
 
 const TypeLobstersTag = "lobsters-tag"
 
 type SourceTag struct {
-	InstanceURL string `json:"instanceUrl"`
-	CustomURL   string `json:"customUrl"`
-	Tag         string `json:"tag"`
+	InstanceURL string `json:"instanceUrl" validate:"required,url"`
+	CustomURL   string `json:"customUrl" validate:"omitempty,url"`
+	Tag         string `json:"tag" validate:"required"`
 	client      *LobstersClient
 }
 
@@ -39,6 +40,10 @@ func (s *SourceTag) Type() string {
 	return TypeLobstersTag
 }
 
+func (s *SourceTag) Validate() []error {
+	return utils.ValidateStruct(s)
+}
+
 func (s *SourceTag) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	var stories []*Story
 	var err error
@@ -60,12 +65,7 @@ func (s *SourceTag) Stream(ctx context.Context, feed chan<- types.Activity, errs
 }
 
 func (s *SourceTag) Initialize() error {
-	if s.Tag == "" {
-		return fmt.Errorf("tag is required")
-	}
-
 	s.client = NewLobstersClient(s.InstanceURL)
-
 	return nil
 }
 

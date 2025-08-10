@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/utils"
 
 	"github.com/mattn/go-mastodon"
 )
@@ -13,8 +14,8 @@ import (
 const TypeMastodonTag = "mastodon-tag"
 
 type SourceTag struct {
-	InstanceURL string `json:"instanceUrl"`
-	Tag         string `json:"tag"`
+	InstanceURL string `json:"instanceUrl" validate:"required,url"`
+	Tag         string `json:"tag" validate:"required"`
 }
 
 func NewSourceTag() *SourceTag {
@@ -39,16 +40,9 @@ func (s *SourceTag) Type() string {
 	return TypeMastodonTag
 }
 
-func (s *SourceTag) Initialize() error {
-	if s.InstanceURL == "" {
-		return fmt.Errorf("instance URL is required")
-	}
-	if s.Tag == "" {
-		return fmt.Errorf("hashtag is required")
-	}
+func (s *SourceTag) Validate() []error { return utils.ValidateStruct(s) }
 
-	return nil
-}
+func (s *SourceTag) Initialize() error { return nil }
 
 func (s *SourceTag) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	client := mastodon.NewClient(&mastodon.Config{

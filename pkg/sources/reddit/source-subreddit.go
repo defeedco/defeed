@@ -3,14 +3,13 @@ package reddit
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"html"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/utils"
 
 	"github.com/go-shiori/go-readability"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
@@ -19,16 +18,15 @@ import (
 const TypeRedditSubreddit = "reddit-subreddit"
 
 type SourceSubreddit struct {
-	Subreddit          string `json:"subreddit"`
-	SortBy             string `json:"sortBy"`
-	TopPeriod          string `json:"topPeriod"`
-	Search             string `json:"search"`
-	RequestURLTemplate string `json:"requestUrlTemplate"`
-	client             *reddit.Client
-	AppAuth            struct {
+	Subreddit string `json:"subreddit" validate:"required"`
+	SortBy    string `json:"sortBy" validate:"required,oneof=hot new top rising"`
+	TopPeriod string `json:"topPeriod" validate:"required,oneof=hour day week month year all"`
+	Search    string `json:"search"`
+	client    *reddit.Client
+	AppAuth   struct {
 		Name   string `json:"name"`
 		ID     string `json:"ID"`
-		Secret string `json:"secret"`
+		Secret string `json:"secret" validate:"required_with=ID"`
 	} `json:"auth"`
 }
 
@@ -51,6 +49,8 @@ func (s *SourceSubreddit) URL() string {
 func (s *SourceSubreddit) Type() string {
 	return TypeRedditSubreddit
 }
+
+func (s *SourceSubreddit) Validate() []error { return utils.ValidateStruct(s) }
 
 type Post struct {
 	Post      *reddit.Post `json:"post"`
@@ -127,26 +127,6 @@ func (p *Post) CreatedAt() time.Time {
 }
 
 func (s *SourceSubreddit) Initialize() error {
-	if s.Subreddit == "" {
-		return errors.New("subreddit is required")
-	}
-
-	sort := s.SortBy
-	if sort != "hot" && sort != "new" && sort != "top" && sort != "rising" {
-		return errors.New("sort by must be one of: 'hot', 'new', 'top', 'rising'")
-	}
-
-	p := s.TopPeriod
-	if p != "hour" && p != "day" && p != "week" && p != "month" && p != "year" && p != "all" {
-		return errors.New("top period must be one of: 'hour', 'day', 'week', 'month', 'year', 'all'")
-	}
-
-	if s.RequestURLTemplate != "" {
-		if !strings.Contains(s.RequestURLTemplate, "{REQUEST-URL}") {
-			return errors.New("no `{REQUEST-URL}` placeholder specified")
-		}
-	}
-
 	var client *reddit.Client
 	var err error
 
