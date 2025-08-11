@@ -74,7 +74,8 @@ func (r *Registry) Add(source Source) error {
 	existing, _ := r.sourceRepo.GetByID(source.UID())
 
 	if existing != nil {
-		return fmt.Errorf("source '%s' already exists", source.UID())
+		// source already exists, we don't need to do anything
+		return nil
 	}
 
 	if err := source.Initialize(); err != nil {
