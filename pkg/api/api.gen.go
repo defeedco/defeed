@@ -66,6 +66,12 @@ const (
 	Similarity   SearchActivitiesParamsSortBy = "similarity"
 )
 
+// ActivitiesSummary defines model for ActivitiesSummary.
+type ActivitiesSummary struct {
+	// Highlights List of key highlights extracted from the activities
+	Highlights []ActivityHighlight `json:"highlights"`
+}
+
 // Activity defines model for Activity.
 type Activity struct {
 	Body      string    `json:"body"`
@@ -85,6 +91,15 @@ type Activity struct {
 	Title      string     `json:"title"`
 	Uid        string     `json:"uid"`
 	Url        string     `json:"url"`
+}
+
+// ActivityHighlight defines model for ActivityHighlight.
+type ActivityHighlight struct {
+	// Content A concise highlight summarizing a key point
+	Content string `json:"content"`
+
+	// SourceActivityIds List of activity IDs that contributed to this highlight
+	SourceActivityIds []string `json:"sourceActivityIds"`
 }
 
 // ChangedetectionWebsiteConfig defines model for ChangedetectionWebsiteConfig.
@@ -269,6 +284,15 @@ type SearchActivitiesParams struct {
 
 // SearchActivitiesParamsSortBy defines parameters for SearchActivities.
 type SearchActivitiesParamsSortBy string
+
+// GetActivitiesSummaryParams defines parameters for GetActivitiesSummary.
+type GetActivitiesSummaryParams struct {
+	// Query Semantic search query text. If provided, the summary will be based on the query.
+	Query *string `form:"query,omitempty" json:"query,omitempty"`
+
+	// Sources Comma-separated list of source UIDs where the activities are from
+	Sources string `form:"sources" json:"sources"`
+}
 
 // GetPageParams defines parameters for GetPage.
 type GetPageParams struct {
@@ -613,6 +637,9 @@ type ServerInterface interface {
 	// Search activities
 	// (GET /activities/search)
 	SearchActivities(w http.ResponseWriter, r *http.Request, params SearchActivitiesParams)
+	// Generate an executive summary of multiple activities
+	// (GET /activities/summary)
+	GetActivitiesSummary(w http.ResponseWriter, r *http.Request, params GetActivitiesSummaryParams)
 	// Get page HTML
 	// (GET /page)
 	GetPage(w http.ResponseWriter, r *http.Request, params GetPageParams)
@@ -692,6 +719,48 @@ func (siw *ServerInterfaceWrapper) SearchActivities(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SearchActivities(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetActivitiesSummary operation middleware
+func (siw *ServerInterfaceWrapper) GetActivitiesSummary(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetActivitiesSummaryParams
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		return
+	}
+
+	// ------------- Required query parameter "sources" -------------
+
+	if paramValue := r.URL.Query().Get("sources"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sources"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "sources", r.URL.Query(), &params.Sources)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sources", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetActivitiesSummary(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -948,6 +1017,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc("GET "+options.BaseURL+"/activities/search", wrapper.SearchActivities)
+	m.HandleFunc("GET "+options.BaseURL+"/activities/summary", wrapper.GetActivitiesSummary)
 	m.HandleFunc("GET "+options.BaseURL+"/page", wrapper.GetPage)
 	m.HandleFunc("GET "+options.BaseURL+"/sources", wrapper.ListSources)
 	m.HandleFunc("POST "+options.BaseURL+"/sources", wrapper.CreateSource)

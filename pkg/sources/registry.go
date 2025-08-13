@@ -41,6 +41,7 @@ type activityStore interface {
 
 type summarizer interface {
 	Summarize(ctx context.Context, activity types.Activity) (*types.ActivitySummary, error)
+	SummarizeMany(ctx context.Context, activities []*types.DecoratedActivity) (*types.ActivitiesSummary, error)
 }
 
 type embedder interface {
@@ -232,4 +233,13 @@ func (r *Registry) Search(ctx context.Context, query string, sourceUIDs []string
 	}
 
 	return r.activityRepo.Search(req)
+}
+
+func (r *Registry) Summary(ctx context.Context, query string, sourceUIDs []string) (*types.ActivitiesSummary, error) {
+	activities, err := r.Search(ctx, query, sourceUIDs, 0.0, 20, types.SortBySimilarity)
+	if err != nil {
+		return nil, fmt.Errorf("search activities: %w", err)
+	}
+
+	return r.summarizer.SummarizeMany(ctx, activities)
 }

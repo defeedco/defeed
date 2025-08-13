@@ -293,6 +293,23 @@ func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
 	s.serializeRes(w, source)
 }
 
+func (s *Server) GetActivitiesSummary(w http.ResponseWriter, r *http.Request, params GetActivitiesSummaryParams) {
+	var query string
+	if params.Query != nil {
+		query = *params.Query
+	}
+
+	sourceIDs := strings.Split(params.Sources, ",")
+
+	summary, err := s.registry.Summary(r.Context(), query, sourceIDs)
+	if err != nil {
+		s.internalError(w, err, "generate summary")
+		return
+	}
+
+	s.serializeRes(w, summary)
+}
+
 func (s *Server) SearchActivities(w http.ResponseWriter, r *http.Request, params SearchActivitiesParams) {
 	var sourceUIDs []string
 	if params.Sources != nil {

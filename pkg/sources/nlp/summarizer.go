@@ -41,44 +41,24 @@ func (llm *ActivitySummarizer) Summarize(
 	ctx context.Context,
 	activity types.Activity,
 ) (*types.ActivitySummary, error) {
-	prompt := strings.Builder{}
+	prompt := promptBuilder{}
 
 	// static system prompt
-	prompt.WriteString(systemPrompt)
+	prompt.WriteString("SystemPrompt", systemPrompt)
 
-	// format instructions
 	parser, err := outputparser.NewDefined(completionResponse{})
 	if err != nil {
 		return nil, fmt.Errorf("creating parser: %w", err)
 	}
-	prompt.WriteString(`
-───────────────────────────────
-FORMAT INSTRUCTIONS
-───────────────────────────────
+	prompt.WriteString("FormatInstructions", parser.GetFormatInstructions())
 
-`)
-	prompt.WriteString(parser.GetFormatInstructions())
-
-	// input
 	input := completionInput{
 		Title:     activity.Title(),
 		Body:      activity.Body(),
 		URL:       activity.URL(),
 		CreatedAt: activity.CreatedAt().Format(time.RFC3339) + "Z",
 	}
-	serializedInput, err := json.MarshalIndent(input, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("serializing input: %w", err)
-	}
-	prompt.WriteString(`
-───────────────────────────────
-INPUT ACTIVITY TO PROCESS
-───────────────────────────────
-
-`)
-	prompt.WriteString("```json\n")
-	prompt.Write(serializedInput)
-	prompt.WriteString("\n```\n")
+	prompt.WriteJSON("ActivityToProcess", input)
 
 	out, err := llms.GenerateFromSinglePrompt(
 		ctx,
@@ -89,12 +69,7 @@ INPUT ACTIVITY TO PROCESS
 		return nil, fmt.Errorf("generate completion: %w", err)
 	}
 
-	// Parser expects backsticks but the output usually doesn't contain them
-	wrappedOut := out
-	if !strings.HasPrefix(out, "```json") {
-		wrappedOut = fmt.Sprintf("```json\n%s\n```", out)
-	}
-	response, err := parser.Parse(wrappedOut)
+	response, err := parseResponse(parser, out)
 	if err != nil {
 		return nil, fmt.Errorf("parse response: %w", err)
 	}
@@ -103,4 +78,130 @@ INPUT ACTIVITY TO PROCESS
 		FullSummary:  response.FullSummary,
 		ShortSummary: response.ShortSummary,
 	}, nil
+}
+
+type multiActivityCompletionResponse struct {
+	Highlights []activityHighlight `json:"highlights" describe:"A list of key highlights from the activities"`
+}
+
+type activityHighlight struct {
+	Content   string   `json:"content" describe:"A concise highlight summarizing a key point"`
+	SourceIDs []string `json:"source_ids" describe:"List of activity IDs that contributed to this highlight"`
+}
+
+type multiActivityInputActivity struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Body      string `json:"body"`
+	URL       string `json:"url"`
+	CreatedAt string `json:"created_at"`
+}
+
+type multiActivityInput struct {
+	Activities []multiActivityInputActivity `json:"activities"`
+}
+
+func (llm *ActivitySummarizer) SummarizeMany(
+	ctx context.Context,
+	activities []*types.DecoratedActivity,
+) (*types.ActivitiesSummary, error) {
+	prompt := promptBuilder{}
+
+	prompt.WriteString("SystemPrompt", `You are an expert at summarizing information and finding key insights.
+Your task is to analyze multiple activities and extract key highlights that represent the most important information.
+Each highlight should be a concise, self-contained piece of information that captures a significant point.
+For each highlight, you must also list the IDs of the source activities that contributed to that insight.
+`)
+
+	parser, err := outputparser.NewDefined(multiActivityCompletionResponse{})
+	if err != nil {
+		return nil, fmt.Errorf("creating parser: %w", err)
+	}
+
+	prompt.WriteString("FormatInstructions", parser.GetFormatInstructions())
+
+	input := multiActivityInput{
+		Activities: make([]multiActivityInputActivity, len(activities)),
+	}
+
+	for i, activity := range activities {
+		input.Activities[i] = multiActivityInputActivity{
+			ID:        activity.UID(),
+			Title:     activity.Title(),
+			Body:      activity.Body(),
+			URL:       activity.URL(),
+			CreatedAt: activity.CreatedAt().Format(time.RFC3339) + "Z",
+		}
+	}
+
+	if err := prompt.WriteJSON("ActivitiesToProcess", input); err != nil {
+		return nil, fmt.Errorf("write json: %w", err)
+	}
+
+	out, err := llms.GenerateFromSinglePrompt(
+		ctx,
+		llm.model,
+		prompt.String(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("generate completion: %w", err)
+	}
+
+	response, err := parseResponse(parser, out)
+	if err != nil {
+		return nil, fmt.Errorf("parse response: %w", err)
+	}
+
+	highlights := make([]types.ActivityHighlight, len(response.Highlights))
+	for i, h := range response.Highlights {
+		highlights[i] = types.ActivityHighlight{
+			Content:           h.Content,
+			SourceActivityIDs: h.SourceIDs,
+		}
+	}
+
+	return &types.ActivitiesSummary{
+		Highlights: highlights,
+	}, nil
+}
+
+func parseResponse[T any](parser outputparser.Defined[T], response string) (*T, error) {
+	// Parser expects backsticks but the output usually doesn't contain them
+	wrappedRes := response
+	if !strings.HasPrefix(response, "```json") {
+		wrappedRes = fmt.Sprintf("```json\n%s\n```", response)
+	}
+	out, err := parser.Parse(wrappedRes)
+	if err != nil {
+		return nil, fmt.Errorf("parse: %w", err)
+	}
+
+	return &out, nil
+}
+
+type promptBuilder struct {
+	prompt strings.Builder
+}
+
+func (p *promptBuilder) WriteString(tag string, s string) {
+	p.prompt.WriteString(fmt.Sprintf("<%s>\n", tag))
+	p.prompt.WriteString(s)
+	p.prompt.WriteString(fmt.Sprintf("</%s>\n", tag))
+}
+
+func (p *promptBuilder) WriteJSON(tag string, v any) error {
+	serialized, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal: %w", err)
+	}
+	p.prompt.WriteString(fmt.Sprintf("<%s>\n", tag))
+	p.prompt.WriteString("```json\n")
+	p.prompt.Write(serialized)
+	p.prompt.WriteString("\n```\n")
+	p.prompt.WriteString(fmt.Sprintf("</%s>\n", tag))
+	return nil
+}
+
+func (p *promptBuilder) String() string {
+	return p.prompt.String()
 }

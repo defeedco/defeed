@@ -100,6 +100,36 @@ paths:
                 items:
                   $ref: '#/components/schemas/Activity'
 
+  /activities/summary:
+    get:
+      summary: Generate an executive summary of multiple activities
+      operationId: getActivitiesSummary
+      tags:
+        - activities
+      parameters:
+        - name: query
+          in: query
+          description: Semantic search query text. If provided, the summary will be based on the query.
+          schema:
+            type: string
+        - name: sources
+          in: query
+          required: true
+          description: Comma-separated list of source UIDs where the activities are from
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9-_]+(,[a-zA-Z0-9-_]+)*$'
+            example: "source1,source2,source3"
+      responses:
+        '200':
+          description: Executive summary of activities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivitiesSummary'
+        '400':
+          description: Invalid request
+
   /activities/search:
     get:
       summary: Search activities
@@ -439,6 +469,32 @@ components:
         - githubReleases
         - githubIssues
         - changedetectionWebsite
+
+    ActivitiesSummary:
+      type: object
+      required:
+        - highlights
+      properties:
+        highlights:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityHighlight'
+          description: List of key highlights extracted from the activities
+
+    ActivityHighlight:
+      type: object
+      required:
+        - content
+        - sourceActivityIds
+      properties:
+        content:
+          type: string
+          description: A concise highlight summarizing a key point
+        sourceActivityIds:
+          type: array
+          items:
+            type: string
+          description: List of activity IDs that contributed to this highlight
 
     Activity:
       type: object

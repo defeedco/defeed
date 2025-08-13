@@ -30,6 +30,15 @@ type DecoratedActivity struct {
 	Similarity float32
 }
 
+type ActivitiesSummary struct {
+	Highlights []ActivityHighlight
+}
+
+type ActivityHighlight struct {
+	Content           string
+	SourceActivityIDs []string
+}
+
 type SortBy string
 
 const (

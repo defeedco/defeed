@@ -26,6 +26,19 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerM
 /**
  * 
  * @export
+ * @interface ActivitiesSummary
+ */
+export interface ActivitiesSummary {
+    /**
+     * List of key highlights extracted from the activities
+     * @type {Array<ActivityHighlight>}
+     * @memberof ActivitiesSummary
+     */
+    'highlights': Array<ActivityHighlight>;
+}
+/**
+ * 
+ * @export
  * @interface Activity
  */
 export interface Activity {
@@ -98,6 +111,25 @@ export interface Activity {
 }
 
 
+/**
+ * 
+ * @export
+ * @interface ActivityHighlight
+ */
+export interface ActivityHighlight {
+    /**
+     * A concise highlight summarizing a key point
+     * @type {string}
+     * @memberof ActivityHighlight
+     */
+    'content': string;
+    /**
+     * List of activity IDs that contributed to this highlight
+     * @type {Array<string>}
+     * @memberof ActivityHighlight
+     */
+    'sourceActivityIds': Array<string>;
+}
 /**
  * 
  * @export
@@ -672,6 +704,48 @@ export const ActivitiesApiAxiosParamCreator = function (configuration?: Configur
     return {
         /**
          * 
+         * @summary Generate an executive summary of multiple activities
+         * @param {string} sources Comma-separated list of source UIDs where the activities are from
+         * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getActivitiesSummary: async (sources: string, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'sources' is not null or undefined
+            assertParamExists('getActivitiesSummary', 'sources', sources)
+            const localVarPath = `/activities/summary`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (query !== undefined) {
+                localVarQueryParameter['query'] = query;
+            }
+
+            if (sources !== undefined) {
+                localVarQueryParameter['sources'] = sources;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary List all activities
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -767,6 +841,20 @@ export const ActivitiesApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary Generate an executive summary of multiple activities
+         * @param {string} sources Comma-separated list of source UIDs where the activities are from
+         * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getActivitiesSummary(sources: string, query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ActivitiesSummary>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getActivitiesSummary(sources, query, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ActivitiesApi.getActivitiesSummary']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary List all activities
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -806,6 +894,17 @@ export const ActivitiesApiFactory = function (configuration?: Configuration, bas
     return {
         /**
          * 
+         * @summary Generate an executive summary of multiple activities
+         * @param {string} sources Comma-separated list of source UIDs where the activities are from
+         * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getActivitiesSummary(sources: string, query?: string, options?: RawAxiosRequestConfig): AxiosPromise<ActivitiesSummary> {
+            return localVarFp.getActivitiesSummary(sources, query, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary List all activities
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -837,6 +936,19 @@ export const ActivitiesApiFactory = function (configuration?: Configuration, bas
  * @extends {BaseAPI}
  */
 export class ActivitiesApi extends BaseAPI {
+    /**
+     * 
+     * @summary Generate an executive summary of multiple activities
+     * @param {string} sources Comma-separated list of source UIDs where the activities are from
+     * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ActivitiesApi
+     */
+    public getActivitiesSummary(sources: string, query?: string, options?: RawAxiosRequestConfig) {
+        return ActivitiesApiFp(this.configuration).getActivitiesSummary(sources, query, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @summary List all activities
