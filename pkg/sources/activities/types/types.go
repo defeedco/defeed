@@ -31,6 +31,7 @@ type DecoratedActivity struct {
 }
 
 type ActivitiesSummary struct {
+	Overview   string
 	Highlights []ActivityHighlight
 }
 

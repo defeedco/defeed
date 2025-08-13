@@ -473,8 +473,12 @@ components:
     ActivitiesSummary:
       type: object
       required:
+        - overview
         - highlights
       properties:
+        overview:
+          type: string
+          description: A concise one-paragraph overview of the overall direction and themes
         highlights:
           type: array
           items:

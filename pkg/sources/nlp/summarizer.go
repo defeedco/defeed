@@ -81,6 +81,7 @@ func (llm *ActivitySummarizer) Summarize(
 }
 
 type multiActivityCompletionResponse struct {
+	Overview   string              `json:"overview" describe:"A concise one-paragraph overview of the overall direction and themes"`
 	Highlights []activityHighlight `json:"highlights" describe:"A list of key highlights from the activities"`
 }
 
@@ -109,7 +110,14 @@ func (llm *ActivitySummarizer) SummarizeMany(
 	prompt := promptBuilder{}
 
 	prompt.WriteString("SystemPrompt", `You are an expert at summarizing information and finding key insights that are relevant to the user's interests.
-Your task is to analyze multiple activities and extract up to 5 key highlights that are most relevant to the user's query.
+Your task is to analyze multiple activities and provide:
+1. A concise one-paragraph overview that captures the overall direction and themes
+2. Up to 5 key highlights that are most relevant to the user's query
+
+Rules for the overview:
+1. Write a single paragraph that captures the main themes and trends
+2. Be direct and concise - avoid fillers like "These articles..."
+3. Focus on the overall narrative, not individual details
 
 Rules for generating highlights:
 1. Each highlight should be extremely concise - preferably one line
@@ -173,6 +181,7 @@ For each highlight, you must also list the IDs of the source activities that con
 	}
 
 	return &types.ActivitiesSummary{
+		Overview:   response.Overview,
 		Highlights: highlights,
 	}, nil
 }

@@ -30,6 +30,12 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerM
  */
 export interface ActivitiesSummary {
     /**
+     * A concise one-paragraph overview of the overall direction and themes
+     * @type {string}
+     * @memberof ActivitiesSummary
+     */
+    'overview': string;
+    /**
      * List of key highlights extracted from the activities
      * @type {Array<ActivityHighlight>}
      * @memberof ActivitiesSummary

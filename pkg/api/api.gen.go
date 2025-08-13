@@ -70,6 +70,9 @@ const (
 type ActivitiesSummary struct {
 	// Highlights List of key highlights extracted from the activities
 	Highlights []ActivityHighlight `json:"highlights"`
+
+	// Overview A concise one-paragraph overview of the overall direction and themes
+	Overview string `json:"overview"`
 }
 
 // Activity defines model for Activity.

@@ -316,6 +316,7 @@ func (s *Server) GetActivitiesSummary(w http.ResponseWriter, r *http.Request, pa
 	}
 
 	s.serializeRes(w, ActivitiesSummary{
+		Overview:   summary.Overview,
 		Highlights: highlights,
 	})
 }
