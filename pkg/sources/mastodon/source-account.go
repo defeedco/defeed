@@ -73,16 +73,13 @@ func (s *SourceAccount) Stream(ctx context.Context, feed chan<- types.Activity, 
 }
 
 func (s *SourceAccount) fetchAccount(ctx context.Context) (*mastodon.Account, error) {
-	accounts, err := s.client.Search(ctx, s.Account, false)
+	acct := s.Account
+
+	account, err := s.client.AccountLookup(ctx, acct)
 	if err != nil {
-		return nil, fmt.Errorf("search account: %w", err)
+		return nil, fmt.Errorf("account lookup: %w", err)
 	}
-
-	if len(accounts.Accounts) == 0 {
-		return nil, fmt.Errorf("account not found: %s", s.Account)
-	}
-
-	return accounts.Accounts[0], nil
+	return account, nil
 }
 
 func (s *SourceAccount) fetchAccountPosts(ctx context.Context, accountID mastodon.ID, limit int64) ([]*Post, error) {

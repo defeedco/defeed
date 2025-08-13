@@ -61,11 +61,22 @@ func (p *Post) Title() string {
 }
 
 func (p *Post) Body() string {
-	return extractTextFromHTML(p.Status.Content)
+	if p.Status.Content != "" {
+		return extractTextFromHTML(p.Status.Content)
+	}
+	if p.Status.Reblog != nil && p.Status.Reblog.Content != "" {
+		reblogAcct := p.Status.Reblog.Account.Acct
+		body := extractTextFromHTML(p.Status.Reblog.Content)
+		return "Reblogged " + reblogAcct + "'s post: " + body
+	}
+	return ""
 }
 
 func (p *Post) URL() string {
-	return p.Status.URL
+	if p.Status.Content != "" {
+		return p.Status.URL
+	}
+	return p.Status.Reblog.URL
 }
 
 func (p *Post) ImageURL() string {
