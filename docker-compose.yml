@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: pgvector/pgvector:0.8.0-pg16
+    image: pgvector/pgvector:0.8.0-pg17
     container_name: defeed-engine-db-postgres
     restart: unless-stopped
     environment:
