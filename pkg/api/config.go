@@ -2,11 +2,12 @@ package api
 
 import (
 	"fmt"
-	"github.com/glanceapp/glance/web"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/glanceapp/glance/web"
 )
 
 type Config struct {
@@ -16,6 +17,7 @@ type Config struct {
 	AssetsPath string `env:"SERVER_ASSETS_PATH,default=./assets"`
 	BaseURL    string `env:"SERVER_BASE_URL,default=/"`
 	FaviconURL string `env:"SERVER_FAVICON_URL,default="`
+	CORSOrigin string `env:"CORS_ORIGIN,default=*"`
 
 	createdAt time.Time
 }
@@ -28,6 +30,7 @@ func NewDefaultConfig() Config {
 		AssetsPath: "./assets",
 		BaseURL:    "/",
 		FaviconURL: "",
+		CORSOrigin: "*",
 		createdAt:  time.Now(),
 	}
 
