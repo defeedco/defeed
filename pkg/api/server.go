@@ -84,7 +84,7 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		registry:  registry,
 		http: http.Server{
 			Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
-			Handler: corsMiddleware(mux),
+			Handler: corsMiddleware(mux, cfg.CORSOrigin),
 		},
 	}
 
@@ -95,11 +95,11 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 	return server, nil
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
+func corsMiddleware(next http.Handler, origin string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
