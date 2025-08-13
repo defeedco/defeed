@@ -445,6 +445,7 @@ components:
       required:
         - uid
         - sourceUid
+        - sourceType
         - title
         - shortSummary
         - fullSummary
@@ -457,6 +458,8 @@ components:
           type: string
         sourceUid:
           type: string
+        sourceType:
+          $ref: '#/components/schemas/SourceType'
         title:
           type: string
         shortSummary:

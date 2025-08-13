@@ -79,11 +79,12 @@ type Activity struct {
 	ShortSummary string `json:"shortSummary"`
 
 	// Similarity Similarity score (0-1) when using semantic search
-	Similarity *float32 `json:"similarity,omitempty"`
-	SourceUid  string   `json:"sourceUid"`
-	Title      string   `json:"title"`
-	Uid        string   `json:"uid"`
-	Url        string   `json:"url"`
+	Similarity *float32   `json:"similarity,omitempty"`
+	SourceType SourceType `json:"sourceType"`
+	SourceUid  string     `json:"sourceUid"`
+	Title      string     `json:"title"`
+	Uid        string     `json:"uid"`
+	Url        string     `json:"url"`
 }
 
 // ChangedetectionWebsiteConfig defines model for ChangedetectionWebsiteConfig.

@@ -43,6 +43,12 @@ export interface Activity {
     'sourceUid': string;
     /**
      * 
+     * @type {SourceType}
+     * @memberof Activity
+     */
+    'sourceType': SourceType;
+    /**
+     * 
      * @type {string}
      * @memberof Activity
      */
@@ -90,6 +96,8 @@ export interface Activity {
      */
     'similarity'?: number;
 }
+
+
 /**
  * 
  * @export

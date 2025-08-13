@@ -213,7 +213,13 @@ func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.serializeRes(w, serializeActivities(out))
+	activities, err := serializeActivities(out)
+	if err != nil {
+		s.internalError(w, err, "serialize activities")
+		return
+	}
+
+	s.serializeRes(w, activities)
 }
 
 func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
@@ -324,7 +330,13 @@ func (s *Server) SearchActivities(w http.ResponseWriter, r *http.Request, params
 		return
 	}
 
-	s.serializeRes(w, serializeActivities(results))
+	activities, err := serializeActivities(results)
+	if err != nil {
+		s.internalError(w, err, "serialize activities")
+		return
+	}
+
+	s.serializeRes(w, activities)
 }
 
 func deserializeReq[Req any](r *http.Request, req *Req) error {
@@ -466,29 +478,39 @@ func deserializeSourceType(in SourceType) (string, error) {
 	return "", fmt.Errorf("unknown source type: %s", in)
 }
 
-func serializeActivities(in []*types.DecoratedActivity) []Activity {
-	out := make([]Activity, 0, len(in))
+func serializeActivities(in []*types.DecoratedActivity) ([]*Activity, error) {
+	out := make([]*Activity, 0, len(in))
 
 	for _, e := range in {
-		out = append(out, serializeActivity(e))
+		activity, err := serializeActivity(e)
+		if err != nil {
+			return nil, fmt.Errorf("serialize activity: %w", err)
+		}
+		out = append(out, activity)
 	}
 
-	return out
+	return out, nil
 }
 
-func serializeActivity(in *types.DecoratedActivity) Activity {
-	return Activity{
+func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
+	sourceType, err := serializeSourceType(in.SourceType())
+	if err != nil {
+		return nil, fmt.Errorf("serialize source type: %w", err)
+	}
+
+	return &Activity{
 		Body:         in.Body(),
 		CreatedAt:    in.CreatedAt(),
 		ImageUrl:     in.ImageURL(),
 		FullSummary:  in.Summary.FullSummary,
 		ShortSummary: in.Summary.ShortSummary,
 		SourceUid:    in.SourceUID(),
+		SourceType:   sourceType,
 		Title:        in.Title(),
 		Uid:          in.UID(),
 		Url:          in.URL(),
 		Similarity:   &in.Similarity,
-	}
+	}, nil
 }
 
 func serializeSources(in []sources.Source) ([]Source, error) {
