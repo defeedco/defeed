@@ -307,7 +307,17 @@ func (s *Server) GetActivitiesSummary(w http.ResponseWriter, r *http.Request, pa
 		return
 	}
 
-	s.serializeRes(w, summary)
+	highlights := make([]ActivityHighlight, 0, len(summary.Highlights))
+	for _, h := range summary.Highlights {
+		highlights = append(highlights, ActivityHighlight{
+			Content:           h.Content,
+			SourceActivityIds: h.SourceActivityIDs,
+		})
+	}
+
+	s.serializeRes(w, ActivitiesSummary{
+		Highlights: highlights,
+	})
 }
 
 func (s *Server) SearchActivities(w http.ResponseWriter, r *http.Request, params SearchActivitiesParams) {

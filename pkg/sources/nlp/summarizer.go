@@ -104,12 +104,20 @@ type multiActivityInput struct {
 func (llm *ActivitySummarizer) SummarizeMany(
 	ctx context.Context,
 	activities []*types.DecoratedActivity,
+	query string,
 ) (*types.ActivitiesSummary, error) {
 	prompt := promptBuilder{}
 
-	prompt.WriteString("SystemPrompt", `You are an expert at summarizing information and finding key insights.
-Your task is to analyze multiple activities and extract key highlights that represent the most important information.
-Each highlight should be a concise, self-contained piece of information that captures a significant point.
+	prompt.WriteString("SystemPrompt", `You are an expert at summarizing information and finding key insights that are relevant to the user's interests.
+Your task is to analyze multiple activities and extract up to 5 key highlights that are most relevant to the user's query.
+
+Rules for generating highlights:
+1. Each highlight should be extremely concise - preferably one line
+2. Group related activities into a single highlight when they discuss the same concept or news
+3. Write in a direct, straightforward style - avoid fillers like "This article..."
+4. Focus only on information relevant to the user's query (if provided)
+5. Limit output to maximum 5 highlights, even if there are more activities
+
 For each highlight, you must also list the IDs of the source activities that contributed to that insight.
 `)
 
@@ -136,6 +144,10 @@ For each highlight, you must also list the IDs of the source activities that con
 
 	if err := prompt.WriteJSON("ActivitiesToProcess", input); err != nil {
 		return nil, fmt.Errorf("write json: %w", err)
+	}
+
+	if query != "" {
+		prompt.WriteString("UserQuery", query)
 	}
 
 	out, err := llms.GenerateFromSinglePrompt(
