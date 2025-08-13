@@ -34,16 +34,21 @@ STYLE & CONTENT RULES
    • Preserve proper nouns, project names, version numbers, etc.
 
 4. **Full Summary**  
-   • One cohesive paragraph (≈ 60–120 words).  
-   • May contain Markdown inline formatting for clarity:
-    - `code` back-ticks for identifiers, **bold**/*italics* for emphasis, links `[text](URL)` if useful.
-    - Avoid headings, lists, or block code; keep it paragraph style.  
-      • Cover *who / what / when / why / impact*:
-    - Primary actor or subject
-    - Key action, result, or discussion point
-    - Crucial details, metrics, or data
-    - Immediate significance for the field or community  
-      • Mention the date (ISO “2025-05-28”) only when timing matters or `created_at` is available.
+   • A structured Markdown list (≈ 60–120 words total) with key points.  
+   • Use bullet points for better readability and scanning:
+     - Start with a brief context/overview (1-2 lines)
+     - Break down important details into 2-4 bullet points
+     - End with impact/significance if relevant
+   • May contain Markdown inline formatting:
+     - `code` back-ticks for identifiers
+     - **bold**/*italics* for emphasis
+     - Links `[text](URL)` if useful
+   • Cover these aspects across the bullet points:
+     - Primary actor or subject
+     - Key action, result, or discussion point
+     - Crucial details, metrics, or data
+     - Immediate significance for the field or community
+   • Mention the date (ISO "2025-05-28") only when timing matters or `created_at` is available.
 
 5. **Short Summary**  
    • ≤ 15 words, single sentence or noun phrase; no terminal period.  
@@ -88,7 +93,7 @@ OUTPUT:
 
 ```json
 {
-    "full_summary": "**PR #88** in `octocat/hello-world` resolves a critical race during repository checkout by wrapping the concurrent fetch in a mutex. The patch eliminates sporadic data corruption seen on multi-worker CI runs, and all unit tests now pass on Linux and macOS. Reviewers deem the change low-risk and request a patch release so downstream projects avoid intermittent build failures.",
+    "full_summary": "**PR #88** in `octocat/hello-world` addresses a critical race condition in the repository checkout process.\n\n- Implements mutex protection around concurrent fetch operations to prevent data corruption\n- Resolves sporadic failures observed during multi-worker CI runs\n- All unit tests now pass successfully on both Linux and macOS platforms\n- Reviewers recommend a patch release to prevent build failures in downstream projects",
     "short_summary": "PR removes checkout race in octocat/hello-world"
 }
 ```
