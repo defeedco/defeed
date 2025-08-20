@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
@@ -53,7 +54,23 @@ func (s *SourceAccount) Initialize() error {
 	return nil
 }
 
-func (s *SourceAccount) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceAccount) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+
+	s.fetchAndSendNewPosts(ctx, since, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewPosts(ctx, since, feed, errs)
+		}
+	}
+}
+
+func (s *SourceAccount) fetchAndSendNewPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	account, err := s.fetchAccount(ctx)
 	if err != nil {
 		errs <- fmt.Errorf("fetch account: %w", err)
@@ -67,8 +84,15 @@ func (s *SourceAccount) Stream(ctx context.Context, feed chan<- types.Activity, 
 		return
 	}
 
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
+	}
+
 	for _, post := range posts {
-		feed <- post
+		if since == nil || post.CreatedAt().After(sinceTime) {
+			feed <- post
+		}
 	}
 }
 

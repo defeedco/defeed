@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
@@ -44,7 +45,23 @@ func (s *SourceTag) Validate() []error {
 	return utils.ValidateStruct(s)
 }
 
-func (s *SourceTag) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+
+	s.fetchAndSendNewStories(ctx, since, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewStories(ctx, since, feed, errs)
+		}
+	}
+}
+
+func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	var stories []*Story
 	var err error
 
@@ -59,8 +76,16 @@ func (s *SourceTag) Stream(ctx context.Context, feed chan<- types.Activity, errs
 		return
 	}
 
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
+	}
+
 	for _, story := range stories {
-		feed <- &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+		post := &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+		if since == nil || post.CreatedAt().After(sinceTime) {
+			feed <- post
+		}
 	}
 }
 

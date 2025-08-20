@@ -60,5 +60,10 @@ type Source interface {
 	// When non-empty, the caller should not proceed to Initialize.
 	Validate() []error
 	Initialize() error
-	Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error)
+	// Stream starts streaming new activities from the source.
+	// since is the last activity emitted by the source.
+	// feed is a channel to send activities to.
+	// errs is a channel to send errors to.
+	// The caller should close the channels when done.
+	Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error)
 }

@@ -150,16 +150,38 @@ func (s *SourceIssues) Initialize() error {
 	return nil
 }
 
-func (s *SourceIssues) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
-	activities, err := s.fetchIssueActivities(ctx, s.client, s.Repository)
+func (s *SourceIssues) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
 
+	s.fetchAndSendNewActivities(ctx, since, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewActivities(ctx, since, feed, errs)
+		}
+	}
+}
+
+func (s *SourceIssues) fetchAndSendNewActivities(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	activities, err := s.fetchIssueActivities(ctx, s.client, s.Repository)
 	if err != nil {
 		errs <- err
 		return
 	}
 
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
+	}
+
 	for _, activity := range activities {
-		feed <- activity
+		if since == nil || activity.CreatedAt().After(sinceTime) {
+			feed <- activity
+		}
 	}
 }
 

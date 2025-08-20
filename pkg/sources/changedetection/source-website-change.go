@@ -42,15 +42,37 @@ func (s *SourceWebsiteChange) Type() string {
 
 func (s *SourceWebsiteChange) Validate() []error { return utils.ValidateStruct(s) }
 
-func (s *SourceWebsiteChange) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
-	initial, err := s.fetchWatchFromChangeDetection()
+func (s *SourceWebsiteChange) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	ticker := time.NewTicker(15 * time.Minute)
+	defer ticker.Stop()
 
+	s.fetchAndSendNewChanges(ctx, since, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewChanges(ctx, since, feed, errs)
+		}
+	}
+}
+
+func (s *SourceWebsiteChange) fetchAndSendNewChanges(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	change, err := s.fetchWatchFromChangeDetection(ctx)
 	if err != nil {
 		errs <- err
 		return
 	}
 
-	feed <- initial
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
+	}
+
+	if since == nil || change.CreatedAt().After(sinceTime) {
+		feed <- change
+	}
 }
 
 func (s *SourceWebsiteChange) Initialize() error {
@@ -170,8 +192,9 @@ type changeDetectionWatchResponseJson struct {
 	PreviousHash string `json:"previous_hash"`
 }
 
-func (s *SourceWebsiteChange) fetchWatchFromChangeDetection() (*WebsiteChange, error) {
-	req, err := http.NewRequest(
+func (s *SourceWebsiteChange) fetchWatchFromChangeDetection(ctx context.Context) (*WebsiteChange, error) {
+	req, err := http.NewRequestWithContext(
+		ctx,
 		"GET",
 		fmt.Sprintf("%s/api/v1/watch/%s", s.InstanceURL, s.WatchUUID),
 		nil,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
@@ -44,7 +45,23 @@ func (s *SourceTag) Validate() []error { return utils.ValidateStruct(s) }
 
 func (s *SourceTag) Initialize() error { return nil }
 
-func (s *SourceTag) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+
+	s.fetchAndSendNewPosts(ctx, since, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewPosts(ctx, since, feed, errs)
+		}
+	}
+}
+
+func (s *SourceTag) fetchAndSendNewPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	client := mastodon.NewClient(&mastodon.Config{
 		Server:       s.InstanceURL,
 		ClientID:     "pulse-feed-aggregation",
@@ -52,19 +69,26 @@ func (s *SourceTag) Stream(ctx context.Context, feed chan<- types.Activity, errs
 	})
 
 	limit := 15
-	posts, err := s.fetchHashtagPosts(client, limit)
+	posts, err := s.fetchHashtagPosts(ctx, client, limit)
 	if err != nil {
 		errs <- fmt.Errorf("failed to fetch posts: %w", err)
 		return
 	}
 
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
+	}
+
 	for _, post := range posts {
-		feed <- post
+		if since == nil || post.CreatedAt().After(sinceTime) {
+			feed <- post
+		}
 	}
 }
 
-func (s *SourceTag) fetchHashtagPosts(client *mastodon.Client, limit int) ([]*Post, error) {
-	statuses, err := client.GetTimelineHashtag(context.Background(), s.Tag, false, &mastodon.Pagination{
+func (s *SourceTag) fetchHashtagPosts(ctx context.Context, client *mastodon.Client, limit int) ([]*Post, error) {
+	statuses, err := client.GetTimelineHashtag(ctx, s.Tag, false, &mastodon.Pagination{
 		Limit: int64(limit),
 	})
 	if err != nil {

@@ -116,6 +116,8 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 			query = query.Order(func(s *sql.Selector) {
 				s.OrderExpr(sql.Expr("similarity DESC"))
 			})
+		} else {
+			return nil, fmt.Errorf("sort by similarity requires query embedding parameter")
 		}
 	case types.SortByDate:
 		query = query.Order(ent.Desc(entactivity.FieldCreatedAt))

@@ -148,16 +148,38 @@ func (s *SourceSubreddit) Initialize() error {
 	return nil
 }
 
-func (s *SourceSubreddit) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
-	posts, err := s.fetchSubredditPosts(ctx)
+func (s *SourceSubreddit) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
 
+	s.fetchAndSendNewPosts(ctx, since, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewPosts(ctx, since, feed, errs)
+		}
+	}
+}
+
+func (s *SourceSubreddit) fetchAndSendNewPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	posts, err := s.fetchSubredditPosts(ctx)
 	if err != nil {
 		errs <- fmt.Errorf("fetch posts: %v", err)
 		return
 	}
 
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
+	}
+
 	for _, post := range posts {
-		feed <- post
+		if since == nil || post.CreatedAt().After(sinceTime) {
+			feed <- post
+		}
 	}
 }
 

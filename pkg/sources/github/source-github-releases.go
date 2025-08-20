@@ -47,15 +47,39 @@ func (s *SourceRelease) Type() string {
 
 func (s *SourceRelease) Validate() []error { return utils.ValidateStruct(s) }
 
-func (s *SourceRelease) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
-	release, err := s.fetchLatestGithubRelease(ctx)
+func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	ticker := time.NewTicker(10 * time.Minute)
+	defer ticker.Stop()
 
+	s.fetchAndSendNewReleases(ctx, since, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewReleases(ctx, since, feed, errs)
+		}
+	}
+}
+
+func (s *SourceRelease) fetchAndSendNewReleases(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	releases, err := s.fetchGithubReleases(ctx)
 	if err != nil {
 		errs <- err
 		return
 	}
 
-	feed <- release
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
+	}
+
+	for _, release := range releases {
+		if since == nil || release.CreatedAt().After(sinceTime) {
+			feed <- release
+		}
+	}
 }
 
 func (s *SourceRelease) Initialize() error {
@@ -165,36 +189,33 @@ func (r *Release) CreatedAt() time.Time {
 	return r.Release.GetPublishedAt().Time
 }
 
-func (s *SourceRelease) fetchLatestGithubRelease(ctx context.Context) (*Release, error) {
+func (s *SourceRelease) fetchGithubReleases(ctx context.Context) ([]*Release, error) {
 	parts := strings.Split(s.Repository, "/")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid Repository format: %s", s.Repository)
 	}
 	owner, repo := parts[0], parts[1]
 
-	var release *github.RepositoryRelease
-	var err error
-
-	if !s.IncludePreleases {
-		release, _, err = s.client.Repositories.GetLatestRelease(ctx, owner, repo)
-	} else {
-		releases, _, err := s.client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{PerPage: 1})
-		if err != nil {
-			return nil, err
-		}
-		if len(releases) == 0 {
-			return nil, fmt.Errorf("no releases found for Repository %s", s.Repository)
-		}
-		release = releases[0]
-	}
-
+	releases, _, err := s.client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{PerPage: 10})
 	if err != nil {
 		return nil, err
 	}
 
-	return &Release{
-		Release:    release,
-		Repository: s.Repository,
-		SourceID:   s.UID(),
-	}, nil
+	if len(releases) == 0 {
+		return nil, fmt.Errorf("no releases found for Repository %s", s.Repository)
+	}
+
+	var result []*Release
+	for _, release := range releases {
+		if !s.IncludePreleases && release.GetPrerelease() {
+			continue
+		}
+		result = append(result, &Release{
+			Release:    release,
+			Repository: s.Repository,
+			SourceID:   s.UID(),
+		})
+	}
+
+	return result, nil
 }

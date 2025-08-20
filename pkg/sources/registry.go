@@ -66,7 +66,8 @@ func NewRegistry(
 		embedder:      embedder,
 	}
 
-	r.startWorkers(1)
+	// Tweak the number of workers as needed.
+	r.startWorkers(10)
 
 	return r
 }
@@ -89,9 +90,22 @@ func (r *Registry) Initialize() error {
 			continue
 		}
 
-		ctx, cancel := context.WithCancel(context.Background())
+		activities, err := r.activityRepo.Search(types.SearchRequest{
+			SourceUIDs: []string{source.UID()},
+			Limit:      1,
+			SortBy:     types.SortByDate,
+		})
+		if err != nil {
+			return fmt.Errorf("search existing activities: %w", err)
+		}
 
-		go source.Stream(ctx, r.activityQueue, r.errorQueue)
+		var since types.Activity = nil
+		if len(activities) > 0 {
+			since = activities[0]
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		go source.Stream(ctx, since, r.activityQueue, r.errorQueue)
 
 		r.cancelBySourceID.Store(source.UID(), cancel)
 
@@ -117,15 +131,17 @@ func (r *Registry) Add(source Source) error {
 		return fmt.Errorf("initialize source: %w", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go source.Stream(ctx, r.activityQueue, r.errorQueue)
-
 	err := r.sourceRepo.Add(source)
 	if err != nil {
-		cancel()
 		return fmt.Errorf("add source: %w", err)
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Set to nil since there are no previous activities for this source yet.
+	var since types.Activity = nil
+	go source.Stream(ctx, since, r.activityQueue, r.errorQueue)
+
 	r.cancelBySourceID.Store(source.UID(), cancel)
 
 	return nil

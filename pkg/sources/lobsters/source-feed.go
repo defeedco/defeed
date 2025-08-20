@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
@@ -47,7 +48,23 @@ func (s *SourceFeed) Initialize() error {
 	return nil
 }
 
-func (s *SourceFeed) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+
+	s.fetchAndSendNewStories(ctx, since, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewStories(ctx, since, feed, errs)
+		}
+	}
+}
+
+func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	var stories []*Story
 	var err error
 
@@ -62,10 +79,17 @@ func (s *SourceFeed) Stream(ctx context.Context, feed chan<- types.Activity, err
 		return
 	}
 
-	for _, story := range stories {
-		feed <- &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
 	}
 
+	for _, story := range stories {
+		post := &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+		if since == nil || post.CreatedAt().After(sinceTime) {
+			feed <- post
+		}
+	}
 }
 
 func (s *SourceFeed) MarshalJSON() ([]byte, error) {

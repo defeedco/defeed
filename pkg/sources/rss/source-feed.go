@@ -61,7 +61,23 @@ func (s *SourceFeed) Validate() []error { return utils.ValidateStruct(s) }
 
 func (s *SourceFeed) Initialize() error { return nil }
 
-func (s *SourceFeed) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	ticker := time.NewTicker(10 * time.Minute)
+	defer ticker.Stop()
+
+	s.fetchAndSendNewItems(ctx, since, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewItems(ctx, since, feed, errs)
+		}
+	}
+}
+
+func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	parser := gofeed.NewParser()
 	parser.UserAgent = utils.PulseUserAgentString
 
@@ -74,7 +90,7 @@ func (s *SourceFeed) Stream(ctx context.Context, feed chan<- types.Activity, err
 		}
 	}
 
-	rssFeed, err := parser.ParseURL(s.FeedURL)
+	rssFeed, err := parser.ParseURLWithContext(s.FeedURL, ctx)
 	if err != nil {
 		errs <- fmt.Errorf("failed to parse RSS feed: %w", err)
 		return
@@ -90,8 +106,16 @@ func (s *SourceFeed) Stream(ctx context.Context, feed chan<- types.Activity, err
 		return
 	}
 
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
+	}
+
 	for _, item := range rssFeed.Items {
-		feed <- &FeedItem{Item: item, FeedURL: s.FeedURL, SourceTyp: s.Type(), SourceID: s.UID()}
+		feedItem := &FeedItem{Item: item, FeedURL: s.FeedURL, SourceTyp: s.Type(), SourceID: s.UID()}
+		if since == nil || feedItem.CreatedAt().After(sinceTime) {
+			feed <- feedItem
+		}
 	}
 }
 
