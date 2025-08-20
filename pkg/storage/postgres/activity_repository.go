@@ -10,7 +10,7 @@ import (
 	"github.com/pgvector/pgvector-go"
 
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
+	entactivity "github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
 )
 
 type ActivityRepository struct {
@@ -21,7 +21,7 @@ func NewActivityRepository(db *DB) *ActivityRepository {
 	return &ActivityRepository{db: db}
 }
 
-func (r *ActivityRepository) Add(activity *types.DecoratedActivity) error {
+func (r *ActivityRepository) Upsert(activity *types.DecoratedActivity) error {
 	ctx := context.Background()
 
 	rawJson, err := activity.MarshalJSON()
@@ -29,7 +29,7 @@ func (r *ActivityRepository) Add(activity *types.DecoratedActivity) error {
 		return fmt.Errorf("marshal activity: %w", err)
 	}
 
-	_, err = r.db.Client().Activity.Create().
+	err = r.db.Client().Activity.Create().
 		SetID(activity.UID()).
 		SetUID(activity.UID()).
 		SetSourceUID(activity.SourceUID()).
@@ -43,7 +43,10 @@ func (r *ActivityRepository) Add(activity *types.DecoratedActivity) error {
 		SetShortSummary(activity.Summary.ShortSummary).
 		SetFullSummary(activity.Summary.FullSummary).
 		SetEmbedding(pgvector.NewVector(activity.Embedding)).
-		Save(ctx)
+		// https://github.com/ent/ent/issues/2494#issuecomment-1182015427
+		OnConflictColumns(entactivity.FieldID).
+		UpdateNewValues().
+		Exec(ctx)
 
 	return err
 }
@@ -57,7 +60,7 @@ func (r *ActivityRepository) List() ([]*types.DecoratedActivity, error) {
 	ctx := context.Background()
 
 	results, err := r.db.Client().Activity.Query().
-		Order(ent.Desc(activity.FieldCreatedAt)).
+		Order(ent.Desc(entactivity.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
 		return nil, err
@@ -86,7 +89,7 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 	query := r.db.Client().Activity.Query()
 
 	if len(req.SourceUIDs) > 0 {
-		query = query.Where(activity.SourceUIDIn(req.SourceUIDs...))
+		query = query.Where(entactivity.SourceUIDIn(req.SourceUIDs...))
 	}
 
 	query = query.Order(func(s *sql.Selector) {
@@ -115,23 +118,23 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 			})
 		}
 	case types.SortByDate:
-		query = query.Order(ent.Desc(activity.FieldCreatedAt))
+		query = query.Order(ent.Desc(entactivity.FieldCreatedAt))
 	}
 
 	fields := []string{
-		activity.FieldID,
-		activity.FieldUID,
-		activity.FieldSourceUID,
-		activity.FieldSourceType,
-		activity.FieldTitle,
-		activity.FieldBody,
-		activity.FieldURL,
-		activity.FieldImageURL,
-		activity.FieldCreatedAt,
-		activity.FieldShortSummary,
-		activity.FieldFullSummary,
-		activity.FieldRawJSON,
-		activity.FieldEmbedding,
+		entactivity.FieldID,
+		entactivity.FieldUID,
+		entactivity.FieldSourceUID,
+		entactivity.FieldSourceType,
+		entactivity.FieldTitle,
+		entactivity.FieldBody,
+		entactivity.FieldURL,
+		entactivity.FieldImageURL,
+		entactivity.FieldCreatedAt,
+		entactivity.FieldShortSummary,
+		entactivity.FieldFullSummary,
+		entactivity.FieldRawJSON,
+		entactivity.FieldEmbedding,
 	}
 
 	var rows []activityWithSimilarity

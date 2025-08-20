@@ -33,7 +33,7 @@ type sourceStore interface {
 }
 
 type activityStore interface {
-	Add(activity *types.DecoratedActivity) error
+	Upsert(activity *types.DecoratedActivity) error
 	Remove(uid string) error
 	List() ([]*types.DecoratedActivity, error)
 	Search(req types.SearchRequest) ([]*types.DecoratedActivity, error)
@@ -69,6 +69,40 @@ func NewRegistry(
 	r.startWorkers(1)
 
 	return r
+}
+
+func (r *Registry) Initialize() error {
+	sources, err := r.sourceRepo.List()
+	if err != nil {
+		return fmt.Errorf("list sources: %w", err)
+	}
+
+	r.logger.Info().Int("count", len(sources)).Msg("Initializing sources")
+
+	for _, source := range sources {
+		if err := source.Initialize(); err != nil {
+			r.logger.Error().
+				Err(err).
+				Str("source_id", source.UID()).
+				Str("source_name", source.Name()).
+				Msg("Failed to initialize source")
+			continue
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		go source.Stream(ctx, r.activityQueue, r.errorQueue)
+
+		r.cancelBySourceID.Store(source.UID(), cancel)
+
+		r.logger.Info().
+			Str("source_id", source.UID()).
+			Str("source_name", source.Name()).
+			Msg("Source initialized")
+	}
+
+	r.logger.Info().Msg("Source initialization complete")
+	return nil
 }
 
 func (r *Registry) Add(source Source) error {
@@ -163,39 +197,58 @@ func (r *Registry) startWorkers(nWorkers int) {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-			r.logger.Info().Msgf("Worker %d starting\n", workerID)
+			r.logger.Info().Int("worker_id", workerID).Msg("Worker started")
 			for {
 				select {
 				case act := <-r.activityQueue:
-					r.logger.Info().Msgf("[Worker %d] Processing activity %s\n", workerID, act.UID())
+					r.logger.Debug().
+						Int("worker_id", workerID).
+						Str("activity_id", act.UID()).
+						Msg("Processing activity")
 
 					summary, err := r.summarizer.Summarize(context.Background(), act)
 					if err != nil {
-						r.logger.Error().Err(err).Msgf("[Worker %d] Error summarizing activity %v\n", workerID, err)
+						r.logger.Error().
+							Err(err).
+							Int("worker_id", workerID).
+							Str("activity_id", act.UID()).
+							Msg("Error summarizing activity")
 						continue
 					}
 
 					// Compute embedding for the full summary
 					embedding, err := r.embedder.Embed(context.Background(), summary)
 					if err != nil {
-						r.logger.Error().Err(err).Msgf("[Worker %d] Error computing embedding %v\n", workerID, err)
+						r.logger.Error().
+							Err(err).
+							Int("worker_id", workerID).
+							Str("activity_id", act.UID()).
+							Msg("Error computing embedding")
 						continue
 					}
 
-					err = r.activityRepo.Add(&types.DecoratedActivity{
+					err = r.activityRepo.Upsert(&types.DecoratedActivity{
 						Activity:  act,
 						Summary:   summary,
 						Embedding: embedding,
 					})
 					if err != nil {
-						r.logger.Error().Err(err).Msgf("[Worker %d] Error storing activity %v\n", workerID, err)
+						r.logger.Error().
+							Err(err).
+							Int("worker_id", workerID).
+							Str("activity_id", act.UID()).
+							Msg("Error storing activity")
 					}
 
 				case err := <-r.errorQueue:
-					r.logger.Error().Err(err).Msgf("[Worker %d] Error processing activity %v\n", workerID, err)
+					// TODO: Decorate errors with source ID
+					r.logger.Error().
+						Err(err).
+						Int("worker_id", workerID).
+						Msg("Error from source")
 
 				case <-r.done:
-					r.logger.Info().Msgf("Worker %d shutting down\n", workerID)
+					r.logger.Info().Int("worker_id", workerID).Msg("Worker shutting down")
 					return
 				}
 			}

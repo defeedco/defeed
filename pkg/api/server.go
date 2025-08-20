@@ -75,6 +75,10 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		postgres.NewSourceRepository(db),
 	)
 
+	if err := registry.Initialize(); err != nil {
+		return nil, fmt.Errorf("initialize registry: %w", err)
+	}
+
 	mux := http.NewServeMux()
 
 	server := &Server{

@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
@@ -19,6 +21,7 @@ type ActivityCreate struct {
 	config
 	mutation *ActivityMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetUID sets the "uid" field.
@@ -205,6 +208,7 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 		_node = &Activity{config: ac.config}
 		_spec = sqlgraph.NewCreateSpec(activity.Table, sqlgraph.NewFieldSpec(activity.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = ac.conflict
 	if id, ok := ac.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -260,11 +264,472 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Activity.Create().
+//		SetUID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ActivityUpsert) {
+//			SetUID(v+v).
+//		}).
+//		Exec(ctx)
+func (ac *ActivityCreate) OnConflict(opts ...sql.ConflictOption) *ActivityUpsertOne {
+	ac.conflict = opts
+	return &ActivityUpsertOne{
+		create: ac,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Activity.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (ac *ActivityCreate) OnConflictColumns(columns ...string) *ActivityUpsertOne {
+	ac.conflict = append(ac.conflict, sql.ConflictColumns(columns...))
+	return &ActivityUpsertOne{
+		create: ac,
+	}
+}
+
+type (
+	// ActivityUpsertOne is the builder for "upsert"-ing
+	//  one Activity node.
+	ActivityUpsertOne struct {
+		create *ActivityCreate
+	}
+
+	// ActivityUpsert is the "OnConflict" setter.
+	ActivityUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUID sets the "uid" field.
+func (u *ActivityUpsert) SetUID(v string) *ActivityUpsert {
+	u.Set(activity.FieldUID, v)
+	return u
+}
+
+// UpdateUID sets the "uid" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateUID() *ActivityUpsert {
+	u.SetExcluded(activity.FieldUID)
+	return u
+}
+
+// SetSourceUID sets the "source_uid" field.
+func (u *ActivityUpsert) SetSourceUID(v string) *ActivityUpsert {
+	u.Set(activity.FieldSourceUID, v)
+	return u
+}
+
+// UpdateSourceUID sets the "source_uid" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateSourceUID() *ActivityUpsert {
+	u.SetExcluded(activity.FieldSourceUID)
+	return u
+}
+
+// SetSourceType sets the "source_type" field.
+func (u *ActivityUpsert) SetSourceType(v string) *ActivityUpsert {
+	u.Set(activity.FieldSourceType, v)
+	return u
+}
+
+// UpdateSourceType sets the "source_type" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateSourceType() *ActivityUpsert {
+	u.SetExcluded(activity.FieldSourceType)
+	return u
+}
+
+// SetTitle sets the "title" field.
+func (u *ActivityUpsert) SetTitle(v string) *ActivityUpsert {
+	u.Set(activity.FieldTitle, v)
+	return u
+}
+
+// UpdateTitle sets the "title" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateTitle() *ActivityUpsert {
+	u.SetExcluded(activity.FieldTitle)
+	return u
+}
+
+// SetBody sets the "body" field.
+func (u *ActivityUpsert) SetBody(v string) *ActivityUpsert {
+	u.Set(activity.FieldBody, v)
+	return u
+}
+
+// UpdateBody sets the "body" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateBody() *ActivityUpsert {
+	u.SetExcluded(activity.FieldBody)
+	return u
+}
+
+// SetURL sets the "url" field.
+func (u *ActivityUpsert) SetURL(v string) *ActivityUpsert {
+	u.Set(activity.FieldURL, v)
+	return u
+}
+
+// UpdateURL sets the "url" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateURL() *ActivityUpsert {
+	u.SetExcluded(activity.FieldURL)
+	return u
+}
+
+// SetImageURL sets the "image_url" field.
+func (u *ActivityUpsert) SetImageURL(v string) *ActivityUpsert {
+	u.Set(activity.FieldImageURL, v)
+	return u
+}
+
+// UpdateImageURL sets the "image_url" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateImageURL() *ActivityUpsert {
+	u.SetExcluded(activity.FieldImageURL)
+	return u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *ActivityUpsert) SetCreatedAt(v time.Time) *ActivityUpsert {
+	u.Set(activity.FieldCreatedAt, v)
+	return u
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateCreatedAt() *ActivityUpsert {
+	u.SetExcluded(activity.FieldCreatedAt)
+	return u
+}
+
+// SetShortSummary sets the "short_summary" field.
+func (u *ActivityUpsert) SetShortSummary(v string) *ActivityUpsert {
+	u.Set(activity.FieldShortSummary, v)
+	return u
+}
+
+// UpdateShortSummary sets the "short_summary" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateShortSummary() *ActivityUpsert {
+	u.SetExcluded(activity.FieldShortSummary)
+	return u
+}
+
+// SetFullSummary sets the "full_summary" field.
+func (u *ActivityUpsert) SetFullSummary(v string) *ActivityUpsert {
+	u.Set(activity.FieldFullSummary, v)
+	return u
+}
+
+// UpdateFullSummary sets the "full_summary" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateFullSummary() *ActivityUpsert {
+	u.SetExcluded(activity.FieldFullSummary)
+	return u
+}
+
+// SetRawJSON sets the "raw_json" field.
+func (u *ActivityUpsert) SetRawJSON(v string) *ActivityUpsert {
+	u.Set(activity.FieldRawJSON, v)
+	return u
+}
+
+// UpdateRawJSON sets the "raw_json" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateRawJSON() *ActivityUpsert {
+	u.SetExcluded(activity.FieldRawJSON)
+	return u
+}
+
+// SetEmbedding sets the "embedding" field.
+func (u *ActivityUpsert) SetEmbedding(v pgvector.Vector) *ActivityUpsert {
+	u.Set(activity.FieldEmbedding, v)
+	return u
+}
+
+// UpdateEmbedding sets the "embedding" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateEmbedding() *ActivityUpsert {
+	u.SetExcluded(activity.FieldEmbedding)
+	return u
+}
+
+// ClearEmbedding clears the value of the "embedding" field.
+func (u *ActivityUpsert) ClearEmbedding() *ActivityUpsert {
+	u.SetNull(activity.FieldEmbedding)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Activity.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(activity.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *ActivityUpsertOne) UpdateNewValues() *ActivityUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(activity.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Activity.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *ActivityUpsertOne) Ignore() *ActivityUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ActivityUpsertOne) DoNothing() *ActivityUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ActivityCreate.OnConflict
+// documentation for more info.
+func (u *ActivityUpsertOne) Update(set func(*ActivityUpsert)) *ActivityUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ActivityUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUID sets the "uid" field.
+func (u *ActivityUpsertOne) SetUID(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetUID(v)
+	})
+}
+
+// UpdateUID sets the "uid" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateUID() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateUID()
+	})
+}
+
+// SetSourceUID sets the "source_uid" field.
+func (u *ActivityUpsertOne) SetSourceUID(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetSourceUID(v)
+	})
+}
+
+// UpdateSourceUID sets the "source_uid" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateSourceUID() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateSourceUID()
+	})
+}
+
+// SetSourceType sets the "source_type" field.
+func (u *ActivityUpsertOne) SetSourceType(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetSourceType(v)
+	})
+}
+
+// UpdateSourceType sets the "source_type" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateSourceType() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateSourceType()
+	})
+}
+
+// SetTitle sets the "title" field.
+func (u *ActivityUpsertOne) SetTitle(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetTitle(v)
+	})
+}
+
+// UpdateTitle sets the "title" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateTitle() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateTitle()
+	})
+}
+
+// SetBody sets the "body" field.
+func (u *ActivityUpsertOne) SetBody(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetBody(v)
+	})
+}
+
+// UpdateBody sets the "body" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateBody() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateBody()
+	})
+}
+
+// SetURL sets the "url" field.
+func (u *ActivityUpsertOne) SetURL(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetURL(v)
+	})
+}
+
+// UpdateURL sets the "url" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateURL() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateURL()
+	})
+}
+
+// SetImageURL sets the "image_url" field.
+func (u *ActivityUpsertOne) SetImageURL(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetImageURL(v)
+	})
+}
+
+// UpdateImageURL sets the "image_url" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateImageURL() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateImageURL()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *ActivityUpsertOne) SetCreatedAt(v time.Time) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateCreatedAt() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// SetShortSummary sets the "short_summary" field.
+func (u *ActivityUpsertOne) SetShortSummary(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetShortSummary(v)
+	})
+}
+
+// UpdateShortSummary sets the "short_summary" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateShortSummary() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateShortSummary()
+	})
+}
+
+// SetFullSummary sets the "full_summary" field.
+func (u *ActivityUpsertOne) SetFullSummary(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetFullSummary(v)
+	})
+}
+
+// UpdateFullSummary sets the "full_summary" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateFullSummary() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateFullSummary()
+	})
+}
+
+// SetRawJSON sets the "raw_json" field.
+func (u *ActivityUpsertOne) SetRawJSON(v string) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetRawJSON(v)
+	})
+}
+
+// UpdateRawJSON sets the "raw_json" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateRawJSON() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateRawJSON()
+	})
+}
+
+// SetEmbedding sets the "embedding" field.
+func (u *ActivityUpsertOne) SetEmbedding(v pgvector.Vector) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetEmbedding(v)
+	})
+}
+
+// UpdateEmbedding sets the "embedding" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateEmbedding() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateEmbedding()
+	})
+}
+
+// ClearEmbedding clears the value of the "embedding" field.
+func (u *ActivityUpsertOne) ClearEmbedding() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.ClearEmbedding()
+	})
+}
+
+// Exec executes the query.
+func (u *ActivityUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ActivityCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ActivityUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *ActivityUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: ActivityUpsertOne.ID is not supported by MySQL driver. Use ActivityUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *ActivityUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // ActivityCreateBulk is the builder for creating many Activity entities in bulk.
 type ActivityCreateBulk struct {
 	config
 	err      error
 	builders []*ActivityCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Activity entities in the database.
@@ -293,6 +758,7 @@ func (acb *ActivityCreateBulk) Save(ctx context.Context) ([]*Activity, error) {
 					_, err = mutators[i+1].Mutate(root, acb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = acb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, acb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -339,6 +805,295 @@ func (acb *ActivityCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (acb *ActivityCreateBulk) ExecX(ctx context.Context) {
 	if err := acb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Activity.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ActivityUpsert) {
+//			SetUID(v+v).
+//		}).
+//		Exec(ctx)
+func (acb *ActivityCreateBulk) OnConflict(opts ...sql.ConflictOption) *ActivityUpsertBulk {
+	acb.conflict = opts
+	return &ActivityUpsertBulk{
+		create: acb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Activity.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (acb *ActivityCreateBulk) OnConflictColumns(columns ...string) *ActivityUpsertBulk {
+	acb.conflict = append(acb.conflict, sql.ConflictColumns(columns...))
+	return &ActivityUpsertBulk{
+		create: acb,
+	}
+}
+
+// ActivityUpsertBulk is the builder for "upsert"-ing
+// a bulk of Activity nodes.
+type ActivityUpsertBulk struct {
+	create *ActivityCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Activity.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(activity.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *ActivityUpsertBulk) UpdateNewValues() *ActivityUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(activity.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Activity.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *ActivityUpsertBulk) Ignore() *ActivityUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ActivityUpsertBulk) DoNothing() *ActivityUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ActivityCreateBulk.OnConflict
+// documentation for more info.
+func (u *ActivityUpsertBulk) Update(set func(*ActivityUpsert)) *ActivityUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ActivityUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUID sets the "uid" field.
+func (u *ActivityUpsertBulk) SetUID(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetUID(v)
+	})
+}
+
+// UpdateUID sets the "uid" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateUID() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateUID()
+	})
+}
+
+// SetSourceUID sets the "source_uid" field.
+func (u *ActivityUpsertBulk) SetSourceUID(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetSourceUID(v)
+	})
+}
+
+// UpdateSourceUID sets the "source_uid" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateSourceUID() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateSourceUID()
+	})
+}
+
+// SetSourceType sets the "source_type" field.
+func (u *ActivityUpsertBulk) SetSourceType(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetSourceType(v)
+	})
+}
+
+// UpdateSourceType sets the "source_type" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateSourceType() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateSourceType()
+	})
+}
+
+// SetTitle sets the "title" field.
+func (u *ActivityUpsertBulk) SetTitle(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetTitle(v)
+	})
+}
+
+// UpdateTitle sets the "title" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateTitle() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateTitle()
+	})
+}
+
+// SetBody sets the "body" field.
+func (u *ActivityUpsertBulk) SetBody(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetBody(v)
+	})
+}
+
+// UpdateBody sets the "body" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateBody() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateBody()
+	})
+}
+
+// SetURL sets the "url" field.
+func (u *ActivityUpsertBulk) SetURL(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetURL(v)
+	})
+}
+
+// UpdateURL sets the "url" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateURL() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateURL()
+	})
+}
+
+// SetImageURL sets the "image_url" field.
+func (u *ActivityUpsertBulk) SetImageURL(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetImageURL(v)
+	})
+}
+
+// UpdateImageURL sets the "image_url" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateImageURL() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateImageURL()
+	})
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *ActivityUpsertBulk) SetCreatedAt(v time.Time) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateCreatedAt() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// SetShortSummary sets the "short_summary" field.
+func (u *ActivityUpsertBulk) SetShortSummary(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetShortSummary(v)
+	})
+}
+
+// UpdateShortSummary sets the "short_summary" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateShortSummary() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateShortSummary()
+	})
+}
+
+// SetFullSummary sets the "full_summary" field.
+func (u *ActivityUpsertBulk) SetFullSummary(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetFullSummary(v)
+	})
+}
+
+// UpdateFullSummary sets the "full_summary" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateFullSummary() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateFullSummary()
+	})
+}
+
+// SetRawJSON sets the "raw_json" field.
+func (u *ActivityUpsertBulk) SetRawJSON(v string) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetRawJSON(v)
+	})
+}
+
+// UpdateRawJSON sets the "raw_json" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateRawJSON() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateRawJSON()
+	})
+}
+
+// SetEmbedding sets the "embedding" field.
+func (u *ActivityUpsertBulk) SetEmbedding(v pgvector.Vector) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetEmbedding(v)
+	})
+}
+
+// UpdateEmbedding sets the "embedding" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateEmbedding() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateEmbedding()
+	})
+}
+
+// ClearEmbedding clears the value of the "embedding" field.
+func (u *ActivityUpsertBulk) ClearEmbedding() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.ClearEmbedding()
+	})
+}
+
+// Exec executes the query.
+func (u *ActivityUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ActivityCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ActivityCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ActivityUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

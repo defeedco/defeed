@@ -17,12 +17,17 @@ import (
 const TypeHackerNewsPosts = "hackernews-posts"
 
 type SourcePosts struct {
-	FeedName string `json:"feedName" validate:"required,oneof=top new best"`
-	client   *gohn.Client
+	FeedName     string        `json:"feedName" validate:"required,oneof=top new best"`
+	PollInterval time.Duration `json:"pollInterval"`
+	client       *gohn.Client
+	seenPosts    map[int]bool
 }
 
 func NewSourcePosts() *SourcePosts {
-	return &SourcePosts{}
+	return &SourcePosts{
+		PollInterval: 5 * time.Minute,
+		seenPosts:    make(map[int]bool),
+	}
 }
 
 func (s *SourcePosts) UID() string {
@@ -122,21 +127,47 @@ func (s *SourcePosts) Initialize() error {
 		return fmt.Errorf("init client: %v", err)
 	}
 
+	if s.seenPosts == nil {
+		s.seenPosts = make(map[int]bool)
+	}
+
+	if s.PollInterval == 0 {
+		s.PollInterval = time.Hour
+	}
+
 	return nil
 }
 
 func (s *SourcePosts) Stream(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
-	posts, err := s.fetchHackerNewsPosts(ctx)
+	ticker := time.NewTicker(s.PollInterval)
+	defer ticker.Stop()
 
+	s.fetchAndSendNewPosts(ctx, feed, errs)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.fetchAndSendNewPosts(ctx, feed, errs)
+		}
+	}
+}
+
+func (s *SourcePosts) fetchAndSendNewPosts(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
+	posts, err := s.fetchHackerNewsPosts(ctx)
 	if err != nil {
 		errs <- fmt.Errorf("fetch posts: %v", err)
 		return
 	}
 
 	for _, post := range posts {
-		feed <- post
+		postID := *post.Post.ID
+		if !s.seenPosts[postID] {
+			s.seenPosts[postID] = true
+			feed <- post
+		}
 	}
-
 }
 
 func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context) ([]*Post, error) {
