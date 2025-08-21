@@ -9,8 +9,8 @@ import (
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/alexferrari88/gohn/pkg/gohn"
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/utils"
-	"github.com/go-shiori/go-readability"
 	"github.com/rs/zerolog"
 )
 
@@ -220,15 +220,13 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Acti
 		if story.Text != nil {
 			textContent = *story.Text
 		} else if story.URL != nil {
-			// TODO: add support for fetching non-HTML content (e.g. PDFs)
-			article, err := readability.FromURL(*story.URL, 5*time.Second)
+			content, err := lib.FetchTextFromURL(ctx, *story.URL)
 			if err != nil {
 				storyLogger.Error().Err(err).Msg("Failed to fetch readable article")
 				continue
 			}
 
-			// Note: don't store the full article struct, it will lead to "encountered a cycle via *html.Node"
-			textContent = article.TextContent
+			textContent = content
 		}
 
 		if textContent == "" {

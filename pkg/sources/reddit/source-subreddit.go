@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
-	"log/slog"
 	"time"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
 
-	"github.com/go-shiori/go-readability"
 	"github.com/rs/zerolog"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
@@ -55,9 +54,10 @@ func (s *SourceSubreddit) Type() string {
 func (s *SourceSubreddit) Validate() []error { return utils.ValidateStruct(s) }
 
 type Post struct {
-	Post      *reddit.Post `json:"post"`
-	SourceID  string       `json:"source_id"`
-	SourceTyp string       `json:"source_type"`
+	Post            *reddit.Post `json:"post"`
+	ExternalContent string       `json:"external_content"`
+	SourceID        string       `json:"source_id"`
+	SourceTyp       string       `json:"source_type"`
 }
 
 func NewPost() *Post {
@@ -100,16 +100,7 @@ func (p *Post) Title() string {
 }
 
 func (p *Post) Body() string {
-	body := p.Post.Body
-	if p.Post.URL != "" && !p.Post.IsSelfPost {
-		article, err := readability.FromURL(p.Post.URL, 5*time.Second)
-		if err == nil {
-			body += fmt.Sprintf("\n\nReferenced article: \n%s", article.TextContent)
-		} else {
-			slog.Error("Failed to fetch reddit article", "error", err, "url", p.Post.URL)
-		}
-	}
-	return body
+	return fmt.Sprintf("%s\n\nExternal link content:\n%s", p.Post.Body, p.ExternalContent)
 }
 
 func (p *Post) URL() string {
@@ -229,12 +220,14 @@ outer:
 			if post.NSFW {
 				continue
 			}
-			posts = append(posts, &Post{
-				Post:      post,
-				SourceTyp: s.Type(),
-				SourceID:  s.UID(),
-			})
+			post, err := s.buildPost(ctx, post)
+			if err != nil {
+				return nil, fmt.Errorf("build post: %v", err)
+			}
+			posts = append(posts, post)
 		}
+
+		sinceID = redditPosts[len(redditPosts)-1].FullID
 	}
 
 	return posts, nil
@@ -250,14 +243,31 @@ func (s *SourceSubreddit) fetchRecentPosts(ctx context.Context) ([]*Post, error)
 
 	posts := make([]*Post, 0)
 	for _, post := range redditPosts {
-		posts = append(posts, &Post{
-			Post:      post,
-			SourceTyp: s.Type(),
-			SourceID:  s.UID(),
-		})
+		post, err := s.buildPost(ctx, post)
+		if err != nil {
+			return nil, fmt.Errorf("build post: %v", err)
+		}
+		posts = append(posts, post)
 	}
 
 	return posts, nil
+}
+
+func (s *SourceSubreddit) buildPost(ctx context.Context, post *reddit.Post) (*Post, error) {
+	externalContent := ""
+	if post.URL != "" && !post.IsSelfPost {
+		content, err := lib.FetchTextFromURL(ctx, post.URL)
+		if err != nil {
+			return nil, fmt.Errorf("fetch external content: %w", err)
+		}
+		externalContent = content
+	}
+	return &Post{
+		Post:            post,
+		ExternalContent: externalContent,
+		SourceTyp:       s.Type(),
+		SourceID:        s.UID(),
+	}, nil
 }
 
 func (s *SourceSubreddit) fetchByCurrentTimeline(ctx context.Context, opts *reddit.ListOptions) ([]*reddit.Post, *reddit.Response, error) {

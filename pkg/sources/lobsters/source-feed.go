@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
 	"github.com/rs/zerolog"
@@ -68,6 +69,11 @@ func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan
 }
 
 func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	feedLogger := s.logger.With().
+		Str("feed", s.FeedName).
+		Str("instance_url", s.InstanceURL).
+		Logger()
+
 	var stories []*Story
 	var err error
 
@@ -76,6 +82,8 @@ func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Act
 	} else {
 		stories, err = s.client.GetStoriesByFeed(ctx, s.FeedName)
 	}
+
+	feedLogger.Debug().Int("count", len(stories)).Msg("Fetched stories")
 
 	if err != nil {
 		errs <- err
@@ -88,11 +96,27 @@ func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Act
 	}
 
 	for _, story := range stories {
-		post := &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+		post, err := s.buildPost(ctx, story)
+		if err != nil {
+			errs <- err
+			return
+		}
 		if since == nil || post.CreatedAt().After(sinceTime) {
 			feed <- post
 		}
 	}
+}
+
+func (s *SourceFeed) buildPost(ctx context.Context, story *Story) (*Post, error) {
+	post := &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+	if story.URL != "" {
+		externalContent, err := lib.FetchTextFromURL(ctx, story.URL)
+		if err != nil {
+			return nil, fmt.Errorf("fetch external content: %w", err)
+		}
+		post.ExternalContent = externalContent
+	}
+	return post, nil
 }
 
 func (s *SourceFeed) MarshalJSON() ([]byte, error) {

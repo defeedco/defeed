@@ -2,16 +2,15 @@ package lobsters
 
 import (
 	"encoding/json"
-	"log/slog"
+	"fmt"
 	"time"
-
-	"github.com/go-shiori/go-readability"
 )
 
 type Post struct {
-	Post      *Story `json:"post"`
-	SourceID  string `json:"source_id"`
-	SourceTyp string `json:"source_type"`
+	Post            *Story `json:"post"`
+	SourceID        string `json:"source_id"`
+	SourceTyp       string `json:"source_type"`
+	ExternalContent string `json:"external_content"`
 }
 
 func NewPost() *Post {
@@ -54,16 +53,7 @@ func (p *Post) Title() string {
 }
 
 func (p *Post) Body() string {
-	body := p.Post.Title
-	if p.Post.URL != "" {
-		article, err := readability.FromURL(p.Post.URL, 5*time.Second)
-		if err == nil {
-			body += "\n\nReferenced article: \n" + article.TextContent
-		} else {
-			slog.Error("Failed to fetch lobster article", "error", err, "url", p.Post.URL)
-		}
-	}
-	return body
+	return fmt.Sprintf("%s\n\nExternal link content:\n%s", p.Post.Title, p.ExternalContent)
 }
 
 func (p *Post) URL() string {
