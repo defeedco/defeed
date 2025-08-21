@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -11,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeLobstersFeed = "lobsters-feed"
+const TypeLobstersFeed = "lobsters:feed"
 
 type SourceFeed struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
@@ -28,7 +29,14 @@ func NewSourceFeed() *SourceFeed {
 }
 
 func (s *SourceFeed) UID() string {
-	return fmt.Sprintf("%s/%s/%s", s.Type(), s.InstanceURL, s.FeedName)
+	urlID := s.InstanceURL
+	// Normalize the URL for consistent UID format (cannot contain slashes)
+	urlID = strings.TrimPrefix(urlID, "https://")
+	urlID = strings.TrimPrefix(urlID, "http://")
+	urlID = strings.TrimPrefix(urlID, "www.")
+	urlID = strings.TrimSuffix(urlID, "/")
+	urlID = strings.ReplaceAll(urlID, "/", ":")
+	return fmt.Sprintf("%s:%s:%s", s.Type(), urlID, s.FeedName)
 }
 
 func (s *SourceFeed) Name() string {

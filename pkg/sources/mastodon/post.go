@@ -2,6 +2,7 @@ package mastodon
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -45,7 +46,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 }
 
 func (p *Post) UID() string {
-	return string(p.Status.ID)
+	return fmt.Sprintf("%s:%s", p.SourceID, p.Status.ID)
 }
 
 func (p *Post) SourceUID() string {

@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/lib"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/lib"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
 
-const TypeGithubIssues = "github-issues"
+const TypeGithubIssues = "github:issues"
 
 type SourceIssues struct {
 	Repository string `json:"repository" validate:"required,contains=/"`
@@ -28,7 +29,7 @@ func NewIssuesSource() *SourceIssues {
 }
 
 func (s *SourceIssues) UID() string {
-	return fmt.Sprintf("%s/%s", s.Type(), s.Repository)
+	return fmt.Sprintf("%s:%s", s.Type(), s.Repository)
 }
 
 func (s *SourceIssues) Name() string {
@@ -104,7 +105,7 @@ func (i *Issue) UnmarshalJSON(data []byte) error {
 }
 
 func (i *Issue) UID() string {
-	return fmt.Sprintf("issue-%d", i.Issue.GetNumber())
+	return fmt.Sprintf("%s:%d", i.SourceID, i.Issue.GetNumber())
 }
 
 func (i *Issue) SourceUID() string {

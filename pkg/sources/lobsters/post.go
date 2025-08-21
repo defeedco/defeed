@@ -41,7 +41,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 }
 
 func (p *Post) UID() string {
-	return p.Post.ID
+	return fmt.Sprintf("%s:%s", p.SourceID, p.Post.ID)
 }
 
 func (p *Post) SourceUID() string {

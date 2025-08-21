@@ -51,6 +51,8 @@ func NewSource(sourceType string) (Source, error) {
 type Source interface {
 	json.Marshaler
 	json.Unmarshaler
+	// UID is the unique identifier for the source.
+	// It should not contain any slashes.
 	UID() string
 	Type() string
 	// Name is a human-readable UID.

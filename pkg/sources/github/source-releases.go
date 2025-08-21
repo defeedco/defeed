@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/lib"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/lib"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
 
-const TypeGithubReleases = "github-releases"
+const TypeGithubReleases = "github:releases"
 
 type SourceRelease struct {
 	Repository       string `json:"repository" validate:"required,contains=/"`
@@ -31,7 +32,7 @@ func NewReleaseSource() *SourceRelease {
 }
 
 func (s *SourceRelease) UID() string {
-	return fmt.Sprintf("%s/%s", s.Type(), s.Repository)
+	return fmt.Sprintf("%s:%s", s.Type(), s.Repository)
 }
 
 func (s *SourceRelease) Name() string {
@@ -160,7 +161,7 @@ func (r *Release) UnmarshalJSON(data []byte) error {
 }
 
 func (r *Release) UID() string {
-	return fmt.Sprintf("%d", r.Release.GetID())
+	return fmt.Sprintf("%s:%d", r.SourceID, r.Release.GetID())
 }
 
 func (r *Release) SourceUID() string {

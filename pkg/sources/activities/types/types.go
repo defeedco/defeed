@@ -8,6 +8,8 @@ import (
 type Activity interface {
 	json.Marshaler
 	json.Unmarshaler
+	// UID is the unique identifier for the activity.
+	// It should not contain any slashes.
 	UID() string
 	SourceUID() string
 	SourceType() string

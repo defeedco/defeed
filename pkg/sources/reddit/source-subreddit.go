@@ -13,7 +13,7 @@ import (
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
-const TypeRedditSubreddit = "reddit-subreddit"
+const TypeRedditSubreddit = "reddit:subreddit"
 
 type SourceSubreddit struct {
 	Subreddit string `json:"subreddit" validate:"required"`
@@ -34,7 +34,7 @@ func NewSourceSubreddit() *SourceSubreddit {
 }
 
 func (s *SourceSubreddit) UID() string {
-	return fmt.Sprintf("%s/%s/%s/%s/%s", TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
+	return fmt.Sprintf("%s:%s:%s:%s:%s", TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
 }
 
 func (s *SourceSubreddit) Name() string {
@@ -86,7 +86,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 }
 
 func (p *Post) UID() string {
-	return p.Post.ID
+	return fmt.Sprintf("%s:%s", p.SourceID, p.Post.ID)
 }
 
 func (p *Post) SourceUID() string {

@@ -4,14 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/lib"
+	"strings"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/lib"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
 
-const TypeLobstersTag = "lobsters-tag"
+const TypeLobstersTag = "lobsters:tag"
 
 type SourceTag struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
@@ -28,7 +30,14 @@ func NewSourceTag() *SourceTag {
 }
 
 func (s *SourceTag) UID() string {
-	return fmt.Sprintf("%s/%s/%s", s.Type(), s.InstanceURL, s.Tag)
+	urlID := s.InstanceURL
+	// Normalize the URL for consistent UID format (cannot contain slashes)
+	urlID = strings.TrimPrefix(urlID, "https://")
+	urlID = strings.TrimPrefix(urlID, "http://")
+	urlID = strings.TrimPrefix(urlID, "www.")
+	urlID = strings.TrimSuffix(urlID, "/")
+	urlID = strings.ReplaceAll(urlID, "/", ":")
+	return fmt.Sprintf("%s:%s:%s", s.Type(), urlID, s.Tag)
 }
 
 func (s *SourceTag) Name() string {

@@ -4,15 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/lib"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/lib"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
 
-const TypeChangedetectionWebsite = "changedetection-website-change"
+const TypeChangedetectionWebsite = "changedetection:website"
 
 type SourceWebsiteChange struct {
 	WatchUUID   string `json:"watch" validate:"required"`
@@ -27,7 +29,7 @@ func NewSourceWebsiteChange() *SourceWebsiteChange {
 }
 
 func (s *SourceWebsiteChange) UID() string {
-	return fmt.Sprintf("%s/%s/%s", s.Type(), s.InstanceURL, s.WatchUUID)
+	return fmt.Sprintf("%s:%s:%s", s.Type(), s.InstanceURL, s.WatchUUID)
 }
 
 func (s *SourceWebsiteChange) Name() string {
@@ -164,7 +166,14 @@ func (c *WebsiteChange) SourceUID() string {
 }
 
 func (c *WebsiteChange) UID() string {
-	return fmt.Sprintf("%s-%d", c.url, c.lastChanged.Unix())
+	urlID := c.url
+	// Normalize the URL for consistent UID format (cannot contain slashes)
+	urlID = strings.TrimPrefix(urlID, "https://")
+	urlID = strings.TrimPrefix(urlID, "http://")
+	urlID = strings.TrimPrefix(urlID, "www.")
+	urlID = strings.TrimSuffix(urlID, "/")
+	urlID = strings.ReplaceAll(urlID, "/", ":")
+	return fmt.Sprintf("%s:%s:%d", c.sourceUID, urlID, c.lastChanged.Unix())
 }
 
 func (c *WebsiteChange) Title() string {
@@ -217,10 +226,11 @@ func (s *SourceWebsiteChange) fetchWatchFromChangeDetection(ctx context.Context)
 	}
 
 	return &WebsiteChange{
-		title:        response.Title,
-		url:          response.URL,
-		lastChanged:  lib.ParseRFC3339Time(response.LastChanged),
-		diffURL:      response.DiffURL,
+		title:       response.Title,
+		url:         response.URL,
+		lastChanged: lib.ParseRFC3339Time(response.LastChanged),
+		diffURL:     response.DiffURL,
+		// TODO: is there a current hash as well that we can use as a UID?
 		previousHash: response.PreviousHash,
 		sourceUID:    s.UID(),
 	}, nil

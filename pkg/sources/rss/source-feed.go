@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/lib"
 	"html"
 	"net/http"
 	"net/url"
@@ -12,13 +11,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glanceapp/glance/pkg/lib"
+
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/mmcdole/gofeed"
 	gofeedext "github.com/mmcdole/gofeed/extensions"
 	"github.com/rs/zerolog"
 )
 
-const TypeRSSFeed = "rss-feed"
+const TypeRSSFeed = "rss:feed"
 
 type customTransport struct {
 	headers map[string]string
@@ -43,7 +44,14 @@ func NewSourceFeed() *SourceFeed {
 }
 
 func (s *SourceFeed) UID() string {
-	return fmt.Sprintf("%s/%s", s.Type(), s.FeedURL)
+	urlID := s.FeedURL
+	// Normalize the URL for consistent UID format (cannot contain slashes)
+	urlID = strings.TrimPrefix(urlID, "https://")
+	urlID = strings.TrimPrefix(urlID, "http://")
+	urlID = strings.TrimPrefix(urlID, "www.")
+	urlID = strings.TrimSuffix(urlID, "/")
+	urlID = strings.ReplaceAll(urlID, "/", ":")
+	return fmt.Sprintf("%s:%s", s.Type(), urlID)
 }
 
 func (s *SourceFeed) Name() string {
@@ -158,10 +166,16 @@ func (e *FeedItem) UnmarshalJSON(data []byte) error {
 }
 
 func (e *FeedItem) UID() string {
-	if e.Item.GUID != "" {
-		return e.Item.GUID
+	id := e.Item.GUID
+	if id == "" {
+		id = e.URL()
+		id = strings.TrimPrefix(id, "https://")
+		id = strings.TrimPrefix(id, "http://")
+		id = strings.TrimPrefix(id, "www.")
+		id = strings.TrimSuffix(id, "/")
+		id = strings.ReplaceAll(id, "/", ":")
 	}
-	return e.URL()
+	return fmt.Sprintf("%s:%s", e.SourceID, id)
 }
 
 func (e *FeedItem) SourceUID() string {

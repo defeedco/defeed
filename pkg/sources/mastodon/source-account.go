@@ -4,15 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/lib"
+	"strings"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/lib"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/mattn/go-mastodon"
 	"github.com/rs/zerolog"
 )
 
-const TypeMastodonAccount = "mastodon-account"
+const TypeMastodonAccount = "mastodon:account"
 
 type SourceAccount struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
@@ -28,7 +30,14 @@ func NewSourceAccount() *SourceAccount {
 }
 
 func (s *SourceAccount) UID() string {
-	return fmt.Sprintf("%s/%s/%s", s.Type(), s.InstanceURL, s.Account)
+	urlID := s.InstanceURL
+	// Normalize the URL for consistent UID format (cannot contain slashes)
+	urlID = strings.TrimPrefix(urlID, "https://")
+	urlID = strings.TrimPrefix(urlID, "http://")
+	urlID = strings.TrimPrefix(urlID, "www.")
+	urlID = strings.TrimSuffix(urlID, "/")
+	urlID = strings.ReplaceAll(urlID, "/", ":")
+	return fmt.Sprintf("%s:%s:%s", s.Type(), urlID, s.Account)
 }
 
 func (s *SourceAccount) Name() string {
