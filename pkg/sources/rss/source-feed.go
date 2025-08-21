@@ -124,10 +124,18 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activ
 	}
 
 	for _, item := range rssFeed.Items {
-		feedItem := &FeedItem{Item: item, FeedURL: s.FeedURL, SourceTyp: s.Type(), SourceID: s.UID()}
-		if since == nil || feedItem.CreatedAt().After(sinceTime) {
-			feed <- feedItem
+		if since != nil && item.PublishedParsed.Before(sinceTime) {
+			continue
 		}
+
+		feedItem := &FeedItem{
+			Item:      item,
+			FeedURL:   s.FeedURL,
+			SourceTyp: s.Type(),
+			SourceID:  s.UID(),
+		}
+
+		feed <- feedItem
 	}
 }
 

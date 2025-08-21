@@ -135,51 +135,29 @@ func (s *SourcePosts) Stream(ctx context.Context, since types.Activity, feed cha
 	ticker := time.NewTicker(s.PollInterval)
 	defer ticker.Stop()
 
-	s.fetchAndSendNewPosts(ctx, since, feed, errs)
+	s.fetchHackerNewsPosts(ctx, since, feed, errs)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			s.fetchAndSendNewPosts(ctx, since, feed, errs)
+			s.fetchHackerNewsPosts(ctx, since, feed, errs)
 		}
 	}
 }
 
-func (s *SourcePosts) fetchAndSendNewPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	posts, err := s.fetchHackerNewsPosts(ctx, since)
+func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+	storyIDs, err := s.fetchStoryIDs(ctx)
+
 	if err != nil {
-		errs <- fmt.Errorf("fetch posts: %v", err)
+		errs <- fmt.Errorf("fetch story IDs: %v", err)
 		return
 	}
 
-	for _, post := range posts {
-		feed <- post
-	}
-}
-
-func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Activity) ([]*Post, error) {
-	var storyIDs []*int
-	var err error
-
-	switch s.FeedName {
-	case "top":
-		storyIDs, err = s.client.Stories.GetTopIDs(ctx)
-	case "new":
-		storyIDs, err = s.client.Stories.GetNewIDs(ctx)
-	case "best":
-		storyIDs, err = s.client.Stories.GetBestIDs(ctx)
-	default:
-		return nil, fmt.Errorf("invalid feed name: %s", s.FeedName)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("fetch story IDs: %v", err)
-	}
-
 	if len(storyIDs) == 0 {
-		return nil, fmt.Errorf("no stories found")
+		errs <- fmt.Errorf("no stories found")
+		return
 	}
 
 	var sincePost *Post
@@ -187,7 +165,6 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Acti
 		sincePost = since.(*Post)
 	}
 
-	posts := make([]*Post, 0, len(storyIDs))
 	for _, id := range storyIDs {
 		if id == nil {
 			continue
@@ -232,18 +209,32 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Acti
 			storyLogger.Debug().Msg("No text content found")
 		}
 
-		posts = append(posts, &Post{
+		post := &Post{
 			Post:            story,
 			ArticleTextBody: textContent,
 			SourceID:        s.UID(),
-		})
+		}
+
+		feed <- post
+	}
+}
+
+func (s *SourcePosts) fetchStoryIDs(ctx context.Context) ([]*int, error) {
+	var storyIDs []*int
+	var err error
+
+	switch s.FeedName {
+	case "top":
+		storyIDs, err = s.client.Stories.GetTopIDs(ctx)
+	case "new":
+		storyIDs, err = s.client.Stories.GetNewIDs(ctx)
+	case "best":
+		storyIDs, err = s.client.Stories.GetBestIDs(ctx)
+	default:
+		return nil, fmt.Errorf("invalid feed name: %s", s.FeedName)
 	}
 
-	if len(posts) == 0 {
-		return nil, fmt.Errorf("no valid stories found")
-	}
-
-	return posts, nil
+	return storyIDs, err
 }
 
 func (s *SourcePosts) MarshalJSON() ([]byte, error) {

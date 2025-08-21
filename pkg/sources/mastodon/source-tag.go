@@ -70,31 +70,19 @@ func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	s.fetchAndSendNewPosts(ctx, since, feed, errs)
+	s.fetchHashtagPosts(ctx, since, feed, errs)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			s.fetchAndSendNewPosts(ctx, since, feed, errs)
+			s.fetchHashtagPosts(ctx, since, feed, errs)
 		}
 	}
 }
 
-func (s *SourceTag) fetchAndSendNewPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	posts, err := s.fetchHashtagPosts(ctx, since)
-	if err != nil {
-		errs <- fmt.Errorf("fetch posts: %w", err)
-		return
-	}
-
-	for _, post := range posts {
-		feed <- post
-	}
-}
-
-func (s *SourceTag) fetchHashtagPosts(ctx context.Context, since types.Activity) ([]*Post, error) {
+func (s *SourceTag) fetchHashtagPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	var sinceID mastodon.ID
 	if since != nil {
 		sincePost := since.(*Post)
@@ -102,14 +90,10 @@ func (s *SourceTag) fetchHashtagPosts(ctx context.Context, since types.Activity)
 	} else {
 		// If this is the first time we're fetching posts,
 		// only fetch the last few posts to avoid retrieving all historic posts.
-		latestPosts, err := s.fetchLatestPosts(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("fetch latest post: %w", err)
-		}
-		return latestPosts, nil
+		s.fetchLatestPosts(ctx, feed, errs)
+		return
 	}
 
-	posts := make([]*Post, 0)
 outer:
 	for {
 		tagLogger := s.logger.With().
@@ -123,7 +107,8 @@ outer:
 			SinceID: sinceID,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("get hashtag timeline: %w", err)
+			errs <- fmt.Errorf("get hashtag timeline: %w", err)
+			return
 		}
 
 		tagLogger.Debug().Int("count", len(statuses)).Msg("Fetched hashtag timeline")
@@ -133,20 +118,19 @@ outer:
 		}
 
 		for _, status := range statuses {
-			posts = append(posts, &Post{
+			post := &Post{
 				Status:    status,
 				SourceTyp: s.Type(),
 				SourceID:  s.UID(),
-			})
+			}
+			feed <- post
 		}
 
 		sinceID = statuses[len(statuses)-1].ID
 	}
-
-	return posts, nil
 }
 
-func (s *SourceTag) fetchLatestPosts(ctx context.Context) ([]*Post, error) {
+func (s *SourceTag) fetchLatestPosts(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	tagLogger := s.logger.With().
 		Str("tag", s.Tag).
 		Logger()
@@ -157,26 +141,25 @@ func (s *SourceTag) fetchLatestPosts(ctx context.Context) ([]*Post, error) {
 		Limit: 10,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("get hashtag timeline: %w", err)
+		errs <- fmt.Errorf("get hashtag timeline: %w", err)
+		return
 	}
 
 	if len(statuses) == 0 {
 		tagLogger.Debug().Msg("No posts found in hashtag timeline")
-		return nil, nil
+		return
 	}
 
-	posts := make([]*Post, 0)
 	for _, status := range statuses {
-		posts = append(posts, &Post{
+		post := &Post{
 			Status:    status,
 			SourceTyp: s.Type(),
 			SourceID:  s.UID(),
-		})
+		}
+		feed <- post
 	}
 
-	tagLogger.Debug().Int("count", len(posts)).Msg("Fetched latest posts from hashtag timeline")
-
-	return posts, nil
+	tagLogger.Debug().Int("count", len(statuses)).Msg("Fetched latest posts from hashtag timeline")
 }
 
 func (s *SourceTag) MarshalJSON() ([]byte, error) {

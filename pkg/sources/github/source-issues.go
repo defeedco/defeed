@@ -158,36 +158,23 @@ func (s *SourceIssues) Stream(ctx context.Context, since types.Activity, feed ch
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	s.fetchAndSendNewActivities(ctx, since, feed, errs)
+	s.fetchIssueActivities(ctx, s.client, s.Repository, since, feed, errs)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			s.fetchAndSendNewActivities(ctx, since, feed, errs)
+			s.fetchIssueActivities(ctx, s.client, s.Repository, since, feed, errs)
 		}
 	}
 }
 
-func (s *SourceIssues) fetchAndSendNewActivities(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	activities, err := s.fetchIssueActivities(ctx, s.client, s.Repository, since)
-	if err != nil {
-		errs <- err
-		return
-	}
-
-	for _, activity := range activities {
-		feed <- activity
-	}
-}
-
-func (s *SourceIssues) fetchIssueActivities(ctx context.Context, client *github.Client, repository string, since types.Activity) ([]*Issue, error) {
-	activities := make([]*Issue, 0)
-
+func (s *SourceIssues) fetchIssueActivities(ctx context.Context, client *github.Client, repository string, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	parts := strings.Split(repository, "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid Repository format: %s", repository)
+		errs <- fmt.Errorf("invalid Repository format: %s", repository)
+		return
 	}
 	owner, repo := parts[0], parts[1]
 
@@ -204,7 +191,8 @@ func (s *SourceIssues) fetchIssueActivities(ctx context.Context, client *github.
 		Since:     sinceTime,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("list issues: %w", err)
+		errs <- fmt.Errorf("list issues: %w", err)
+		return
 	}
 
 	s.logger.Debug().
@@ -214,12 +202,11 @@ func (s *SourceIssues) fetchIssueActivities(ctx context.Context, client *github.
 		Msg("Fetched issues")
 
 	for _, issue := range issues {
-		activities = append(activities, &Issue{
+		activity := &Issue{
 			Issue:      issue,
 			SourceID:   s.UID(),
 			Repository: s.Repository,
-		})
+		}
+		feed <- activity
 	}
-
-	return activities, nil
 }

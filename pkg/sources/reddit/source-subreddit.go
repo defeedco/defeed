@@ -145,31 +145,19 @@ func (s *SourceSubreddit) Stream(ctx context.Context, since types.Activity, feed
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	s.fetchAndSendNewPosts(ctx, since, feed, errs)
+	s.fetchSubredditPosts(ctx, since, feed, errs)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			s.fetchAndSendNewPosts(ctx, since, feed, errs)
+			s.fetchSubredditPosts(ctx, since, feed, errs)
 		}
 	}
 }
 
-func (s *SourceSubreddit) fetchAndSendNewPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	posts, err := s.fetchSubredditPosts(ctx, since)
-	if err != nil {
-		errs <- fmt.Errorf("fetch posts: %v", err)
-		return
-	}
-
-	for _, post := range posts {
-		feed <- post
-	}
-}
-
-func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since types.Activity) ([]*Post, error) {
+func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	subrLogger := s.logger.With().
 		Str("subreddit", s.Subreddit).
 		Str("sort_by", s.SortBy).
@@ -184,14 +172,10 @@ func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since types.A
 		subrLogger.Debug().Msg("Fetching recent posts")
 		// If this is the first time we're fetching posts,
 		// only fetch the last few posts to avoid retrieving all historic posts.
-		posts, err := s.fetchRecentPosts(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("fetch recent posts: %v", err)
-		}
-		return posts, nil
+		s.fetchRecentPosts(ctx, feed, errs)
+		return
 	}
 
-	posts := make([]*Post, 0)
 outer:
 	for {
 		subrLogger.Debug().Msg("Fetching posts")
@@ -200,7 +184,8 @@ outer:
 			After: sinceID,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("fetch posts: %v", err)
+			errs <- fmt.Errorf("fetch posts: %v", err)
+			return
 		}
 
 		subrLogger.Debug().Int("count", len(redditPosts)).Msg("Fetched posts")
@@ -218,37 +203,35 @@ outer:
 			if post.NSFW {
 				continue
 			}
-			post, err := s.buildPost(ctx, post)
+			builtPost, err := s.buildPost(ctx, post)
 			if err != nil {
-				return nil, fmt.Errorf("build post: %v", err)
+				errs <- fmt.Errorf("build post: %v", err)
+				return
 			}
-			posts = append(posts, post)
+			feed <- builtPost
 		}
 
 		sinceID = redditPosts[len(redditPosts)-1].FullID
 	}
-
-	return posts, nil
 }
 
-func (s *SourceSubreddit) fetchRecentPosts(ctx context.Context) ([]*Post, error) {
+func (s *SourceSubreddit) fetchRecentPosts(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
 	redditPosts, _, err := s.fetchByCurrentTimeline(ctx, &reddit.ListOptions{
 		Limit: 10,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("fetch posts: %v", err)
+		errs <- fmt.Errorf("fetch posts: %v", err)
+		return
 	}
 
-	posts := make([]*Post, 0)
 	for _, post := range redditPosts {
-		post, err := s.buildPost(ctx, post)
+		builtPost, err := s.buildPost(ctx, post)
 		if err != nil {
-			return nil, fmt.Errorf("build post: %v", err)
+			errs <- fmt.Errorf("build post: %v", err)
+			return
 		}
-		posts = append(posts, post)
+		feed <- builtPost
 	}
-
-	return posts, nil
 }
 
 func (s *SourceSubreddit) buildPost(ctx context.Context, post *reddit.Post) (*Post, error) {

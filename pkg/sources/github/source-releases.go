@@ -53,33 +53,14 @@ func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed c
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 
-	s.fetchAndSendNewReleases(ctx, since, feed, errs)
+	s.fetchGithubReleases(ctx, since, feed, errs)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			s.fetchAndSendNewReleases(ctx, since, feed, errs)
-		}
-	}
-}
-
-func (s *SourceRelease) fetchAndSendNewReleases(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	releases, err := s.fetchGithubReleases(ctx, since)
-	if err != nil {
-		errs <- err
-		return
-	}
-
-	var sinceTime time.Time
-	if since != nil {
-		sinceTime = since.CreatedAt()
-	}
-
-	for _, release := range releases {
-		if since == nil || release.CreatedAt().After(sinceTime) {
-			feed <- release
+			s.fetchGithubReleases(ctx, since, feed, errs)
 		}
 	}
 }
@@ -193,10 +174,11 @@ func (r *Release) CreatedAt() time.Time {
 	return r.Release.GetPublishedAt().Time
 }
 
-func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since types.Activity) ([]*Release, error) {
+func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	parts := strings.Split(s.Repository, "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid Repository format: %s", s.Repository)
+		errs <- fmt.Errorf("invalid Repository format: %s", s.Repository)
+		return
 	}
 	owner, repo := parts[0], parts[1]
 
@@ -205,7 +187,6 @@ func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since types.Act
 		sinceTime = since.CreatedAt()
 	}
 
-	var result []*Release
 	page := 1
 outer:
 	for {
@@ -214,7 +195,8 @@ outer:
 			Page:    page,
 		})
 		if err != nil {
-			return nil, err
+			errs <- err
+			return
 		}
 
 		s.logger.Debug().
@@ -235,14 +217,19 @@ outer:
 				// Found the last release, stop looking for more
 				break outer
 			}
-			result = append(result, &Release{
+
+			if since != nil && release.GetPublishedAt().Before(sinceTime) {
+				continue
+			}
+
+			releaseActivity := &Release{
 				Release:    release,
 				Repository: s.Repository,
 				SourceID:   s.UID(),
-			})
+			}
+
+			feed <- releaseActivity
 		}
 		page++
 	}
-
-	return result, nil
 }
