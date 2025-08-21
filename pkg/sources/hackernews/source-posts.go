@@ -88,6 +88,10 @@ func (p *Post) SourceUID() string {
 }
 
 func (p *Post) Title() string {
+	if p.Post.Title == nil {
+		return ""
+	}
+
 	return *p.Post.Title
 }
 
@@ -96,8 +100,12 @@ func (p *Post) Body() string {
 		return p.ArticleTextBody
 	}
 
-	// Note: there is also Post.Text, but its usually empty.
-	return *p.Post.Title
+	// Note: this is usually empty.
+	if p.Post.Text != nil {
+		return *p.Post.Text
+	}
+
+	return p.Title()
 }
 
 func (p *Post) URL() string {
@@ -112,6 +120,10 @@ func (p *Post) ImageURL() string {
 }
 
 func (p *Post) CreatedAt() time.Time {
+	if p.Post.Time == nil {
+		return time.Time{}
+	}
+
 	return time.Unix(int64(*p.Post.Time), 0)
 }
 
