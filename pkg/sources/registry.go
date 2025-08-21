@@ -297,7 +297,11 @@ func (r *Registry) Search(ctx context.Context, query string, sourceUIDs []string
 }
 
 func (r *Registry) Summary(ctx context.Context, query string, sourceUIDs []string) (*types.ActivitiesSummary, error) {
-	activities, err := r.Search(ctx, query, sourceUIDs, 0.0, 20, types.SortBySimilarity)
+	sortBy := types.SortBySimilarity
+	if query == "" {
+		sortBy = types.SortByDate
+	}
+	activities, err := r.Search(ctx, query, sourceUIDs, 0.0, 20, sortBy)
 	if err != nil {
 		return nil, fmt.Errorf("search activities: %w", err)
 	}
