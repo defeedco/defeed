@@ -18,6 +18,7 @@ const TypeMastodonTag = "mastodon-tag"
 type SourceTag struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
 	Tag         string `json:"tag" validate:"required"`
+	client      *mastodon.Client
 	logger      *zerolog.Logger
 }
 
@@ -46,7 +47,14 @@ func (s *SourceTag) Type() string {
 func (s *SourceTag) Validate() []error { return utils.ValidateStruct(s) }
 
 func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
+	s.client = mastodon.NewClient(&mastodon.Config{
+		Server:       s.InstanceURL,
+		ClientID:     "pulse-feed-aggregation",
+		ClientSecret: "pulse-feed-aggregation",
+	})
+
 	s.logger = logger
+
 	return nil
 }
 
@@ -67,43 +75,98 @@ func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<
 }
 
 func (s *SourceTag) fetchAndSendNewPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	client := mastodon.NewClient(&mastodon.Config{
-		Server:       s.InstanceURL,
-		ClientID:     "pulse-feed-aggregation",
-		ClientSecret: "pulse-feed-aggregation",
-	})
-
-	limit := 15
-	posts, err := s.fetchHashtagPosts(ctx, client, limit)
+	posts, err := s.fetchHashtagPosts(ctx, since)
 	if err != nil {
-		errs <- fmt.Errorf("failed to fetch posts: %w", err)
+		errs <- fmt.Errorf("fetch posts: %w", err)
 		return
 	}
 
-	var sinceTime time.Time
-	if since != nil {
-		sinceTime = since.CreatedAt()
-	}
-
 	for _, post := range posts {
-		if since == nil || post.CreatedAt().After(sinceTime) {
-			feed <- post
-		}
+		feed <- post
 	}
 }
 
-func (s *SourceTag) fetchHashtagPosts(ctx context.Context, client *mastodon.Client, limit int) ([]*Post, error) {
-	statuses, err := client.GetTimelineHashtag(ctx, s.Tag, false, &mastodon.Pagination{
-		Limit: int64(limit),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get hashtag timeline: %w", err)
+func (s *SourceTag) fetchHashtagPosts(ctx context.Context, since types.Activity) ([]*Post, error) {
+	var sinceID mastodon.ID
+	if since != nil {
+		sincePost := since.(*Post)
+		sinceID = sincePost.Status.ID
+	} else {
+		// If this is the first time we're fetching posts,
+		// only fetch the last few posts to avoid fetching all historic posts.
+		latestPosts, err := s.fetchLatestPosts(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("fetch latest post: %w", err)
+		}
+		return latestPosts, nil
 	}
 
-	posts := make([]*Post, len(statuses))
-	for i, status := range statuses {
-		posts[i] = &Post{Status: status, SourceTyp: s.Type(), SourceID: s.UID()}
+	posts := make([]*Post, 0)
+outer:
+	for {
+		tagLogger := s.logger.With().
+			Str("tag", s.Tag).
+			Str("since_id", string(sinceID)).
+			Logger()
+
+		tagLogger.Debug().Msg("Fetching hashtag timeline")
+		statuses, err := s.client.GetTimelineHashtag(ctx, s.Tag, false, &mastodon.Pagination{
+			Limit:   int64(15),
+			SinceID: sinceID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("get hashtag timeline: %w", err)
+		}
+
+		tagLogger.Debug().Int("count", len(statuses)).Msg("Fetched hashtag timeline")
+
+		if len(statuses) == 0 {
+			break outer
+		}
+
+		for _, status := range statuses {
+			posts = append(posts, &Post{
+				Status:    status,
+				SourceTyp: s.Type(),
+				SourceID:  s.UID(),
+			})
+		}
+
+		sinceID = statuses[len(statuses)-1].ID
 	}
+
+	return posts, nil
+}
+
+func (s *SourceTag) fetchLatestPosts(ctx context.Context) ([]*Post, error) {
+	tagLogger := s.logger.With().
+		Str("tag", s.Tag).
+		Logger()
+
+	tagLogger.Debug().Msg("Fetching latest post from hashtag timeline")
+
+	statuses, err := s.client.GetTimelineHashtag(ctx, s.Tag, false, &mastodon.Pagination{
+		Limit: 10,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get hashtag timeline: %w", err)
+	}
+
+	if len(statuses) == 0 {
+		tagLogger.Debug().Msg("No posts found in hashtag timeline")
+		return nil, nil
+	}
+
+	posts := make([]*Post, 0)
+	for _, status := range statuses {
+		posts = append(posts, &Post{
+			Status:    status,
+			SourceTyp: s.Type(),
+			SourceID:  s.UID(),
+		})
+	}
+
+	tagLogger.Debug().Int("count", len(posts)).Msg("Fetched latest posts from hashtag timeline")
 
 	return posts, nil
 }

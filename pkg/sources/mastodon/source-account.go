@@ -81,22 +81,14 @@ func (s *SourceAccount) fetchAndSendNewPosts(ctx context.Context, since types.Ac
 		return
 	}
 
-	limit := int64(15)
-	posts, err := s.fetchAccountPosts(ctx, account.ID, limit)
+	posts, err := s.fetchAccountPosts(ctx, account.ID, since)
 	if err != nil {
 		errs <- fmt.Errorf("fetch posts: %w", err)
 		return
 	}
 
-	var sinceTime time.Time
-	if since != nil {
-		sinceTime = since.CreatedAt()
-	}
-
 	for _, post := range posts {
-		if since == nil || post.CreatedAt().After(sinceTime) {
-			feed <- post
-		}
+		feed <- post
 	}
 }
 
@@ -110,18 +102,88 @@ func (s *SourceAccount) fetchAccount(ctx context.Context) (*mastodon.Account, er
 	return account, nil
 }
 
-func (s *SourceAccount) fetchAccountPosts(ctx context.Context, accountID mastodon.ID, limit int64) ([]*Post, error) {
+func (s *SourceAccount) fetchAccountPosts(ctx context.Context, accountID mastodon.ID, since types.Activity) ([]*Post, error) {
+	var sinceID mastodon.ID
+	if since != nil {
+		sincePost := since.(*Post)
+		sinceID = sincePost.Status.ID
+	} else {
+		// If this is the first time we're fetching posts,
+		// only fetch the last few posts to avoid fetching all historic posts.
+		latestPosts, err := s.fetchLatestPosts(ctx, accountID)
+		if err != nil {
+			return nil, fmt.Errorf("fetch latest post: %w", err)
+		}
+		return latestPosts, nil
+	}
+
+	posts := make([]*Post, 0)
+outer:
+	for {
+		accLogger := s.logger.With().
+			Str("account_id", string(accountID)).
+			Str("since_id", string(sinceID)).
+			Logger()
+
+		accLogger.Debug().Msg("Fetching account statuses")
+
+		statuses, err := s.client.GetAccountStatuses(ctx, accountID, &mastodon.Pagination{
+			Limit:   int64(15),
+			SinceID: sinceID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("fetch account statuses: %w", err)
+		}
+
+		accLogger.Debug().Int("count", len(statuses)).Msg("Fetched account statuses")
+
+		if len(statuses) == 0 {
+			break outer
+		}
+
+		for _, status := range statuses {
+			posts = append(posts, &Post{
+				Status:    status,
+				SourceTyp: s.Type(),
+				SourceID:  s.UID(),
+			})
+		}
+
+		sinceID = statuses[len(statuses)-1].ID
+	}
+
+	return posts, nil
+}
+
+func (s *SourceAccount) fetchLatestPosts(ctx context.Context, accountID mastodon.ID) ([]*Post, error) {
+	accLogger := s.logger.With().
+		Str("account_id", string(accountID)).
+		Logger()
+
+	accLogger.Debug().Msg("Fetching latest post from account timeline")
+
 	statuses, err := s.client.GetAccountStatuses(ctx, accountID, &mastodon.Pagination{
-		Limit: limit,
+		Limit: 10,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("fetch account statuses: %w", err)
 	}
 
-	posts := make([]*Post, len(statuses))
-	for i, status := range statuses {
-		posts[i] = &Post{Status: status, SourceTyp: s.Type(), SourceID: s.UID()}
+	if len(statuses) == 0 {
+		accLogger.Debug().Msg("No posts found in account timeline")
+		return nil, nil
 	}
+
+	posts := make([]*Post, 0)
+	for _, status := range statuses {
+		posts = append(posts, &Post{
+			Status:    status,
+			SourceTyp: s.Type(),
+			SourceID:  s.UID(),
+		})
+	}
+
+	accLogger.Debug().Int("count", len(posts)).Msg("Fetched latest posts from account timeline")
 
 	return posts, nil
 }
