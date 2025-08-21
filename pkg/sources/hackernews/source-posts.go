@@ -216,17 +216,28 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Acti
 			continue
 		}
 
-		article, err := readability.FromURL(*story.URL, 5*time.Second)
-		if err != nil {
+		textContent := ""
+		if story.Text != nil {
+			textContent = *story.Text
+		} else if story.URL != nil {
 			// TODO: add support for fetching non-HTML content (e.g. PDFs)
-			storyLogger.Error().Err(err).Msg("Failed to fetch readable article")
-			continue
+			article, err := readability.FromURL(*story.URL, 5*time.Second)
+			if err != nil {
+				storyLogger.Error().Err(err).Msg("Failed to fetch readable article")
+				continue
+			}
+
+			// Note: don't store the full article struct, it will lead to "encountered a cycle via *html.Node"
+			textContent = article.TextContent
+		}
+
+		if textContent == "" {
+			storyLogger.Debug().Msg("No text content found")
 		}
 
 		posts = append(posts, &Post{
-			Post: story,
-			// Note: storing the full article struct will lead to "encountered a cycle via *html.Node"
-			ArticleTextBody: article.TextContent,
+			Post:            story,
+			ArticleTextBody: textContent,
 			SourceID:        s.UID(),
 		})
 	}
