@@ -27,7 +27,5 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("validate config: %w", err)
 	}
 
-	cfg.APIConfig.Init()
-
 	return &cfg, nil
 }

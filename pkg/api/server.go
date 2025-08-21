@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	_ "embed"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,19 +27,11 @@ import (
 	"github.com/tmc/langchaingo/llms/openai"
 
 	"github.com/glanceapp/glance/pkg/sources"
-	"github.com/glanceapp/glance/pkg/widgets"
-	"github.com/glanceapp/glance/web"
 	"github.com/rs/zerolog"
 )
 
 //go:embed openapi.yaml
 var openapiSpecYaml string
-
-const StaticAssetsCacheDuration = 24 * time.Hour
-
-var (
-	pageTemplate = web.MustParseTemplate("page.html", "document.html", "footer.html", "page-content.html")
-)
 
 type Server struct {
 	registry  *sources.Registry
@@ -93,7 +84,6 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 	}
 
 	HandlerFromMux(server, mux)
-	server.registerFileHandlers(mux)
 	server.registerApiDocsHandlers(mux)
 
 	return server, nil
@@ -128,35 +118,6 @@ func (s *Server) registerApiDocsHandlers(mux *http.ServeMux) {
 		}
 	})
 }
-
-func (s *Server) registerFileHandlers(mux *http.ServeMux) {
-	mux.Handle(
-		fmt.Sprintf("GET /static/%s/{path...}", web.StaticFSHash),
-		http.StripPrefix(
-			"/static/"+web.StaticFSHash,
-			fileServerWithCache(http.FS(web.StaticFS), StaticAssetsCacheDuration),
-		),
-	)
-
-	assetCacheControlValue := fmt.Sprintf(
-		"public, max-age=%d",
-		int(StaticAssetsCacheDuration.Seconds()),
-	)
-
-	mux.HandleFunc(fmt.Sprintf("GET /static/%s/css/bundle.css", web.StaticFSHash), func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Cache-Control", assetCacheControlValue)
-		w.Header().Add("Content-Type", "text/css; charset=utf-8")
-		w.Write(web.BundledCSSContents)
-	})
-
-	// TODO(pulse): Serve manifest at GET /manifest.json
-
-	if s.config.AssetsPath != "" {
-		assetsFS := fileServerWithCache(http.Dir(s.config.AssetsPath), 2*time.Hour)
-		mux.Handle("/assets/{path...}", http.StripPrefix("/assets/", assetsFS))
-	}
-}
-
 func (s *Server) Start() error {
 	if err := s.http.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
@@ -166,48 +127,6 @@ func (s *Server) Start() error {
 
 func (s *Server) Stop() error {
 	return s.http.Close()
-}
-
-type templateData struct {
-	Config         *Config
-	Page           *widgets.Page
-	Theme          widgets.Theme
-	ThemePresets   []widgets.Theme
-	SourceRegistry *sources.Registry
-}
-
-func (s *Server) GetPage(w http.ResponseWriter, r *http.Request, params GetPageParams) {
-	configJson, err := base64.StdEncoding.DecodeString(params.Config)
-	if err != nil {
-		s.badRequest(w, err, "decode config")
-		return
-	}
-
-	page, err := widgets.NewPageFromJSON(configJson)
-	if err != nil {
-		s.badRequest(w, err, "deserialize page")
-	}
-
-	themePresets := widgets.DefaultThemePresets()
-	data := templateData{
-		Page:           page,
-		Config:         s.config,
-		Theme:          themePresets[0],
-		ThemePresets:   themePresets,
-		SourceRegistry: s.registry,
-	}
-
-	var responseBytes bytes.Buffer
-	err = pageTemplate.Execute(&responseBytes, data)
-	if err != nil {
-		s.internalError(w, err, "execute template")
-		return
-	}
-
-	_, err = w.Write(responseBytes.Bytes())
-	if err != nil {
-		s.logger.Err(err).Msg("write response")
-	}
 }
 
 func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
@@ -233,13 +152,13 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sources, err := serializeSources(out)
+	res, err := serializeSources(out)
 	if err != nil {
 		s.internalError(w, err, "serialize sources")
 		return
 	}
 
-	s.serializeRes(w, sources)
+	s.serializeRes(w, res)
 }
 
 func (s *Server) CreateSource(w http.ResponseWriter, r *http.Request) {

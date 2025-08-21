@@ -297,12 +297,6 @@ type GetActivitiesSummaryParams struct {
 	Sources string `form:"sources" json:"sources"`
 }
 
-// GetPageParams defines parameters for GetPage.
-type GetPageParams struct {
-	// Config Base64 encoded JSON string for feed config
-	Config string `form:"config" json:"config"`
-}
-
 // CreateSourceJSONRequestBody defines body for CreateSource for application/json ContentType.
 type CreateSourceJSONRequestBody = CreateSourceRequest
 
@@ -643,9 +637,6 @@ type ServerInterface interface {
 	// Generate an executive summary of multiple activities
 	// (GET /activities/summary)
 	GetActivitiesSummary(w http.ResponseWriter, r *http.Request, params GetActivitiesSummaryParams)
-	// Get page HTML
-	// (GET /page)
-	GetPage(w http.ResponseWriter, r *http.Request, params GetPageParams)
 	// List all sources
 	// (GET /sources)
 	ListSources(w http.ResponseWriter, r *http.Request)
@@ -764,40 +755,6 @@ func (siw *ServerInterfaceWrapper) GetActivitiesSummary(w http.ResponseWriter, r
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetActivitiesSummary(w, r, params)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// GetPage operation middleware
-func (siw *ServerInterfaceWrapper) GetPage(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetPageParams
-
-	// ------------- Required query parameter "config" -------------
-
-	if paramValue := r.URL.Query().Get("config"); paramValue != "" {
-
-	} else {
-		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "config"})
-		return
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "config", r.URL.Query(), &params.Config)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "config", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetPage(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1021,7 +978,6 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc("GET "+options.BaseURL+"/activities/search", wrapper.SearchActivities)
 	m.HandleFunc("GET "+options.BaseURL+"/activities/summary", wrapper.GetActivitiesSummary)
-	m.HandleFunc("GET "+options.BaseURL+"/page", wrapper.GetPage)
 	m.HandleFunc("GET "+options.BaseURL+"/sources", wrapper.ListSources)
 	m.HandleFunc("POST "+options.BaseURL+"/sources", wrapper.CreateSource)
 	m.HandleFunc("GET "+options.BaseURL+"/sources/activities", wrapper.ListAllActivities)

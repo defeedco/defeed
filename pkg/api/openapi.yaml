@@ -180,27 +180,6 @@ paths:
                 items:
                   $ref: '#/components/schemas/Activity'
 
-  /page:
-    get:
-      summary: Get page HTML
-      operationId: getPage
-      tags:
-        - pages
-      parameters:
-        - name: config
-          in: query
-          required: true
-          description: Base64 encoded JSON string for feed config
-          schema:
-            type: string
-      responses:
-        '200':
-          description: HTML content
-          content:
-            text/html:
-              schema:
-                type: string
-
 components:
   schemas:
     CreateSourceRequest:
