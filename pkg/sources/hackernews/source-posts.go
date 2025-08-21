@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
@@ -49,8 +48,9 @@ func (s *SourcePosts) Type() string {
 func (s *SourcePosts) Validate() []error { return utils.ValidateStruct(s) }
 
 type Post struct {
-	Post     *gohn.Item `json:"post"`
-	SourceID string     `json:"source_id"`
+	Post            *gohn.Item `json:"post"`
+	ArticleTextBody string     `json:"article_text_body"`
+	SourceID        string     `json:"source_id"`
 }
 
 func NewPost() *Post {
@@ -93,16 +93,12 @@ func (p *Post) Title() string {
 }
 
 func (p *Post) Body() string {
-	body := *p.Post.Title
-	if p.Post.URL != nil {
-		article, err := readability.FromURL(*p.Post.URL, 5*time.Second)
-		if err == nil {
-			body += fmt.Sprintf("\n\nReferenced article: \n%s", article.TextContent)
-		} else {
-			slog.Error("Failed to fetch hacker news article", "error", err, "url", *p.Post.URL)
-		}
+	if p.ArticleTextBody != "" {
+		return p.ArticleTextBody
 	}
-	return body
+
+	// Note: there is also Post.Text, but its usually empty.
+	return *p.Post.Title
 }
 
 func (p *Post) URL() string {
@@ -153,25 +149,18 @@ func (s *SourcePosts) Stream(ctx context.Context, since types.Activity, feed cha
 }
 
 func (s *SourcePosts) fetchAndSendNewPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	posts, err := s.fetchHackerNewsPosts(ctx)
+	posts, err := s.fetchHackerNewsPosts(ctx, since)
 	if err != nil {
 		errs <- fmt.Errorf("fetch posts: %v", err)
 		return
 	}
 
-	var sinceTime time.Time
-	if since != nil {
-		sinceTime = since.CreatedAt()
-	}
-
 	for _, post := range posts {
-		if since == nil || post.CreatedAt().After(sinceTime) {
-			feed <- post
-		}
+		feed <- post
 	}
 }
 
-func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context) ([]*Post, error) {
+func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Activity) ([]*Post, error) {
 	var storyIDs []*int
 	var err error
 
@@ -194,23 +183,52 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context) ([]*Post, error)
 		return nil, fmt.Errorf("no stories found")
 	}
 
+	var sincePost *Post
+	if since != nil {
+		sincePost = since.(*Post)
+	}
+
 	posts := make([]*Post, 0, len(storyIDs))
 	for _, id := range storyIDs {
 		if id == nil {
 			continue
 		}
 
+		storyLogger := s.logger.With().Int("story_id", *id).Logger()
+
+		// Note: We are assuming post IDs are returned in descending order (newest first),
+		// and that post IDs are incremented based on the order of the creation time.
+		// This is not explicitly stated anywhere, but it seems to be the case based on the observations.
+		if sincePost != nil && *id <= *sincePost.Post.ID {
+			storyLogger.Debug().Msg("Reached last seen story")
+			break
+		}
+
+		storyLogger.Debug().Msg("Fetching hacker news story")
 		story, err := s.client.Items.Get(ctx, *id)
 		if err != nil {
-			slog.Error("Failed to fetch hacker news story", "error", err, "id", *id)
+			storyLogger.Error().Err(err).Msg("Failed to fetch hacker news story")
 			continue
 		}
 
 		if story == nil {
+			storyLogger.Debug().Msg("Fetched story is nil")
 			continue
 		}
 
-		posts = append(posts, &Post{Post: story, SourceID: s.UID()})
+		article, err := readability.FromURL(*story.URL, 5*time.Second)
+		if err != nil {
+			// TODO: add support for fetching non-HTML content (e.g. PDFs)
+			storyLogger.Error().Err(err).Msg("Failed to fetch readable article")
+			continue
+		}
+
+		posts = append(posts, &Post{
+			Post: story,
+			// Note: storing the full article struct will lead to "encountered a cycle via *html.Node"
+			ArticleTextBody: article.TextContent,
+			SourceID:        s.UID(),
+		})
 	}
 
 	if len(posts) == 0 {

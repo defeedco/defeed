@@ -525,22 +525,22 @@ func serializeActivities(in []*types.DecoratedActivity) ([]*Activity, error) {
 }
 
 func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
-	sourceType, err := serializeSourceType(in.SourceType())
+	sourceType, err := serializeSourceType(in.Activity.SourceType())
 	if err != nil {
 		return nil, fmt.Errorf("serialize source type: %w", err)
 	}
 
 	return &Activity{
-		Body:         in.Body(),
-		CreatedAt:    in.CreatedAt(),
-		ImageUrl:     in.ImageURL(),
+		Body:         in.Activity.Body(),
+		CreatedAt:    in.Activity.CreatedAt(),
+		ImageUrl:     in.Activity.ImageURL(),
 		FullSummary:  in.Summary.FullSummary,
 		ShortSummary: in.Summary.ShortSummary,
-		SourceUid:    in.SourceUID(),
+		SourceUid:    in.Activity.SourceUID(),
 		SourceType:   sourceType,
-		Title:        in.Title(),
-		Uid:          in.UID(),
-		Url:          in.URL(),
+		Title:        in.Activity.Title(),
+		Uid:          in.Activity.UID(),
+		Url:          in.Activity.URL(),
 		Similarity:   &in.Similarity,
 	}, nil
 }

@@ -100,7 +100,7 @@ func (r *Registry) Initialize() error {
 
 		var since types.Activity = nil
 		if len(activities) > 0 {
-			since = activities[0]
+			since = activities[0].Activity
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -180,7 +180,7 @@ func (r *Registry) Activities() ([]*types.DecoratedActivity, error) {
 	}
 
 	sort.Slice(matches, func(i, j int) bool {
-		return matches[i].CreatedAt().Before(matches[j].CreatedAt())
+		return matches[i].Activity.CreatedAt().Before(matches[j].Activity.CreatedAt())
 	})
 
 	return matches, nil
@@ -194,7 +194,7 @@ func (r *Registry) ActivitiesBySource(sourceUID string) ([]*types.DecoratedActiv
 
 	matches := make([]*types.DecoratedActivity, 0)
 	for _, a := range activities {
-		if a.SourceUID() == sourceUID {
+		if a.Activity.SourceUID() == sourceUID {
 			matches = append(matches, a)
 		}
 	}
@@ -205,18 +205,19 @@ func (r *Registry) ActivitiesBySource(sourceUID string) ([]*types.DecoratedActiv
 func (r *Registry) startWorkers(nWorkers int) {
 	var wg sync.WaitGroup
 
-	for i := 0; i < nWorkers; i++ {
+	for i := range nWorkers {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-			r.logger.Info().Int("worker_id", workerID).Msg("Worker started")
+
+			wLogger := r.logger.With().Int("worker_id", workerID).Logger()
+
+			wLogger.Info().Msg("Worker started")
 			for {
 				select {
 				case act := <-r.activityQueue:
 
-					actLogger := activityLogger(act, r.logger).With().
-						Int("worker_id", workerID).
-						Logger()
+					actLogger := activityLogger(act, &wLogger)
 
 					actLogger.Debug().Msg("Processing activity")
 
@@ -250,13 +251,12 @@ func (r *Registry) startWorkers(nWorkers int) {
 
 				case err := <-r.errorQueue:
 					// TODO: Decorate errors with source ID
-					r.logger.Error().
+					wLogger.Error().
 						Err(err).
-						Int("worker_id", workerID).
 						Msg("Error from source")
 
 				case <-r.done:
-					r.logger.Info().Int("worker_id", workerID).Msg("Worker shutting down")
+					wLogger.Info().Msg("Worker shutting down")
 					return
 				}
 			}

@@ -24,21 +24,21 @@ func NewActivityRepository(db *DB) *ActivityRepository {
 func (r *ActivityRepository) Upsert(activity *types.DecoratedActivity) error {
 	ctx := context.Background()
 
-	rawJson, err := activity.MarshalJSON()
+	rawJson, err := activity.Activity.MarshalJSON()
 	if err != nil {
 		return fmt.Errorf("marshal activity: %w", err)
 	}
 
 	err = r.db.Client().Activity.Create().
-		SetID(activity.UID()).
-		SetUID(activity.UID()).
-		SetSourceUID(activity.SourceUID()).
-		SetTitle(activity.Title()).
-		SetBody(activity.Body()).
-		SetURL(activity.URL()).
-		SetImageURL(activity.ImageURL()).
-		SetCreatedAt(activity.CreatedAt()).
-		SetSourceType(activity.SourceType()).
+		SetID(activity.Activity.UID()).
+		SetUID(activity.Activity.UID()).
+		SetSourceUID(activity.Activity.SourceUID()).
+		SetTitle(activity.Activity.Title()).
+		SetBody(activity.Activity.Body()).
+		SetURL(activity.Activity.URL()).
+		SetImageURL(activity.Activity.ImageURL()).
+		SetCreatedAt(activity.Activity.CreatedAt()).
+		SetSourceType(activity.Activity.SourceType()).
 		SetRawJSON(string(rawJson)).
 		SetShortSummary(activity.Summary.ShortSummary).
 		SetFullSummary(activity.Summary.FullSummary).
