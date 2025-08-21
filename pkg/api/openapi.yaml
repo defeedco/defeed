@@ -6,6 +6,9 @@ info:
 
 servers:
   - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.defeed.co
+    description: Production server
 
 paths:
   /sources:
