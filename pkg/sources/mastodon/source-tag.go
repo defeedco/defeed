@@ -10,6 +10,7 @@ import (
 	"github.com/glanceapp/glance/pkg/utils"
 
 	"github.com/mattn/go-mastodon"
+	"github.com/rs/zerolog"
 )
 
 const TypeMastodonTag = "mastodon-tag"
@@ -17,6 +18,7 @@ const TypeMastodonTag = "mastodon-tag"
 type SourceTag struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
 	Tag         string `json:"tag" validate:"required"`
+	logger      *zerolog.Logger
 }
 
 func NewSourceTag() *SourceTag {
@@ -43,7 +45,10 @@ func (s *SourceTag) Type() string {
 
 func (s *SourceTag) Validate() []error { return utils.ValidateStruct(s) }
 
-func (s *SourceTag) Initialize() error { return nil }
+func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
+	s.logger = logger
+	return nil
+}
 
 func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	ticker := time.NewTicker(5 * time.Minute)

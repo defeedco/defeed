@@ -14,6 +14,7 @@ import (
 	"github.com/glanceapp/glance/pkg/sources/mastodon"
 	"github.com/glanceapp/glance/pkg/sources/reddit"
 	"github.com/glanceapp/glance/pkg/sources/rss"
+	"github.com/rs/zerolog"
 )
 
 func NewSource(sourceType string) (Source, error) {
@@ -59,7 +60,8 @@ type Source interface {
 	// Validate returns a list of configuration validation errors.
 	// When non-empty, the caller should not proceed to Initialize.
 	Validate() []error
-	Initialize() error
+	// Initialize initializes the internal state and prepares the logger.
+	Initialize(logger *zerolog.Logger) error
 	// Stream starts streaming new activities from the source.
 	// since is the last activity emitted by the source.
 	// feed is a channel to send activities to.

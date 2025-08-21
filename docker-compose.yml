@@ -16,6 +16,8 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
 
   app:
     container_name: defeed-engine

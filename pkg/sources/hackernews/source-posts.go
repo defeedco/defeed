@@ -12,6 +12,7 @@ import (
 	"github.com/alexferrari88/gohn/pkg/gohn"
 	"github.com/glanceapp/glance/pkg/utils"
 	"github.com/go-shiori/go-readability"
+	"github.com/rs/zerolog"
 )
 
 const TypeHackerNewsPosts = "hackernews-posts"
@@ -20,6 +21,7 @@ type SourcePosts struct {
 	FeedName     string        `json:"feedName" validate:"required,oneof=top new best"`
 	PollInterval time.Duration `json:"pollInterval"`
 	client       *gohn.Client
+	logger       *zerolog.Logger
 }
 
 func NewSourcePosts() *SourcePosts {
@@ -118,7 +120,7 @@ func (p *Post) CreatedAt() time.Time {
 	return time.Unix(int64(*p.Post.Time), 0)
 }
 
-func (s *SourcePosts) Initialize() error {
+func (s *SourcePosts) Initialize(logger *zerolog.Logger) error {
 	var err error
 	s.client, err = gohn.NewClient(nil)
 	if err != nil {
@@ -128,6 +130,8 @@ func (s *SourcePosts) Initialize() error {
 	if s.PollInterval == 0 {
 		s.PollInterval = time.Hour
 	}
+
+	s.logger = logger
 
 	return nil
 }

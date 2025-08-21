@@ -8,6 +8,7 @@ import (
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
+	"github.com/rs/zerolog"
 )
 
 const TypeLobstersTag = "lobsters-tag"
@@ -17,6 +18,7 @@ type SourceTag struct {
 	CustomURL   string `json:"customUrl" validate:"omitempty,url"`
 	Tag         string `json:"tag" validate:"required"`
 	client      *LobstersClient
+	logger      *zerolog.Logger
 }
 
 func NewSourceTag() *SourceTag {
@@ -89,8 +91,9 @@ func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Acti
 	}
 }
 
-func (s *SourceTag) Initialize() error {
+func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
 	s.client = NewLobstersClient(s.InstanceURL)
+	s.logger = logger
 	return nil
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/glanceapp/glance/pkg/utils"
 
 	"github.com/mattn/go-mastodon"
+	"github.com/rs/zerolog"
 )
 
 const TypeMastodonAccount = "mastodon-account"
@@ -18,6 +19,7 @@ type SourceAccount struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
 	Account     string `json:"account" validate:"required"`
 	client      *mastodon.Client
+	logger      *zerolog.Logger
 }
 
 func NewSourceAccount() *SourceAccount {
@@ -44,12 +46,14 @@ func (s *SourceAccount) Type() string {
 
 func (s *SourceAccount) Validate() []error { return utils.ValidateStruct(s) }
 
-func (s *SourceAccount) Initialize() error {
+func (s *SourceAccount) Initialize(logger *zerolog.Logger) error {
 	s.client = mastodon.NewClient(&mastodon.Config{
 		Server:       s.InstanceURL,
 		ClientID:     "pulse-feed-aggregation",
 		ClientSecret: "pulse-feed-aggregation",
 	})
+
+	s.logger = logger
 
 	return nil
 }

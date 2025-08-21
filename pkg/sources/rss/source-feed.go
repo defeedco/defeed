@@ -16,6 +16,7 @@ import (
 
 	"github.com/mmcdole/gofeed"
 	gofeedext "github.com/mmcdole/gofeed/extensions"
+	"github.com/rs/zerolog"
 )
 
 const TypeRSSFeed = "rss-feed"
@@ -35,6 +36,7 @@ func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 type SourceFeed struct {
 	FeedURL string            `json:"url" validate:"required,url"`
 	Headers map[string]string `json:"headers"`
+	logger  *zerolog.Logger
 }
 
 func NewSourceFeed() *SourceFeed {
@@ -59,7 +61,10 @@ func (s *SourceFeed) Type() string {
 
 func (s *SourceFeed) Validate() []error { return utils.ValidateStruct(s) }
 
-func (s *SourceFeed) Initialize() error { return nil }
+func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
+	s.logger = logger
+	return nil
+}
 
 func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	ticker := time.NewTicker(10 * time.Minute)

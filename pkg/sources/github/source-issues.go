@@ -10,8 +10,8 @@ import (
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
-
 	"github.com/google/go-github/v72/github"
+	"github.com/rs/zerolog"
 )
 
 const TypeGithubIssues = "github-issues"
@@ -20,6 +20,7 @@ type SourceIssues struct {
 	Repository string `json:"repository" validate:"required,contains=/"`
 	Token      string `json:"token"`
 	client     *github.Client
+	logger     *zerolog.Logger
 }
 
 func NewIssuesSource() *SourceIssues {
@@ -135,7 +136,7 @@ func (i *Issue) CreatedAt() time.Time {
 	return i.Issue.GetUpdatedAt().Time
 }
 
-func (s *SourceIssues) Initialize() error {
+func (s *SourceIssues) Initialize(logger *zerolog.Logger) error {
 	token := s.Token
 	if token == "" {
 		token = os.Getenv("GITHUB_TOKEN")
@@ -146,6 +147,8 @@ func (s *SourceIssues) Initialize() error {
 	} else {
 		s.client = github.NewClient(nil)
 	}
+
+	s.logger = logger
 
 	return nil
 }
@@ -167,25 +170,18 @@ func (s *SourceIssues) Stream(ctx context.Context, since types.Activity, feed ch
 }
 
 func (s *SourceIssues) fetchAndSendNewActivities(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	activities, err := s.fetchIssueActivities(ctx, s.client, s.Repository)
+	activities, err := s.fetchIssueActivities(ctx, s.client, s.Repository, since)
 	if err != nil {
 		errs <- err
 		return
 	}
 
-	var sinceTime time.Time
-	if since != nil {
-		sinceTime = since.CreatedAt()
-	}
-
 	for _, activity := range activities {
-		if since == nil || activity.CreatedAt().After(sinceTime) {
-			feed <- activity
-		}
+		feed <- activity
 	}
 }
 
-func (s *SourceIssues) fetchIssueActivities(ctx context.Context, client *github.Client, repository string) ([]*Issue, error) {
+func (s *SourceIssues) fetchIssueActivities(ctx context.Context, client *github.Client, repository string, since types.Activity) ([]*Issue, error) {
 	activities := make([]*Issue, 0)
 
 	parts := strings.Split(repository, "/")
@@ -194,15 +190,27 @@ func (s *SourceIssues) fetchIssueActivities(ctx context.Context, client *github.
 	}
 	owner, repo := parts[0], parts[1]
 
+	var sinceTime time.Time
+	if since != nil {
+		sinceTime = since.CreatedAt()
+	}
+
+	// TODO: When since is non-empty, it always fetches the one last issue we've already seen
 	issues, _, err := client.Issues.ListByRepo(ctx, owner, repo, &github.IssueListByRepoOptions{
-		State:       "all",
-		Sort:        "updated",
-		Direction:   "desc",
-		ListOptions: github.ListOptions{PerPage: 10},
+		State:     "all",
+		Sort:      "updated",
+		Direction: "desc",
+		Since:     sinceTime,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list issues: %w", err)
 	}
+
+	s.logger.Debug().
+		Str("repository", repository).
+		Time("since", sinceTime).
+		Int("count", len(issues)).
+		Msg("Fetched issues")
 
 	for _, issue := range issues {
 		activities = append(activities, &Issue{

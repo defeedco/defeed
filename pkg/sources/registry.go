@@ -81,11 +81,10 @@ func (r *Registry) Initialize() error {
 	r.logger.Info().Int("count", len(sources)).Msg("Initializing sources")
 
 	for _, source := range sources {
-		if err := source.Initialize(); err != nil {
-			r.logger.Error().
+		sLogger := sourceLogger(source, r.logger)
+		if err := source.Initialize(sLogger); err != nil {
+			sLogger.Error().
 				Err(err).
-				Str("source_id", source.UID()).
-				Str("source_name", source.Name()).
 				Msg("Failed to initialize source")
 			continue
 		}
@@ -109,10 +108,7 @@ func (r *Registry) Initialize() error {
 
 		r.cancelBySourceID.Store(source.UID(), cancel)
 
-		r.logger.Info().
-			Str("source_id", source.UID()).
-			Str("source_name", source.Name()).
-			Msg("Source initialized")
+		sLogger.Info().Msg("Source initialized")
 	}
 
 	r.logger.Info().Msg("Source initialization complete")
@@ -127,7 +123,7 @@ func (r *Registry) Add(source Source) error {
 		return nil
 	}
 
-	if err := source.Initialize(); err != nil {
+	if err := source.Initialize(sourceLogger(source, r.logger)); err != nil {
 		return fmt.Errorf("initialize source: %w", err)
 	}
 
@@ -217,17 +213,17 @@ func (r *Registry) startWorkers(nWorkers int) {
 			for {
 				select {
 				case act := <-r.activityQueue:
-					r.logger.Debug().
+
+					actLogger := activityLogger(act, r.logger).With().
 						Int("worker_id", workerID).
-						Str("activity_id", act.UID()).
-						Msg("Processing activity")
+						Logger()
+
+					actLogger.Debug().Msg("Processing activity")
 
 					summary, err := r.summarizer.Summarize(context.Background(), act)
 					if err != nil {
-						r.logger.Error().
+						actLogger.Error().
 							Err(err).
-							Int("worker_id", workerID).
-							Str("activity_id", act.UID()).
 							Msg("Error summarizing activity")
 						continue
 					}
@@ -235,10 +231,8 @@ func (r *Registry) startWorkers(nWorkers int) {
 					// Compute embedding for the full summary
 					embedding, err := r.embedder.Embed(context.Background(), summary)
 					if err != nil {
-						r.logger.Error().
+						actLogger.Error().
 							Err(err).
-							Int("worker_id", workerID).
-							Str("activity_id", act.UID()).
 							Msg("Error computing embedding")
 						continue
 					}
@@ -249,10 +243,8 @@ func (r *Registry) startWorkers(nWorkers int) {
 						Embedding: embedding,
 					})
 					if err != nil {
-						r.logger.Error().
+						actLogger.Error().
 							Err(err).
-							Int("worker_id", workerID).
-							Str("activity_id", act.UID()).
 							Msg("Error storing activity")
 					}
 
@@ -311,4 +303,23 @@ func (r *Registry) Summary(ctx context.Context, query string, sourceUIDs []strin
 	}
 
 	return r.summarizer.SummarizeMany(ctx, activities, query)
+}
+
+func sourceLogger(source Source, logger *zerolog.Logger) *zerolog.Logger {
+	out := logger.With().
+		Str("source_type", source.Type()).
+		Str("source_uid", source.UID()).
+		Logger()
+
+	return &out
+}
+
+func activityLogger(activity types.Activity, logger *zerolog.Logger) *zerolog.Logger {
+	out := logger.With().
+		Str("activity_id", activity.UID()).
+		Str("source_type", activity.SourceType()).
+		Str("source_uid", activity.SourceUID()).
+		Logger()
+
+	return &out
 }

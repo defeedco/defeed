@@ -9,6 +9,7 @@ import (
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
+	"github.com/rs/zerolog"
 )
 
 const TypeChangedetectionWebsite = "changedetection-website-change"
@@ -18,6 +19,7 @@ type SourceWebsiteChange struct {
 	InstanceURL string `json:"instanceUrl" validate:"omitempty,url"`
 	Token       string `json:"token"`
 	Limit       int    `json:"limit"`
+	logger      *zerolog.Logger
 }
 
 func NewSourceWebsiteChange() *SourceWebsiteChange {
@@ -75,7 +77,7 @@ func (s *SourceWebsiteChange) fetchAndSendNewChanges(ctx context.Context, since 
 	}
 }
 
-func (s *SourceWebsiteChange) Initialize() error {
+func (s *SourceWebsiteChange) Initialize(logger *zerolog.Logger) error {
 	if s.Limit <= 0 {
 		s.Limit = 10
 	}
@@ -83,6 +85,8 @@ func (s *SourceWebsiteChange) Initialize() error {
 	if s.InstanceURL == "" {
 		s.InstanceURL = "https://www.changedetection.io"
 	}
+
+	s.logger = logger
 
 	return nil
 }

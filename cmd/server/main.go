@@ -3,19 +3,18 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/glanceapp/glance/pkg/api"
 	"github.com/glanceapp/glance/pkg/config"
+	"github.com/glanceapp/glance/pkg/lib/log"
 	"github.com/glanceapp/glance/pkg/storage/postgres"
 	"github.com/joho/godotenv"
-	"github.com/rs/zerolog"
-	"log"
-	"os"
 )
 
 func main() {
 	err := run()
 	if err != nil {
-		log.Fatalf("Failed to run: %v", err)
+		panic(err)
 	}
 }
 
@@ -30,7 +29,10 @@ func run() error {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	logger := zerolog.New(os.Stdout)
+	logger, err := log.NewLogger(&cfg.LogConfig)
+	if err != nil {
+		return fmt.Errorf("create logger: %w", err)
+	}
 
 	db := postgres.NewDB(&cfg.DBConfig)
 	err = db.Connect(context.Background())
@@ -38,7 +40,7 @@ func run() error {
 		return fmt.Errorf("connect to database: %w", err)
 	}
 
-	server, err := api.NewServer(&logger, &cfg.APIConfig, db)
+	server, err := api.NewServer(logger, &cfg.APIConfig, db)
 	if err != nil {
 		return fmt.Errorf("create server: %w", err)
 	}

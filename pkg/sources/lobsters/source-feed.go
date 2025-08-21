@@ -8,6 +8,7 @@ import (
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/utils"
+	"github.com/rs/zerolog"
 )
 
 const TypeLobstersFeed = "lobsters-feed"
@@ -17,6 +18,7 @@ type SourceFeed struct {
 	CustomURL   string `json:"customUrl" validate:"omitempty,url"`
 	FeedName    string `json:"feed" validate:"required,oneof=hottest newest"`
 	client      *LobstersClient
+	logger      *zerolog.Logger
 }
 
 func NewSourceFeed() *SourceFeed {
@@ -43,8 +45,9 @@ func (s *SourceFeed) Type() string {
 
 func (s *SourceFeed) Validate() []error { return utils.ValidateStruct(s) }
 
-func (s *SourceFeed) Initialize() error {
+func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 	s.client = NewLobstersClient(s.InstanceURL)
+	s.logger = logger
 	return nil
 }
 

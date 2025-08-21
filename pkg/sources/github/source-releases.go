@@ -12,6 +12,7 @@ import (
 	"github.com/glanceapp/glance/pkg/utils"
 
 	"github.com/google/go-github/v72/github"
+	"github.com/rs/zerolog"
 )
 
 const TypeGithubReleases = "github-releases"
@@ -21,6 +22,7 @@ type SourceRelease struct {
 	Token            string `json:"token"`
 	IncludePreleases bool   `json:"includePrereleases"`
 	client           *github.Client
+	logger           *zerolog.Logger
 }
 
 func NewReleaseSource() *SourceRelease {
@@ -64,7 +66,7 @@ func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed c
 }
 
 func (s *SourceRelease) fetchAndSendNewReleases(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	releases, err := s.fetchGithubReleases(ctx)
+	releases, err := s.fetchGithubReleases(ctx, since)
 	if err != nil {
 		errs <- err
 		return
@@ -82,7 +84,7 @@ func (s *SourceRelease) fetchAndSendNewReleases(ctx context.Context, since types
 	}
 }
 
-func (s *SourceRelease) Initialize() error {
+func (s *SourceRelease) Initialize(logger *zerolog.Logger) error {
 
 	token := s.Token
 	if token == "" {
@@ -94,6 +96,8 @@ func (s *SourceRelease) Initialize() error {
 	} else {
 		s.client = github.NewClient(nil)
 	}
+
+	s.logger = logger
 
 	return nil
 }
@@ -189,32 +193,55 @@ func (r *Release) CreatedAt() time.Time {
 	return r.Release.GetPublishedAt().Time
 }
 
-func (s *SourceRelease) fetchGithubReleases(ctx context.Context) ([]*Release, error) {
+func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since types.Activity) ([]*Release, error) {
 	parts := strings.Split(s.Repository, "/")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid Repository format: %s", s.Repository)
 	}
 	owner, repo := parts[0], parts[1]
 
-	releases, _, err := s.client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{PerPage: 10})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(releases) == 0 {
-		return nil, fmt.Errorf("no releases found for Repository %s", s.Repository)
+	sinceTime := time.Now().Add(-1 * time.Hour)
+	if since != nil {
+		sinceTime = since.CreatedAt()
 	}
 
 	var result []*Release
-	for _, release := range releases {
-		if !s.IncludePreleases && release.GetPrerelease() {
-			continue
-		}
-		result = append(result, &Release{
-			Release:    release,
-			Repository: s.Repository,
-			SourceID:   s.UID(),
+	page := 1
+outer:
+	for {
+		releases, _, err := s.client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{
+			PerPage: 10,
+			Page:    page,
 		})
+		if err != nil {
+			return nil, err
+		}
+
+		s.logger.Debug().
+			Str("repository", s.Repository).
+			Time("since", sinceTime).
+			Int("count", len(releases)).
+			Msg("Fetched releases")
+
+		if len(releases) == 0 {
+			break
+		}
+
+		for _, release := range releases {
+			if !s.IncludePreleases && release.GetPrerelease() {
+				continue
+			}
+			if release.GetPublishedAt().Before(sinceTime) {
+				// Found the last release, stop looking for more
+				break outer
+			}
+			result = append(result, &Release{
+				Release:    release,
+				Repository: s.Repository,
+				SourceID:   s.UID(),
+			})
+		}
+		page++
 	}
 
 	return result, nil

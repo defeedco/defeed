@@ -12,6 +12,7 @@ import (
 	"github.com/glanceapp/glance/pkg/utils"
 
 	"github.com/go-shiori/go-readability"
+	"github.com/rs/zerolog"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
@@ -28,6 +29,7 @@ type SourceSubreddit struct {
 		ID     string `json:"ID"`
 		Secret string `json:"secret" validate:"required_with=ID"`
 	} `json:"auth"`
+	logger *zerolog.Logger
 }
 
 func NewSourceSubreddit() *SourceSubreddit {
@@ -126,7 +128,7 @@ func (p *Post) CreatedAt() time.Time {
 	return p.Post.Created.Time
 }
 
-func (s *SourceSubreddit) Initialize() error {
+func (s *SourceSubreddit) Initialize(logger *zerolog.Logger) error {
 	var client *reddit.Client
 	var err error
 
@@ -144,6 +146,8 @@ func (s *SourceSubreddit) Initialize() error {
 	}
 
 	s.client = client
+
+	s.logger = logger
 
 	return nil
 }
