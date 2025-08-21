@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -89,9 +90,24 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 	return server, nil
 }
 
-func corsMiddleware(next http.Handler, origin string) http.Handler {
+func corsMiddleware(next http.Handler, originConfig string) http.Handler {
+	origins := strings.Split(originConfig, ",")
+	for i := range origins {
+		origins[i] = strings.TrimSpace(origins[i])
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
+		requestOrigin := r.Header.Get("Origin")
+
+		if len(origins) == 1 && origins[0] == "*" {
+			// Allow all origins
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		} else if requestOrigin != "" && slices.Contains(origins, requestOrigin) {
+			// CORS doesn't support multiple origins,
+			// so we either set the origin in the header or not at all.
+			w.Header().Set("Access-Control-Allow-Origin", requestOrigin)
+		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "*")
 

@@ -7,5 +7,6 @@ type Config struct {
 	AssetsPath string `env:"SERVER_ASSETS_PATH,default=./assets"`
 	BaseURL    string `env:"SERVER_BASE_URL,default=/"`
 	FaviconURL string `env:"SERVER_FAVICON_URL,default="`
+	// CORSOrigin is a comma-separated list of origins.
 	CORSOrigin string `env:"CORS_ORIGIN,default=*"`
 }
