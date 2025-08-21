@@ -10,7 +10,6 @@ import (
 
 	"github.com/alexferrari88/gohn/pkg/gohn"
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/utils"
 	"github.com/rs/zerolog"
 )
 
@@ -45,7 +44,7 @@ func (s *SourcePosts) Type() string {
 	return TypeHackerNewsPosts
 }
 
-func (s *SourcePosts) Validate() []error { return utils.ValidateStruct(s) }
+func (s *SourcePosts) Validate() []error { return lib.ValidateStruct(s) }
 
 type Post struct {
 	Post            *gohn.Item `json:"post"`

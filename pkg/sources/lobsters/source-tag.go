@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/lib"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/utils"
 	"github.com/rs/zerolog"
 )
 
@@ -44,7 +44,7 @@ func (s *SourceTag) Type() string {
 }
 
 func (s *SourceTag) Validate() []error {
-	return utils.ValidateStruct(s)
+	return lib.ValidateStruct(s)
 }
 
 func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {

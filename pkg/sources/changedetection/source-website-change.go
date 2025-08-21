@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/lib"
 	"net/http"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/utils"
 	"github.com/rs/zerolog"
 )
 
@@ -42,7 +42,7 @@ func (s *SourceWebsiteChange) Type() string {
 	return TypeChangedetectionWebsite
 }
 
-func (s *SourceWebsiteChange) Validate() []error { return utils.ValidateStruct(s) }
+func (s *SourceWebsiteChange) Validate() []error { return lib.ValidateStruct(s) }
 
 func (s *SourceWebsiteChange) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	ticker := time.NewTicker(15 * time.Minute)
@@ -155,7 +155,7 @@ func (c *WebsiteChange) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	c.lastChanged = utils.ParseRFC3339Time(aux.LastChanged)
+	c.lastChanged = lib.ParseRFC3339Time(aux.LastChanged)
 	return nil
 }
 
@@ -211,7 +211,7 @@ func (s *SourceWebsiteChange) fetchWatchFromChangeDetection(ctx context.Context)
 		req.Header.Add("X-API-Key", s.Token)
 	}
 
-	response, err := utils.DecodeJSONFromRequest[changeDetectionWatchResponseJson](utils.DefaultHTTPClient, req)
+	response, err := lib.DecodeJSONFromRequest[changeDetectionWatchResponseJson](lib.DefaultHTTPClient, req)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func (s *SourceWebsiteChange) fetchWatchFromChangeDetection(ctx context.Context)
 	return &WebsiteChange{
 		title:        response.Title,
 		url:          response.URL,
-		lastChanged:  utils.ParseRFC3339Time(response.LastChanged),
+		lastChanged:  lib.ParseRFC3339Time(response.LastChanged),
 		diffURL:      response.DiffURL,
 		previousHash: response.PreviousHash,
 		sourceUID:    s.UID(),

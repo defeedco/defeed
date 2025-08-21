@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/lib"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/utils"
-
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
@@ -47,7 +46,7 @@ func (s *SourceRelease) Type() string {
 	return TypeGithubReleases
 }
 
-func (s *SourceRelease) Validate() []error { return utils.ValidateStruct(s) }
+func (s *SourceRelease) Validate() []error { return lib.ValidateStruct(s) }
 
 func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	ticker := time.NewTicker(10 * time.Minute)

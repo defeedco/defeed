@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/lib"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/utils"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
@@ -43,7 +43,7 @@ func (s *SourceIssues) Type() string {
 	return TypeGithubIssues
 }
 
-func (s *SourceIssues) Validate() []error { return utils.ValidateStruct(s) }
+func (s *SourceIssues) Validate() []error { return lib.ValidateStruct(s) }
 
 func (s *SourceIssues) MarshalJSON() ([]byte, error) {
 	type Alias SourceIssues

@@ -9,8 +9,6 @@ import (
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/utils"
-
 	"github.com/rs/zerolog"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
@@ -51,7 +49,7 @@ func (s *SourceSubreddit) Type() string {
 	return TypeRedditSubreddit
 }
 
-func (s *SourceSubreddit) Validate() []error { return utils.ValidateStruct(s) }
+func (s *SourceSubreddit) Validate() []error { return lib.ValidateStruct(s) }
 
 type Post struct {
 	Post            *reddit.Post `json:"post"`

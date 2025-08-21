@@ -8,7 +8,6 @@ import (
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/utils"
 	"github.com/rs/zerolog"
 )
 
@@ -44,7 +43,7 @@ func (s *SourceFeed) Type() string {
 	return TypeLobstersFeed
 }
 
-func (s *SourceFeed) Validate() []error { return utils.ValidateStruct(s) }
+func (s *SourceFeed) Validate() []error { return lib.ValidateStruct(s) }
 
 func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 	s.client = NewLobstersClient(s.InstanceURL)

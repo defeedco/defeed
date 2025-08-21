@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/lib"
 	"html"
 	"net/http"
 	"net/url"
@@ -12,8 +13,6 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/utils"
-
 	"github.com/mmcdole/gofeed"
 	gofeedext "github.com/mmcdole/gofeed/extensions"
 	"github.com/rs/zerolog"
@@ -59,7 +58,7 @@ func (s *SourceFeed) Type() string {
 	return TypeRSSFeed
 }
 
-func (s *SourceFeed) Validate() []error { return utils.ValidateStruct(s) }
+func (s *SourceFeed) Validate() []error { return lib.ValidateStruct(s) }
 
 func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 	s.logger = logger
@@ -84,7 +83,7 @@ func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan
 
 func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	parser := gofeed.NewParser()
-	parser.UserAgent = utils.PulseUserAgentString
+	parser.UserAgent = lib.PulseUserAgentString
 
 	if s.Headers != nil {
 		parser.Client = &http.Client{
@@ -277,9 +276,9 @@ func sanitizeFeedDescription(description string) string {
 }
 
 func shortenFeedDescriptionLen(description string, maxLen int) string {
-	description, _ = utils.LimitStringLength(description, 1000)
+	description, _ = lib.LimitStringLength(description, 1000)
 	description = sanitizeFeedDescription(description)
-	description, limited := utils.LimitStringLength(description, maxLen)
+	description, limited := lib.LimitStringLength(description, maxLen)
 
 	if limited {
 		description += "…"

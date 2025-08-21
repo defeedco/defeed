@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/lib"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/utils"
-
 	"github.com/mattn/go-mastodon"
 	"github.com/rs/zerolog"
 )
@@ -44,7 +43,7 @@ func (s *SourceAccount) Type() string {
 	return TypeMastodonAccount
 }
 
-func (s *SourceAccount) Validate() []error { return utils.ValidateStruct(s) }
+func (s *SourceAccount) Validate() []error { return lib.ValidateStruct(s) }
 
 func (s *SourceAccount) Initialize(logger *zerolog.Logger) error {
 	s.client = mastodon.NewClient(&mastodon.Config{
