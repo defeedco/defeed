@@ -169,81 +169,124 @@ func (s *SourceSubreddit) Stream(ctx context.Context, since types.Activity, feed
 }
 
 func (s *SourceSubreddit) fetchAndSendNewPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	posts, err := s.fetchSubredditPosts(ctx)
+	posts, err := s.fetchSubredditPosts(ctx, since)
 	if err != nil {
 		errs <- fmt.Errorf("fetch posts: %v", err)
 		return
 	}
 
-	var sinceTime time.Time
-	if since != nil {
-		sinceTime = since.CreatedAt()
-	}
-
 	for _, post := range posts {
-		if since == nil || post.CreatedAt().After(sinceTime) {
-			feed <- post
-		}
+		feed <- post
 	}
 }
 
-func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context) ([]*Post, error) {
-	var posts []*reddit.Post
-	var err error
+func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since types.Activity) ([]*Post, error) {
+	subrLogger := s.logger.With().
+		Str("subreddit", s.Subreddit).
+		Str("sort_by", s.SortBy).
+		Str("top_period", s.TopPeriod).
+		Str("search", s.Search).
+		Logger()
 
-	limit := 10
-
-	opts := &reddit.ListOptions{
-		Limit: limit,
+	var sinceID string
+	if since != nil {
+		sinceID = since.(*Post).Post.FullID
+	} else {
+		subrLogger.Debug().Msg("Fetching recent posts")
+		// If this is the first time we're fetching posts,
+		// only fetch the last few posts to avoid retrieving all historic posts.
+		posts, err := s.fetchRecentPosts(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("fetch recent posts: %v", err)
+		}
+		return posts, nil
 	}
 
+	posts := make([]*Post, 0)
+outer:
+	for {
+		subrLogger.Debug().Msg("Fetching posts")
+		redditPosts, _, err := s.fetchByCurrentTimeline(ctx, &reddit.ListOptions{
+			Limit: 10,
+			After: sinceID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("fetch posts: %v", err)
+		}
+
+		subrLogger.Debug().Int("count", len(redditPosts)).Msg("Fetched posts")
+
+		if len(redditPosts) == 0 {
+			break outer
+		}
+
+		for _, post := range redditPosts {
+			// Skip pineed posts
+			if post.Stickied {
+				continue
+			}
+			// Skip NSFW posts to avoid missuse or legal issues
+			if post.NSFW {
+				continue
+			}
+			posts = append(posts, &Post{
+				Post:      post,
+				SourceTyp: s.Type(),
+				SourceID:  s.UID(),
+			})
+		}
+	}
+
+	return posts, nil
+}
+
+func (s *SourceSubreddit) fetchRecentPosts(ctx context.Context) ([]*Post, error) {
+	redditPosts, _, err := s.fetchByCurrentTimeline(ctx, &reddit.ListOptions{
+		Limit: 10,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("fetch posts: %v", err)
+	}
+
+	posts := make([]*Post, 0)
+	for _, post := range redditPosts {
+		posts = append(posts, &Post{
+			Post:      post,
+			SourceTyp: s.Type(),
+			SourceID:  s.UID(),
+		})
+	}
+
+	return posts, nil
+}
+
+func (s *SourceSubreddit) fetchByCurrentTimeline(ctx context.Context, opts *reddit.ListOptions) ([]*reddit.Post, *reddit.Response, error) {
 	if s.Search != "" {
 		searchOpts := &reddit.ListPostSearchOptions{
 			ListPostOptions: reddit.ListPostOptions{
-				ListOptions: reddit.ListOptions{
-					Limit: limit,
-				},
+				ListOptions: *opts,
 			},
 			Sort: s.SortBy,
 		}
-		posts, _, err = s.client.Subreddit.SearchPosts(ctx, s.Subreddit, s.Search, searchOpts)
-	} else {
-		switch s.SortBy {
-		case "hot":
-			posts, _, err = s.client.Subreddit.HotPosts(ctx, s.Subreddit, opts)
-		case "new":
-			posts, _, err = s.client.Subreddit.NewPosts(ctx, s.Subreddit, opts)
-		case "top":
-			topOpts := &reddit.ListPostOptions{
-				ListOptions: reddit.ListOptions{
-					Limit: limit,
-				},
-				Time: s.TopPeriod,
-			}
-			posts, _, err = s.client.Subreddit.TopPosts(ctx, s.Subreddit, topOpts)
-		case "rising":
-			posts, _, err = s.client.Subreddit.RisingPosts(ctx, s.Subreddit, opts)
+		return s.client.Subreddit.SearchPosts(ctx, s.Subreddit, s.Search, searchOpts)
+	}
+
+	switch s.SortBy {
+	case "hot":
+		return s.client.Subreddit.HotPosts(ctx, s.Subreddit, opts)
+	case "new":
+		return s.client.Subreddit.NewPosts(ctx, s.Subreddit, opts)
+	case "top":
+		topOpts := &reddit.ListPostOptions{
+			ListOptions: *opts,
+			Time:        s.TopPeriod,
 		}
+		return s.client.Subreddit.TopPosts(ctx, s.Subreddit, topOpts)
+	case "rising":
+		return s.client.Subreddit.RisingPosts(ctx, s.Subreddit, opts)
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("fetching posts: %v", err)
-	}
-
-	if len(posts) == 0 {
-		return nil, fmt.Errorf("no posts found")
-	}
-
-	redditPosts := make([]*Post, 0, len(posts))
-	for _, post := range posts {
-		if post.Stickied {
-			continue
-		}
-
-		redditPosts = append(redditPosts, &Post{Post: post, SourceTyp: s.Type(), SourceID: s.UID()})
-	}
-
-	return redditPosts, nil
+	return nil, nil, fmt.Errorf("invalid sort by: %s", s.SortBy)
 }
 
 func (s *SourceSubreddit) MarshalJSON() ([]byte, error) {

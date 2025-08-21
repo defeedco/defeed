@@ -109,7 +109,7 @@ func (s *SourceAccount) fetchAccountPosts(ctx context.Context, accountID mastodo
 		sinceID = sincePost.Status.ID
 	} else {
 		// If this is the first time we're fetching posts,
-		// only fetch the last few posts to avoid fetching all historic posts.
+		// only fetch the last few posts to avoid retrieving all historic posts.
 		latestPosts, err := s.fetchLatestPosts(ctx, accountID)
 		if err != nil {
 			return nil, fmt.Errorf("fetch latest post: %w", err)

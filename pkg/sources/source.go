@@ -64,7 +64,7 @@ type Source interface {
 	Initialize(logger *zerolog.Logger) error
 	// Stream starts streaming new activities from the source.
 	// since is the last activity emitted by the source.
-	// feed is a channel to send activities to.
+	// feed is a channel to send activities to. Already seen activities are permitted.
 	// errs is a channel to send errors to.
 	// The caller should close the channels when done.
 	Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error)
