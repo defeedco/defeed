@@ -15,6 +15,12 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for ActivitySortBy.
+const (
+	CreationDate ActivitySortBy = "creationDate"
+	Similarity   ActivitySortBy = "similarity"
+)
+
 // Defines values for HackernewsPostsConfigFeedName.
 const (
 	HackernewsPostsConfigFeedNameBest HackernewsPostsConfigFeedName = "best"
@@ -60,12 +66,6 @@ const (
 	RssFeed                SourceType = "rssFeed"
 )
 
-// Defines values for SearchActivitiesParamsSortBy.
-const (
-	CreationDate SearchActivitiesParamsSortBy = "creationDate"
-	Similarity   SearchActivitiesParamsSortBy = "similarity"
-)
-
 // ActivitiesSummary defines model for ActivitiesSummary.
 type ActivitiesSummary struct {
 	// Highlights List of key highlights extracted from the activities
@@ -104,6 +104,9 @@ type ActivityHighlight struct {
 	// SourceActivityIds List of activity IDs that contributed to this highlight
 	SourceActivityIds []string `json:"sourceActivityIds"`
 }
+
+// ActivitySortBy defines model for ActivitySortBy.
+type ActivitySortBy string
 
 // ChangedetectionWebsiteConfig defines model for ChangedetectionWebsiteConfig.
 type ChangedetectionWebsiteConfig struct {
@@ -282,11 +285,8 @@ type SearchActivitiesParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
 	// SortBy Field to sort results by
-	SortBy *SearchActivitiesParamsSortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
+	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
-
-// SearchActivitiesParamsSortBy defines parameters for SearchActivities.
-type SearchActivitiesParamsSortBy string
 
 // GetActivitiesSummaryParams defines parameters for GetActivitiesSummary.
 type GetActivitiesSummaryParams struct {
@@ -295,6 +295,9 @@ type GetActivitiesSummaryParams struct {
 
 	// Sources Comma-separated list of source UIDs where the activities are from
 	Sources string `form:"sources" json:"sources"`
+
+	// SortBy Field to sort activities for the summary by
+	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
 
 // CreateSourceJSONRequestBody defines body for CreateSource for application/json ContentType.
@@ -750,6 +753,14 @@ func (siw *ServerInterfaceWrapper) GetActivitiesSummary(w http.ResponseWriter, r
 	err = runtime.BindQueryParameter("form", true, true, "sources", r.URL.Query(), &params.Sources)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sources", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "sortBy" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sortBy", r.URL.Query(), &params.SortBy)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sortBy", Err: err})
 		return
 	}
 

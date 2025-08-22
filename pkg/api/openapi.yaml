@@ -123,6 +123,11 @@ paths:
             type: string
             pattern: '^[a-zA-Z0-9-_]+(,[a-zA-Z0-9-_]+)*$'
             example: "source1,source2,source3"
+        - name: sortBy
+          in: query
+          description: Field to sort activities for the summary by
+          schema:
+            $ref: '#/components/schemas/ActivitySortBy'
       responses:
         '200':
           description: Executive summary of activities
@@ -170,9 +175,7 @@ paths:
           in: query
           description: Field to sort results by
           schema:
-            type: string
-            enum: [similarity, creationDate]
-            default: similarity
+            $ref: '#/components/schemas/ActivitySortBy'
       responses:
         '200':
           description: Search results
@@ -451,6 +454,11 @@ components:
         - githubReleases
         - githubIssues
         - changedetectionWebsite
+
+    ActivitySortBy:
+      type: string
+      enum: [similarity, creationDate]
+      default: similarity
 
     ActivitiesSummary:
       type: object

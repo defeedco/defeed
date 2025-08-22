@@ -238,9 +238,15 @@ func (s *Server) GetActivitiesSummary(w http.ResponseWriter, r *http.Request, pa
 		query = *params.Query
 	}
 
+	sortBy, err := deserializeSortBy(params.SortBy)
+	if err != nil {
+		s.badRequest(w, err, "deserialize sort by")
+		return
+	}
+
 	sourceIDs := strings.Split(params.Sources, ",")
 
-	summary, err := s.registry.Summary(r.Context(), query, sourceIDs)
+	summary, err := s.registry.Summary(r.Context(), query, sourceIDs, sortBy)
 	if err != nil {
 		s.internalError(w, err, "generate summary")
 		return
@@ -535,7 +541,7 @@ func serializeSourceType(in string) (SourceType, error) {
 	return "", fmt.Errorf("unknown source type: %s", in)
 }
 
-func deserializeSortBy(in *SearchActivitiesParamsSortBy) (types.SortBy, error) {
+func deserializeSortBy(in *ActivitySortBy) (types.SortBy, error) {
 	if in == nil {
 		return types.SortByDate, nil
 	}

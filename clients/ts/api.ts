@@ -139,6 +139,20 @@ export interface ActivityHighlight {
 /**
  * 
  * @export
+ * @enum {string}
+ */
+
+export const ActivitySortBy = {
+    Similarity: 'similarity',
+    CreationDate: 'creationDate'
+} as const;
+
+export type ActivitySortBy = typeof ActivitySortBy[keyof typeof ActivitySortBy];
+
+
+/**
+ * 
+ * @export
  * @interface ChangedetectionWebsiteConfig
  */
 export interface ChangedetectionWebsiteConfig {
@@ -713,10 +727,11 @@ export const ActivitiesApiAxiosParamCreator = function (configuration?: Configur
          * @summary Generate an executive summary of multiple activities
          * @param {string} sources Comma-separated list of source UIDs where the activities are from
          * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
+         * @param {ActivitySortBy} [sortBy] Field to sort activities for the summary by
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getActivitiesSummary: async (sources: string, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getActivitiesSummary: async (sources: string, query?: string, sortBy?: ActivitySortBy, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'sources' is not null or undefined
             assertParamExists('getActivitiesSummary', 'sources', sources)
             const localVarPath = `/activities/summary`;
@@ -737,6 +752,10 @@ export const ActivitiesApiAxiosParamCreator = function (configuration?: Configur
 
             if (sources !== undefined) {
                 localVarQueryParameter['sources'] = sources;
+            }
+
+            if (sortBy !== undefined) {
+                localVarQueryParameter['sortBy'] = sortBy;
             }
 
 
@@ -787,11 +806,11 @@ export const ActivitiesApiAxiosParamCreator = function (configuration?: Configur
          * @param {string} [sources] Filter by source UIDs (comma-separated)
          * @param {number} [minSimilarity] Minimum similarity score (0-1). Can only be used when &#x60;query&#x60; is provided.
          * @param {number} [limit] Maximum number of results to return
-         * @param {SearchActivitiesSortByEnum} [sortBy] Field to sort results by
+         * @param {ActivitySortBy} [sortBy] Field to sort results by
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        searchActivities: async (query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: SearchActivitiesSortByEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        searchActivities: async (query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: ActivitySortBy, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/activities/search`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -850,11 +869,12 @@ export const ActivitiesApiFp = function(configuration?: Configuration) {
          * @summary Generate an executive summary of multiple activities
          * @param {string} sources Comma-separated list of source UIDs where the activities are from
          * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
+         * @param {ActivitySortBy} [sortBy] Field to sort activities for the summary by
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getActivitiesSummary(sources: string, query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ActivitiesSummary>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getActivitiesSummary(sources, query, options);
+        async getActivitiesSummary(sources: string, query?: string, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ActivitiesSummary>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getActivitiesSummary(sources, query, sortBy, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ActivitiesApi.getActivitiesSummary']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -878,11 +898,11 @@ export const ActivitiesApiFp = function(configuration?: Configuration) {
          * @param {string} [sources] Filter by source UIDs (comma-separated)
          * @param {number} [minSimilarity] Minimum similarity score (0-1). Can only be used when &#x60;query&#x60; is provided.
          * @param {number} [limit] Maximum number of results to return
-         * @param {SearchActivitiesSortByEnum} [sortBy] Field to sort results by
+         * @param {ActivitySortBy} [sortBy] Field to sort results by
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async searchActivities(query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: SearchActivitiesSortByEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
+        async searchActivities(query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.searchActivities(query, sources, minSimilarity, limit, sortBy, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ActivitiesApi.searchActivities']?.[localVarOperationServerIndex]?.url;
@@ -903,11 +923,12 @@ export const ActivitiesApiFactory = function (configuration?: Configuration, bas
          * @summary Generate an executive summary of multiple activities
          * @param {string} sources Comma-separated list of source UIDs where the activities are from
          * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
+         * @param {ActivitySortBy} [sortBy] Field to sort activities for the summary by
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getActivitiesSummary(sources: string, query?: string, options?: RawAxiosRequestConfig): AxiosPromise<ActivitiesSummary> {
-            return localVarFp.getActivitiesSummary(sources, query, options).then((request) => request(axios, basePath));
+        getActivitiesSummary(sources: string, query?: string, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig): AxiosPromise<ActivitiesSummary> {
+            return localVarFp.getActivitiesSummary(sources, query, sortBy, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -925,11 +946,11 @@ export const ActivitiesApiFactory = function (configuration?: Configuration, bas
          * @param {string} [sources] Filter by source UIDs (comma-separated)
          * @param {number} [minSimilarity] Minimum similarity score (0-1). Can only be used when &#x60;query&#x60; is provided.
          * @param {number} [limit] Maximum number of results to return
-         * @param {SearchActivitiesSortByEnum} [sortBy] Field to sort results by
+         * @param {ActivitySortBy} [sortBy] Field to sort results by
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        searchActivities(query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: SearchActivitiesSortByEnum, options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
+        searchActivities(query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
             return localVarFp.searchActivities(query, sources, minSimilarity, limit, sortBy, options).then((request) => request(axios, basePath));
         },
     };
@@ -947,12 +968,13 @@ export class ActivitiesApi extends BaseAPI {
      * @summary Generate an executive summary of multiple activities
      * @param {string} sources Comma-separated list of source UIDs where the activities are from
      * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
+     * @param {ActivitySortBy} [sortBy] Field to sort activities for the summary by
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ActivitiesApi
      */
-    public getActivitiesSummary(sources: string, query?: string, options?: RawAxiosRequestConfig) {
-        return ActivitiesApiFp(this.configuration).getActivitiesSummary(sources, query, options).then((request) => request(this.axios, this.basePath));
+    public getActivitiesSummary(sources: string, query?: string, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig) {
+        return ActivitiesApiFp(this.configuration).getActivitiesSummary(sources, query, sortBy, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -973,24 +995,16 @@ export class ActivitiesApi extends BaseAPI {
      * @param {string} [sources] Filter by source UIDs (comma-separated)
      * @param {number} [minSimilarity] Minimum similarity score (0-1). Can only be used when &#x60;query&#x60; is provided.
      * @param {number} [limit] Maximum number of results to return
-     * @param {SearchActivitiesSortByEnum} [sortBy] Field to sort results by
+     * @param {ActivitySortBy} [sortBy] Field to sort results by
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ActivitiesApi
      */
-    public searchActivities(query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: SearchActivitiesSortByEnum, options?: RawAxiosRequestConfig) {
+    public searchActivities(query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig) {
         return ActivitiesApiFp(this.configuration).searchActivities(query, sources, minSimilarity, limit, sortBy, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
-/**
- * @export
- */
-export const SearchActivitiesSortByEnum = {
-    Similarity: 'similarity',
-    CreationDate: 'creationDate'
-} as const;
-export type SearchActivitiesSortByEnum = typeof SearchActivitiesSortByEnum[keyof typeof SearchActivitiesSortByEnum];
 
 
 /**
