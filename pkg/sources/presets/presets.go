@@ -12,8 +12,8 @@ import (
 
 // Source: https://raw.githubusercontent.com/tuan3w/awesome-tech-rss/refs/heads/main/feeds.opml
 //
-//go:embed awesome-tech-rss-feed.opml
-var awesomeTechRSSFeedOPMLRaw string
+//go:embed awesome-tech-rss-list.opml
+var awesomeTechRSSListRaw string
 
 // Registry manages available source configurations.
 type Registry struct {
@@ -31,23 +31,38 @@ func NewRegistry(logger *zerolog.Logger) *Registry {
 // Initialize parses the embedded OPML file and populates the registry with sources
 func (r *Registry) Initialize() error {
 
-	awesomeTechRSSFeedOPML, err := ParseOPML(awesomeTechRSSFeedOPMLRaw)
+	err := r.loadOPMLFile("awesome-tech-rss-list.opml", awesomeTechRSSListRaw)
 	if err != nil {
-		return fmt.Errorf("parse awesome-tech-rss-feed.opml: %w", err)
+		return fmt.Errorf("load opml file: %w", err)
 	}
 
-	awesomeTechRSSSources, err := opmlToRSSSources(awesomeTechRSSFeedOPML)
+	return nil
+}
+
+func (r Registry) loadOPMLFile(name, content string) error {
+	opml, err := ParseOPML(content)
+	if err != nil {
+		return fmt.Errorf("parse %s: %w", name, err)
+	}
+
+	sources, err := opmlToRSSSources(opml)
 	if err != nil {
 		return fmt.Errorf("convert OPML to RSS sources: %w", err)
 	}
 
-	r.logger.Info().Msgf("found %d RSS presets in awesome-tech-rss-feed.opml", len(awesomeTechRSSSources))
+	r.logger.Info().
+		Int("count", len(sources)).
+		Str("name", name).
+		Msg("found RSS presets")
 
-	for _, s := range awesomeTechRSSSources {
+	for _, s := range sources {
 		err := r.add(s)
 		if err != nil {
 			// Ignore any duplicate entries that were present in the file
-			r.logger.Error().Err(err).Msgf("failed to add RSS preset: %s", s.UID())
+			r.logger.Warn().
+				Err(err).
+				Str("name", name).
+				Msgf("failed to add RSS preset: %s", s.UID())
 		}
 	}
 
@@ -77,20 +92,12 @@ func opmlToRSSSources(opml *OPML) ([]sources.Source, error) {
 				return nil, fmt.Errorf("outline missing url: %s", outline.Text)
 			}
 
-			source, err := sources.NewSource(rss.TypeRSSFeed)
-			if err != nil {
-				return nil, fmt.Errorf("new rss source: %w", err)
+			rssSource := &rss.SourceFeed{
+				Title:   outline.Title,
+				FeedURL: outline.XMLUrl,
 			}
 
-			rssSource, ok := source.(*rss.SourceFeed)
-			if !ok {
-				return nil, fmt.Errorf("cast source to rss source: %w", err)
-			}
-
-			rssSource.FeedURL = outline.XMLUrl
-			rssSource.Title = outline.Title
-
-			result = append(result, source)
+			result = append(result, rssSource)
 		}
 	}
 
