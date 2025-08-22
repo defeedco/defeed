@@ -11,7 +11,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type Registry struct {
+// Executor manages the execution of active sources.
+//
+// It is responsible for:
+// - Managing the lifecycle of sources
+// - Fetching activities from the sources
+// - Summarizing & embedding activities
+// - Storing activities in the database
+// - Retrieving stored activities
+type Executor struct {
 	sourceRepo   sourceStore
 	activityRepo activityStore
 
@@ -54,8 +62,8 @@ func NewRegistry(
 	embedder embedder,
 	activityRepo activityStore,
 	sourceRepo sourceStore,
-) *Registry {
-	r := &Registry{
+) *Executor {
+	r := &Executor{
 		activityRepo:  activityRepo,
 		sourceRepo:    sourceRepo,
 		activityQueue: make(chan types.Activity),
@@ -72,7 +80,7 @@ func NewRegistry(
 	return r
 }
 
-func (r *Registry) Initialize() error {
+func (r *Executor) Initialize() error {
 	sources, err := r.sourceRepo.List()
 	if err != nil {
 		return fmt.Errorf("list sources: %w", err)
@@ -115,7 +123,7 @@ func (r *Registry) Initialize() error {
 	return nil
 }
 
-func (r *Registry) Add(source Source) error {
+func (r *Executor) Add(source Source) error {
 	existing, _ := r.sourceRepo.GetByID(source.UID())
 
 	if existing != nil {
@@ -143,7 +151,7 @@ func (r *Registry) Add(source Source) error {
 	return nil
 }
 
-func (r *Registry) Remove(uid string) error {
+func (r *Executor) Remove(uid string) error {
 	existing, _ := r.sourceRepo.GetByID(uid)
 
 	if existing != nil {
@@ -165,15 +173,15 @@ func (r *Registry) Remove(uid string) error {
 	return nil
 }
 
-func (r *Registry) Sources() ([]Source, error) {
+func (r *Executor) Sources() ([]Source, error) {
 	return r.sourceRepo.List()
 }
 
-func (r *Registry) Source(uid string) (Source, error) {
+func (r *Executor) Source(uid string) (Source, error) {
 	return r.sourceRepo.GetByID(uid)
 }
 
-func (r *Registry) Activities() ([]*types.DecoratedActivity, error) {
+func (r *Executor) Activities() ([]*types.DecoratedActivity, error) {
 	matches, err := r.activityRepo.List()
 	if err != nil {
 		return nil, fmt.Errorf("repo list: %w", err)
@@ -186,7 +194,7 @@ func (r *Registry) Activities() ([]*types.DecoratedActivity, error) {
 	return matches, nil
 }
 
-func (r *Registry) ActivitiesBySource(sourceUID string) ([]*types.DecoratedActivity, error) {
+func (r *Executor) ActivitiesBySource(sourceUID string) ([]*types.DecoratedActivity, error) {
 	activities, err := r.Activities()
 	if err != nil {
 		return nil, fmt.Errorf("list activities: %w", err)
@@ -202,7 +210,7 @@ func (r *Registry) ActivitiesBySource(sourceUID string) ([]*types.DecoratedActiv
 	return matches, nil
 }
 
-func (r *Registry) startWorkers(nWorkers int) {
+func (r *Executor) startWorkers(nWorkers int) {
 	var wg sync.WaitGroup
 
 	for i := range nWorkers {
@@ -264,7 +272,7 @@ func (r *Registry) startWorkers(nWorkers int) {
 	}
 }
 
-func (r *Registry) Shutdown() {
+func (r *Executor) Shutdown() {
 	close(r.done)
 
 	r.cancelBySourceID.Range(func(key, value interface{}) bool {
@@ -275,7 +283,7 @@ func (r *Registry) Shutdown() {
 	r.cancelBySourceID.Clear()
 }
 
-func (r *Registry) Search(ctx context.Context, query string, sourceUIDs []string, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
+func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []string, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
 	req := types.SearchRequest{
 		SourceUIDs:    sourceUIDs,
 		MinSimilarity: minSimilarity,
@@ -296,7 +304,7 @@ func (r *Registry) Search(ctx context.Context, query string, sourceUIDs []string
 	return r.activityRepo.Search(req)
 }
 
-func (r *Registry) Summary(ctx context.Context, query string, sourceUIDs []string, sortBy types.SortBy) (*types.ActivitiesSummary, error) {
+func (r *Executor) Summary(ctx context.Context, query string, sourceUIDs []string, sortBy types.SortBy) (*types.ActivitiesSummary, error) {
 	activities, err := r.Search(ctx, query, sourceUIDs, 0.0, 20, sortBy)
 	if err != nil {
 		return nil, fmt.Errorf("search activities: %w", err)

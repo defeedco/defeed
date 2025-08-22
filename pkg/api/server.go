@@ -6,6 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
+	"github.com/glanceapp/glance/pkg/sources/providers/github"
+	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
+	"github.com/glanceapp/glance/pkg/sources/providers/lobsters"
+	"github.com/glanceapp/glance/pkg/sources/providers/mastodon"
+	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
+	"github.com/glanceapp/glance/pkg/sources/providers/rss"
 	"html/template"
 	"io"
 	"net/http"
@@ -14,14 +21,7 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/sources/changedetection"
-	"github.com/glanceapp/glance/pkg/sources/github"
-	"github.com/glanceapp/glance/pkg/sources/hackernews"
-	"github.com/glanceapp/glance/pkg/sources/lobsters"
-	"github.com/glanceapp/glance/pkg/sources/mastodon"
 	"github.com/glanceapp/glance/pkg/sources/nlp"
-	"github.com/glanceapp/glance/pkg/sources/reddit"
-	"github.com/glanceapp/glance/pkg/sources/rss"
 	httpswagger "github.com/swaggo/http-swagger"
 
 	"github.com/glanceapp/glance/pkg/storage/postgres"
@@ -35,7 +35,7 @@ import (
 var openapiSpecYaml string
 
 type Server struct {
-	registry  *sources.Registry
+	registry  *sources.Executor
 	logger    *zerolog.Logger
 	createdAt time.Time
 	config    *Config
