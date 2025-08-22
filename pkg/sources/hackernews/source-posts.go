@@ -172,9 +172,21 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Acti
 		return
 	}
 
-	var sincePost *Post
-	if since != nil {
-		sincePost = since.(*Post)
+	// Note: We are assuming post IDs are returned in descending order (newest first),
+	// and that post IDs are incremented based on the order of the creation time.
+	// This is not explicitly stated anywhere, but it seems to be the case based on the observations.
+	var sincePostID int
+	if since == nil {
+		// Number of posts to look back for the initial fetch
+		n := 100
+		if len(storyIDs) >= n {
+			sincePostID = *storyIDs[len(storyIDs)-n]
+		} else {
+			// Fallback - shouldn't happen.
+			sincePostID = *storyIDs[len(storyIDs)-1]
+		}
+	} else {
+		sincePostID = *since.(*Post).Post.ID
 	}
 
 	for _, id := range storyIDs {
@@ -184,10 +196,7 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Acti
 
 		storyLogger := s.logger.With().Int("story_id", *id).Logger()
 
-		// Note: We are assuming post IDs are returned in descending order (newest first),
-		// and that post IDs are incremented based on the order of the creation time.
-		// This is not explicitly stated anywhere, but it seems to be the case based on the observations.
-		if sincePost != nil && *id <= *sincePost.Post.ID {
+		if sincePostID != 0 && *id <= sincePostID {
 			storyLogger.Debug().Msg("Reached last seen story")
 			break
 		}
