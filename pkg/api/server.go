@@ -46,7 +46,7 @@ var _ ServerInterface = (*Server)(nil)
 
 func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, error) {
 	summarizerModel, err := openai.New(
-		openai.WithModel("gpt-4o-mini"),
+		openai.WithModel("gpt-5-mini"),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create summarizer model: %w", err)
