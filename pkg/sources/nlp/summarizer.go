@@ -64,6 +64,8 @@ func (llm *ActivitySummarizer) Summarize(
 		ctx,
 		llm.model,
 		prompt.String(),
+		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
+		llms.WithTemperature(1.0),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("generate completion: %w", err)
@@ -162,6 +164,7 @@ For each highlight, you must also list the IDs of the source activities that con
 		ctx,
 		llm.model,
 		prompt.String(),
+		llms.WithTemperature(1.0),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("generate completion: %w", err)
