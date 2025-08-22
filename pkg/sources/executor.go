@@ -56,7 +56,7 @@ type embedder interface {
 	Embed(ctx context.Context, summary *types.ActivitySummary) ([]float32, error)
 }
 
-func NewRegistry(
+func NewExecutor(
 	logger *zerolog.Logger,
 	summarizer summarizer,
 	embedder embedder,

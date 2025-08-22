@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/presets"
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
 	"github.com/glanceapp/glance/pkg/sources/providers/github"
 	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
@@ -35,11 +36,10 @@ import (
 var openapiSpecYaml string
 
 type Server struct {
-	registry  *sources.Executor
-	logger    *zerolog.Logger
-	createdAt time.Time
-	config    *Config
-	http      http.Server
+	executor       *sources.Executor
+	presetRegistry *presets.Registry
+	logger         *zerolog.Logger
+	http           http.Server
 }
 
 var _ ServerInterface = (*Server)(nil)
@@ -59,25 +59,28 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		return nil, fmt.Errorf("create embedder model: %w", err)
 	}
 
-	registry := sources.NewRegistry(
+	executor := sources.NewExecutor(
 		logger,
 		nlp.NewSummarizer(summarizerModel),
 		nlp.NewEmbedder(embedderModel),
 		postgres.NewActivityRepository(db),
 		postgres.NewSourceRepository(db),
 	)
+	if err := executor.Initialize(); err != nil {
+		return nil, fmt.Errorf("initialize executor: %w", err)
+	}
 
-	if err := registry.Initialize(); err != nil {
-		return nil, fmt.Errorf("initialize registry: %w", err)
+	presetRegistry := presets.NewRegistry(logger)
+	if err := presetRegistry.Initialize(); err != nil {
+		return nil, fmt.Errorf("initialize preset registry: %w", err)
 	}
 
 	mux := http.NewServeMux()
 
 	server := &Server{
-		createdAt: time.Now(),
-		logger:    logger,
-		config:    cfg,
-		registry:  registry,
+		logger:         logger,
+		presetRegistry: presetRegistry,
+		executor:       executor,
 		http: http.Server{
 			Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 			Handler: corsMiddleware(mux, cfg.CORSOrigin),
@@ -146,7 +149,7 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
-	out, err := s.registry.Activities()
+	out, err := s.executor.Activities()
 	if err != nil {
 		s.internalError(w, err, "list activities")
 		return
@@ -162,7 +165,7 @@ func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
-	out, err := s.registry.Sources()
+	out, err := s.presetRegistry.Sources()
 	if err != nil {
 		s.internalError(w, err, "list sources")
 		return
@@ -191,7 +194,7 @@ func (s *Server) CreateSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.registry.Add(out)
+	err = s.executor.Add(out)
 	if err != nil {
 		s.internalError(w, err, "add source")
 		return
@@ -207,7 +210,7 @@ func (s *Server) CreateSource(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) DeleteSource(w http.ResponseWriter, r *http.Request, uid string) {
-	err := s.registry.Remove(uid)
+	err := s.executor.Remove(uid)
 	if err != nil {
 		s.internalError(w, err, "remove source")
 		return
@@ -217,7 +220,7 @@ func (s *Server) DeleteSource(w http.ResponseWriter, r *http.Request, uid string
 }
 
 func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
-	out, err := s.registry.Source(uid)
+	out, err := s.executor.Source(uid)
 	if err != nil {
 		s.internalError(w, err, "remove source")
 		return
@@ -246,7 +249,7 @@ func (s *Server) GetActivitiesSummary(w http.ResponseWriter, r *http.Request, pa
 
 	sourceIDs := strings.Split(params.Sources, ",")
 
-	summary, err := s.registry.Summary(r.Context(), query, sourceIDs, sortBy)
+	summary, err := s.executor.Summary(r.Context(), query, sourceIDs, sortBy)
 	if err != nil {
 		s.internalError(w, err, "generate summary")
 		return
@@ -297,7 +300,7 @@ func (s *Server) SearchActivities(w http.ResponseWriter, r *http.Request, params
 		return
 	}
 
-	results, err := s.registry.Search(r.Context(), query, sourceUIDs, minSimilarity, limit, sortBy)
+	results, err := s.executor.Search(r.Context(), query, sourceUIDs, minSimilarity, limit, sortBy)
 	if err != nil {
 		s.internalError(w, err, "search activities")
 		return
