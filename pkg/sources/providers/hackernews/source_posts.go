@@ -32,7 +32,7 @@ func (s *SourcePosts) UID() string {
 }
 
 func (s *SourcePosts) Name() string {
-	return fmt.Sprintf("%s Hacker News", lib.Capitalize(s.FeedName))
+	return fmt.Sprintf("%s on Hacker News", lib.Capitalize(s.FeedName))
 }
 
 func (s *SourcePosts) Description() string {

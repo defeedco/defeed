@@ -38,7 +38,7 @@ func (s *SourceSubreddit) UID() string {
 }
 
 func (s *SourceSubreddit) Name() string {
-	return fmt.Sprintf("%s Subreddit", lib.Capitalize(s.Subreddit))
+	return fmt.Sprintf("%s subreddit", lib.Capitalize(s.Subreddit))
 }
 
 func (s *SourceSubreddit) Description() string {

@@ -34,7 +34,7 @@ func (s *SourceTag) UID() string {
 }
 
 func (s *SourceTag) Name() string {
-	return fmt.Sprintf("#%s Tag", s.Tag)
+	return fmt.Sprintf("Lobsters #%s", s.Tag)
 }
 
 func (s *SourceTag) Description() string {

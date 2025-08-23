@@ -33,7 +33,7 @@ func (s *SourceFeed) UID() string {
 }
 
 func (s *SourceFeed) Name() string {
-	return fmt.Sprintf("%s Lobsters", lib.Capitalize(s.FeedName))
+	return fmt.Sprintf("%s on Lobsters", lib.Capitalize(s.FeedName))
 }
 
 func (s *SourceFeed) Description() string {

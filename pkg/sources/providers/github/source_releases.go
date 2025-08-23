@@ -35,7 +35,7 @@ func (s *SourceRelease) UID() string {
 }
 
 func (s *SourceRelease) Name() string {
-	return fmt.Sprintf("%s GitHub Releases", s.Repository)
+	return fmt.Sprintf("Releases on %s", s.Repository)
 }
 
 func (s *SourceRelease) Description() string {

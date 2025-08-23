@@ -32,7 +32,7 @@ func (s *SourceIssues) UID() string {
 }
 
 func (s *SourceIssues) Name() string {
-	return fmt.Sprintf("%s GitHub Issues", s.Repository)
+	return fmt.Sprintf("Issues on %s", s.Repository)
 }
 
 func (s *SourceIssues) Description() string {

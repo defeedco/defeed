@@ -33,7 +33,7 @@ func (s *SourceAccount) UID() string {
 }
 
 func (s *SourceAccount) Name() string {
-	return fmt.Sprintf("@%s Mastodon Account", s.Account)
+	return fmt.Sprintf("User @%s", s.Account)
 }
 
 func (s *SourceAccount) Description() string {
