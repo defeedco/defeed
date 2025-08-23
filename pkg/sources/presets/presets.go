@@ -45,6 +45,7 @@ func (r *Registry) Initialize() error {
 	r.fetchers = append(r.fetchers, reddit.NewSubredditFetcher(r.logger))
 	r.fetchers = append(r.fetchers, hackernews.NewPostsFetcher(r.logger))
 	r.fetchers = append(r.fetchers, lobsters.NewFeedFetcher(r.logger))
+	r.fetchers = append(r.fetchers, lobsters.NewTagFetcher(r.logger))
 	r.fetchers = append(r.fetchers, mastodon.NewAccountFetcher(r.logger))
 	r.fetchers = append(r.fetchers, mastodon.NewTagFetcher(r.logger))
 
