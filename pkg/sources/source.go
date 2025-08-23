@@ -54,9 +54,14 @@ type Source interface {
 	// UID is the unique identifier for the source.
 	// It should not contain any slashes.
 	UID() string
+	// Type is the non-parameterized ID (e.g. "reddit:subreddit" vs "reddit:subreddit:top:day")
 	Type() string
-	// Name is a human-readable UID.
+	// Name is a short human-readable descriptor.
+	// Example: "Programming Subreddit"
 	Name() string
+	// Description provides more context about the specific source parameters.
+	// Example: "Top posts from r/programming"
+	Description() string
 	// URL is a web resource representation of UID.
 	URL() string
 	// Validate returns a list of configuration validation errors.
@@ -65,9 +70,9 @@ type Source interface {
 	// Initialize initializes the internal state and prepares the logger.
 	Initialize(logger *zerolog.Logger) error
 	// Stream starts streaming new activities from the source.
-	// since is the last activity emitted by the source.
-	// feed is a channel to send activities to. Already seen activities are permitted.
-	// errs is a channel to send errors to.
+	// Since is the last activity emitted by the source.
+	// Feed is a channel to send activities to. Already seen activities are permitted.
+	// Err is a channel to send errors to.
 	// The caller should close the channels when done.
-	Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error)
+	Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, err chan<- error)
 }

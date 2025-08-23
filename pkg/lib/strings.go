@@ -1,6 +1,9 @@
 package lib
 
-import "time"
+import (
+	"time"
+	"unicode"
+)
 
 func LimitStringLength(s string, max int) (string, bool) {
 	asRunes := []rune(s)
@@ -19,4 +22,14 @@ func ParseRFC3339Time(t string) time.Time {
 	}
 
 	return parsed
+}
+
+func Capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
 }

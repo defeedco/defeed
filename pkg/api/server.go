@@ -512,10 +512,11 @@ func serializeSource(in sources.Source) (Source, error) {
 	}
 
 	return Source{
-		Uid:  in.UID(),
-		Type: sourceType,
-		Url:  in.URL(),
-		Name: in.Name(),
+		Uid:         in.UID(),
+		Type:        sourceType,
+		Url:         in.URL(),
+		Name:        in.Name(),
+		Description: in.Description(),
 	}, nil
 }
 

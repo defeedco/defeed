@@ -33,7 +33,18 @@ func (s *SourceWebsiteChange) UID() string {
 }
 
 func (s *SourceWebsiteChange) Name() string {
-	return "Change Detection"
+	if s.WatchUUID != "" {
+		return fmt.Sprintf("Website Change Monitor (%s)", s.WatchUUID[:8])
+	}
+	return "Website Change Monitor"
+}
+
+func (s *SourceWebsiteChange) Description() string {
+	instanceName, err := lib.StripURLHost(s.InstanceURL)
+	if err != nil {
+		return "Website Change Monitor"
+	}
+	return fmt.Sprintf("Monitor website changes using %s", instanceName)
 }
 
 func (s *SourceWebsiteChange) URL() string {

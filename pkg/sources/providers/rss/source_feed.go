@@ -45,18 +45,24 @@ func NewSourceFeed() *SourceFeed {
 }
 
 func (s *SourceFeed) UID() string {
-	urlID := s.FeedURL
-	// Normalize the URL for consistent UID format (cannot contain slashes)
-	urlID = strings.TrimPrefix(urlID, "https://")
-	urlID = strings.TrimPrefix(urlID, "http://")
-	urlID = strings.TrimPrefix(urlID, "www.")
-	urlID = strings.TrimSuffix(urlID, "/")
-	urlID = strings.ReplaceAll(urlID, "/", ":")
-	return fmt.Sprintf("%s:%s", s.Type(), urlID)
+	return fmt.Sprintf("%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.FeedURL), "/", ":"))
 }
 
 func (s *SourceFeed) Name() string {
-	return fmt.Sprintf("RSS (%s)", s.FeedURL)
+	if s.Title != "" {
+		return s.Title
+	}
+
+	hostName, err := lib.StripURLHost(s.FeedURL)
+	if err == nil {
+		return fmt.Sprintf("%s RSS Feed", lib.Capitalize(hostName))
+	}
+
+	return "RSS Feed"
+}
+
+func (s *SourceFeed) Description() string {
+	return fmt.Sprintf("Updates from %s", lib.StripURL(s.FeedURL))
 }
 
 func (s *SourceFeed) URL() string {

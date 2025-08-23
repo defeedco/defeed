@@ -32,7 +32,11 @@ func (s *SourceIssues) UID() string {
 }
 
 func (s *SourceIssues) Name() string {
-	return fmt.Sprintf("Issue Activity (%s)", s.Repository)
+	return fmt.Sprintf("%s GitHub Issues", s.Repository)
+}
+
+func (s *SourceIssues) Description() string {
+	return fmt.Sprintf("Recent issue activity from %s", s.Repository)
 }
 
 func (s *SourceIssues) URL() string {

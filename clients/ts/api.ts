@@ -689,6 +689,12 @@ export interface Source {
      * @type {string}
      * @memberof Source
      */
+    'description': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Source
+     */
     'url': string;
 }
 

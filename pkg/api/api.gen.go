@@ -261,10 +261,11 @@ type RssFeedConfig struct {
 
 // Source defines model for Source.
 type Source struct {
-	Name string     `json:"name"`
-	Type SourceType `json:"type"`
-	Uid  string     `json:"uid"`
-	Url  string     `json:"url"`
+	Description string     `json:"description"`
+	Name        string     `json:"name"`
+	Type        SourceType `json:"type"`
+	Uid         string     `json:"uid"`
+	Url         string     `json:"url"`
 }
 
 // SourceType defines model for SourceType.

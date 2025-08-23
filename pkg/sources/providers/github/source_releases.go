@@ -35,7 +35,14 @@ func (s *SourceRelease) UID() string {
 }
 
 func (s *SourceRelease) Name() string {
-	return fmt.Sprintf("Releases (%s)", s.Repository)
+	return fmt.Sprintf("%s GitHub Releases", s.Repository)
+}
+
+func (s *SourceRelease) Description() string {
+	if s.IncludePreleases {
+		return fmt.Sprintf("All releases from %s", s.Repository)
+	}
+	return fmt.Sprintf("Stable releases from %s", s.Repository)
 }
 
 func (s *SourceRelease) URL() string {
