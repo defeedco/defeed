@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/mattn/go-mastodon"
 	"github.com/rs/zerolog"
@@ -30,18 +29,19 @@ func NewSourceTag() *SourceTag {
 }
 
 func (s *SourceTag) UID() string {
-	urlID := s.InstanceURL
-	// Normalize the URL for consistent UID format (cannot contain slashes)
-	urlID = strings.TrimPrefix(urlID, "https://")
-	urlID = strings.TrimPrefix(urlID, "http://")
-	urlID = strings.TrimPrefix(urlID, "www.")
-	urlID = strings.TrimSuffix(urlID, "/")
-	urlID = strings.ReplaceAll(urlID, "/", ":")
-	return fmt.Sprintf("%s:%s:%s", s.Type(), urlID, s.Tag)
+	return fmt.Sprintf("%s:%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.InstanceURL), "/", ":"), s.Tag)
 }
 
 func (s *SourceTag) Name() string {
-	return fmt.Sprintf("Mastodon (%s)", s.Tag)
+	return fmt.Sprintf("Mastodon #%s", s.Tag)
+}
+
+func (s *SourceTag) Description() string {
+	instanceName, err := lib.StripURLHost(s.InstanceURL)
+	if err != nil {
+		return fmt.Sprintf("Posts with #%s hashtag from %s", s.Tag, instanceName)
+	}
+	return fmt.Sprintf("Posts with #%s hashtag from %s", s.Tag, instanceName)
 }
 
 func (s *SourceTag) URL() string {

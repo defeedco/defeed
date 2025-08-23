@@ -38,7 +38,29 @@ func (s *SourceSubreddit) UID() string {
 }
 
 func (s *SourceSubreddit) Name() string {
-	return fmt.Sprintf("Reddit (%s, %s, %s)", s.Subreddit, s.SortBy, s.TopPeriod)
+	return fmt.Sprintf("%s subreddit", lib.Capitalize(s.Subreddit))
+}
+
+func (s *SourceSubreddit) Description() string {
+	return fmt.Sprintf("%s %s posts from r/%s", lib.Capitalize(reformatTopPeriod(s.TopPeriod)), s.SortBy, s.Subreddit)
+}
+
+func reformatTopPeriod(value string) string {
+	switch value {
+	case "hour":
+		return "hourly"
+	case "day":
+		return "daily"
+	case "week":
+		return "weekly"
+	case "month":
+		return "monthly"
+	case "year":
+		return "yearly"
+	case "all":
+		return "all time"
+	}
+	return value
 }
 
 func (s *SourceSubreddit) URL() string {

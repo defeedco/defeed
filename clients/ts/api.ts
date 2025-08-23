@@ -689,6 +689,12 @@ export interface Source {
      * @type {string}
      * @memberof Source
      */
+    'description': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Source
+     */
     'url': string;
 }
 
@@ -1120,10 +1126,11 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @summary List all sources
+         * @param {string} [query] Filter sources by name or description.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listSources: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        listSources: async (query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/sources`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1135,6 +1142,10 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            if (query !== undefined) {
+                localVarQueryParameter['query'] = query;
+            }
 
 
     
@@ -1199,11 +1210,12 @@ export const SourcesApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary List all sources
+         * @param {string} [query] Filter sources by name or description.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listSources(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Source>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listSources(options);
+        async listSources(query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Source>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listSources(query, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['SourcesApi.listSources']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1251,11 +1263,12 @@ export const SourcesApiFactory = function (configuration?: Configuration, basePa
         /**
          * 
          * @summary List all sources
+         * @param {string} [query] Filter sources by name or description.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listSources(options?: RawAxiosRequestConfig): AxiosPromise<Array<Source>> {
-            return localVarFp.listSources(options).then((request) => request(axios, basePath));
+        listSources(query?: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<Source>> {
+            return localVarFp.listSources(query, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1306,12 +1319,13 @@ export class SourcesApi extends BaseAPI {
     /**
      * 
      * @summary List all sources
+     * @param {string} [query] Filter sources by name or description.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SourcesApi
      */
-    public listSources(options?: RawAxiosRequestConfig) {
-        return SourcesApiFp(this.configuration).listSources(options).then((request) => request(this.axios, this.basePath));
+    public listSources(query?: string, options?: RawAxiosRequestConfig) {
+        return SourcesApiFp(this.configuration).listSources(query, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

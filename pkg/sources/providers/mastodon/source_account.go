@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/mattn/go-mastodon"
 	"github.com/rs/zerolog"
@@ -30,18 +29,19 @@ func NewSourceAccount() *SourceAccount {
 }
 
 func (s *SourceAccount) UID() string {
-	urlID := s.InstanceURL
-	// Normalize the URL for consistent UID format (cannot contain slashes)
-	urlID = strings.TrimPrefix(urlID, "https://")
-	urlID = strings.TrimPrefix(urlID, "http://")
-	urlID = strings.TrimPrefix(urlID, "www.")
-	urlID = strings.TrimSuffix(urlID, "/")
-	urlID = strings.ReplaceAll(urlID, "/", ":")
-	return fmt.Sprintf("%s:%s:%s", s.Type(), urlID, s.Account)
+	return fmt.Sprintf("%s:%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.InstanceURL), "/", ":"), s.Account)
 }
 
 func (s *SourceAccount) Name() string {
-	return fmt.Sprintf("Mastodon (%s)", s.Account)
+	return fmt.Sprintf("User @%s", s.Account)
+}
+
+func (s *SourceAccount) Description() string {
+	instanceName, err := lib.StripURLHost(s.InstanceURL)
+	if err != nil {
+		return fmt.Sprintf("Posts from @%s account on %s", s.Account, instanceName)
+	}
+	return fmt.Sprintf("Posts from @%s account on %s", s.Account, instanceName)
 }
 
 func (s *SourceAccount) URL() string {

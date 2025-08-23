@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	types2 "github.com/glanceapp/glance/pkg/sources/types"
 	"html/template"
 	"io"
 	"net/http"
@@ -13,15 +14,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
+	"github.com/glanceapp/glance/pkg/sources/providers/github"
+	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
+	"github.com/glanceapp/glance/pkg/sources/providers/lobsters"
+	"github.com/glanceapp/glance/pkg/sources/providers/mastodon"
+	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
+	"github.com/glanceapp/glance/pkg/sources/providers/rss"
+
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/sources/changedetection"
-	"github.com/glanceapp/glance/pkg/sources/github"
-	"github.com/glanceapp/glance/pkg/sources/hackernews"
-	"github.com/glanceapp/glance/pkg/sources/lobsters"
-	"github.com/glanceapp/glance/pkg/sources/mastodon"
 	"github.com/glanceapp/glance/pkg/sources/nlp"
-	"github.com/glanceapp/glance/pkg/sources/reddit"
-	"github.com/glanceapp/glance/pkg/sources/rss"
 	httpswagger "github.com/swaggo/http-swagger"
 
 	"github.com/glanceapp/glance/pkg/storage/postgres"
@@ -35,11 +37,10 @@ import (
 var openapiSpecYaml string
 
 type Server struct {
-	registry  *sources.Registry
-	logger    *zerolog.Logger
-	createdAt time.Time
-	config    *Config
-	http      http.Server
+	executor *sources.Executor
+	registry *sources.Registry
+	logger   *zerolog.Logger
+	http     http.Server
 }
 
 var _ ServerInterface = (*Server)(nil)
@@ -59,25 +60,28 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		return nil, fmt.Errorf("create embedder model: %w", err)
 	}
 
-	registry := sources.NewRegistry(
+	executor := sources.NewExecutor(
 		logger,
 		nlp.NewSummarizer(summarizerModel),
 		nlp.NewEmbedder(embedderModel),
 		postgres.NewActivityRepository(db),
 		postgres.NewSourceRepository(db),
 	)
+	if err := executor.Initialize(); err != nil {
+		return nil, fmt.Errorf("initialize executor: %w", err)
+	}
 
+	registry := sources.NewRegistry(logger)
 	if err := registry.Initialize(); err != nil {
-		return nil, fmt.Errorf("initialize registry: %w", err)
+		return nil, fmt.Errorf("initialize preset registry: %w", err)
 	}
 
 	mux := http.NewServeMux()
 
 	server := &Server{
-		createdAt: time.Now(),
-		logger:    logger,
-		config:    cfg,
-		registry:  registry,
+		logger:   logger,
+		registry: registry,
+		executor: executor,
 		http: http.Server{
 			Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 			Handler: corsMiddleware(mux, cfg.CORSOrigin),
@@ -146,7 +150,7 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
-	out, err := s.registry.Activities()
+	out, err := s.executor.Activities()
 	if err != nil {
 		s.internalError(w, err, "list activities")
 		return
@@ -161,14 +165,19 @@ func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
 	s.serializeRes(w, activities)
 }
 
-func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
-	out, err := s.registry.Sources()
+func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params ListSourcesParams) {
+	var query string
+	if params.Query != nil {
+		query = *params.Query
+	}
+
+	result, err := s.registry.Search(r.Context(), query)
 	if err != nil {
-		s.internalError(w, err, "list sources")
+		s.internalError(w, err, "search source presets")
 		return
 	}
 
-	res, err := serializeSources(out)
+	res, err := serializeSources(result)
 	if err != nil {
 		s.internalError(w, err, "serialize sources")
 		return
@@ -191,7 +200,7 @@ func (s *Server) CreateSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.registry.Add(out)
+	err = s.executor.Add(out)
 	if err != nil {
 		s.internalError(w, err, "add source")
 		return
@@ -207,7 +216,7 @@ func (s *Server) CreateSource(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) DeleteSource(w http.ResponseWriter, r *http.Request, uid string) {
-	err := s.registry.Remove(uid)
+	err := s.executor.Remove(uid)
 	if err != nil {
 		s.internalError(w, err, "remove source")
 		return
@@ -217,7 +226,7 @@ func (s *Server) DeleteSource(w http.ResponseWriter, r *http.Request, uid string
 }
 
 func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
-	out, err := s.registry.Source(uid)
+	out, err := s.executor.Source(uid)
 	if err != nil {
 		s.internalError(w, err, "remove source")
 		return
@@ -246,7 +255,7 @@ func (s *Server) GetActivitiesSummary(w http.ResponseWriter, r *http.Request, pa
 
 	sourceIDs := strings.Split(params.Sources, ",")
 
-	summary, err := s.registry.Summary(r.Context(), query, sourceIDs, sortBy)
+	summary, err := s.executor.Summary(r.Context(), query, sourceIDs, sortBy)
 	if err != nil {
 		s.internalError(w, err, "generate summary")
 		return
@@ -297,7 +306,7 @@ func (s *Server) SearchActivities(w http.ResponseWriter, r *http.Request, params
 		return
 	}
 
-	results, err := s.registry.Search(r.Context(), query, sourceUIDs, minSimilarity, limit, sortBy)
+	results, err := s.executor.Search(r.Context(), query, sourceUIDs, minSimilarity, limit, sortBy)
 	if err != nil {
 		s.internalError(w, err, "search activities")
 		return
@@ -355,7 +364,7 @@ func (s *Server) badRequest(w http.ResponseWriter, err error, msg string) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
 }
 
-func deserializeCreateSourceRequest(req CreateSourceRequest) (sources.Source, error) {
+func deserializeCreateSourceRequest(req CreateSourceRequest) (types2.Source, error) {
 	disc, err := req.Discriminator()
 	if err != nil {
 		return nil, fmt.Errorf("read discriminator: %w", err)
@@ -486,7 +495,7 @@ func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
 	}, nil
 }
 
-func serializeSources(in []sources.Source) ([]Source, error) {
+func serializeSources(in []types2.Source) ([]Source, error) {
 	out := make([]Source, 0, len(in))
 
 	for _, e := range in {
@@ -500,17 +509,18 @@ func serializeSources(in []sources.Source) ([]Source, error) {
 	return out, nil
 }
 
-func serializeSource(in sources.Source) (Source, error) {
+func serializeSource(in types2.Source) (Source, error) {
 	sourceType, err := serializeSourceType(in.Type())
 	if err != nil {
 		return Source{}, fmt.Errorf("serialize source type: %w", err)
 	}
 
 	return Source{
-		Uid:  in.UID(),
-		Type: sourceType,
-		Url:  in.URL(),
-		Name: in.Name(),
+		Uid:         in.UID(),
+		Type:        sourceType,
+		Url:         in.URL(),
+		Name:        in.Name(),
+		Description: in.Description(),
 	}, nil
 }
 

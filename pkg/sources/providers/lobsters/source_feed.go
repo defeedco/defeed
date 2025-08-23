@@ -29,18 +29,27 @@ func NewSourceFeed() *SourceFeed {
 }
 
 func (s *SourceFeed) UID() string {
-	urlID := s.InstanceURL
-	// Normalize the URL for consistent UID format (cannot contain slashes)
-	urlID = strings.TrimPrefix(urlID, "https://")
-	urlID = strings.TrimPrefix(urlID, "http://")
-	urlID = strings.TrimPrefix(urlID, "www.")
-	urlID = strings.TrimSuffix(urlID, "/")
-	urlID = strings.ReplaceAll(urlID, "/", ":")
-	return fmt.Sprintf("%s:%s:%s", s.Type(), urlID, s.FeedName)
+	return fmt.Sprintf("%s:%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.InstanceURL), "/", ":"), s.FeedName)
 }
 
 func (s *SourceFeed) Name() string {
-	return fmt.Sprintf("Lobsters (%s)", s.FeedName)
+	return fmt.Sprintf("%s on Lobsters", lib.Capitalize(s.FeedName))
+}
+
+func (s *SourceFeed) Description() string {
+	instanceName, err := lib.StripURLHost(s.InstanceURL)
+	if err != nil {
+		return fmt.Sprintf("Stories from %s", instanceName)
+	}
+
+	switch s.FeedName {
+	case "hottest":
+		return fmt.Sprintf("Hottest stories from %s", instanceName)
+	case "newest":
+		return fmt.Sprintf("Newest stories from %s", instanceName)
+	default:
+		return fmt.Sprintf("%s stories from %s", lib.Capitalize(s.FeedName), instanceName)
+	}
 }
 
 func (s *SourceFeed) URL() string {

@@ -1,24 +1,19 @@
 package sources
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
-
-	"github.com/glanceapp/glance/pkg/sources/changedetection"
-	"github.com/glanceapp/glance/pkg/sources/github"
-	"github.com/glanceapp/glance/pkg/sources/hackernews"
-	"github.com/glanceapp/glance/pkg/sources/lobsters"
-	"github.com/glanceapp/glance/pkg/sources/mastodon"
-	"github.com/glanceapp/glance/pkg/sources/reddit"
-	"github.com/glanceapp/glance/pkg/sources/rss"
-	"github.com/rs/zerolog"
+	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
+	"github.com/glanceapp/glance/pkg/sources/providers/github"
+	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
+	"github.com/glanceapp/glance/pkg/sources/providers/lobsters"
+	"github.com/glanceapp/glance/pkg/sources/providers/mastodon"
+	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
+	"github.com/glanceapp/glance/pkg/sources/providers/rss"
+	types2 "github.com/glanceapp/glance/pkg/sources/types"
 )
 
-func NewSource(sourceType string) (Source, error) {
-	var s Source
+func NewSource(sourceType string) (types2.Source, error) {
+	var s types2.Source
 
 	switch sourceType {
 	case mastodon.TypeMastodonAccount:
@@ -46,28 +41,4 @@ func NewSource(sourceType string) (Source, error) {
 	}
 
 	return s, nil
-}
-
-type Source interface {
-	json.Marshaler
-	json.Unmarshaler
-	// UID is the unique identifier for the source.
-	// It should not contain any slashes.
-	UID() string
-	Type() string
-	// Name is a human-readable UID.
-	Name() string
-	// URL is a web resource representation of UID.
-	URL() string
-	// Validate returns a list of configuration validation errors.
-	// When non-empty, the caller should not proceed to Initialize.
-	Validate() []error
-	// Initialize initializes the internal state and prepares the logger.
-	Initialize(logger *zerolog.Logger) error
-	// Stream starts streaming new activities from the source.
-	// since is the last activity emitted by the source.
-	// feed is a channel to send activities to. Already seen activities are permitted.
-	// errs is a channel to send errors to.
-	// The caller should close the channels when done.
-	Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error)
 }

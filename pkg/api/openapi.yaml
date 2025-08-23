@@ -39,6 +39,12 @@ paths:
       operationId: listSources
       tags:
         - sources
+      parameters:
+        - name: query
+          in: query
+          description: Filter sources by name or description.
+          schema:
+            type: string
       responses:
         '200':
           description: List of sources
@@ -430,6 +436,7 @@ components:
         - uid
         - type
         - name
+        - description
         - url
       properties:
         uid:
@@ -437,6 +444,8 @@ components:
         type:
           $ref: '#/components/schemas/SourceType'
         name:
+          type: string
+        description:
           type: string
         url:
           type: string

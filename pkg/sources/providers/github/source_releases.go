@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
@@ -36,7 +35,14 @@ func (s *SourceRelease) UID() string {
 }
 
 func (s *SourceRelease) Name() string {
-	return fmt.Sprintf("Releases (%s)", s.Repository)
+	return fmt.Sprintf("Releases on %s", s.Repository)
+}
+
+func (s *SourceRelease) Description() string {
+	if s.IncludePreleases {
+		return fmt.Sprintf("All releases from %s", s.Repository)
+	}
+	return fmt.Sprintf("Stable releases from %s", s.Repository)
 }
 
 func (s *SourceRelease) URL() string {

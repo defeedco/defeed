@@ -2,324 +2,150 @@ package sources
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
-	"sort"
-	"sync"
+	"github.com/glanceapp/glance/pkg/sources/types"
 
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"strings"
 
+	"github.com/glanceapp/glance/pkg/sources/providers/github"
+	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
+	"github.com/glanceapp/glance/pkg/sources/providers/lobsters"
+	"github.com/glanceapp/glance/pkg/sources/providers/mastodon"
+	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
+	"github.com/glanceapp/glance/pkg/sources/providers/rss"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog"
+	"golang.org/x/sync/errgroup"
 )
 
+// Registry manages available source configurations through fetchers.
 type Registry struct {
-	sourceRepo   sourceStore
-	activityRepo activityStore
-
-	cancelBySourceID sync.Map
-	activityQueue    chan types.Activity
-	errorQueue       chan error
-	done             chan struct{}
-
-	logger     *zerolog.Logger
-	summarizer summarizer
-	embedder   embedder
+	fetchers []types.Fetcher
+	logger   *zerolog.Logger
 }
 
-type sourceStore interface {
-	Add(source Source) error
-	Remove(uid string) error
-	List() ([]Source, error)
-	GetByID(uid string) (Source, error)
-}
-
-type activityStore interface {
-	Upsert(activity *types.DecoratedActivity) error
-	Remove(uid string) error
-	List() ([]*types.DecoratedActivity, error)
-	Search(req types.SearchRequest) ([]*types.DecoratedActivity, error)
-}
-
-type summarizer interface {
-	Summarize(ctx context.Context, activity types.Activity) (*types.ActivitySummary, error)
-	SummarizeMany(ctx context.Context, activities []*types.DecoratedActivity, query string) (*types.ActivitiesSummary, error)
-}
-
-type embedder interface {
-	Embed(ctx context.Context, summary *types.ActivitySummary) ([]float32, error)
-}
-
-func NewRegistry(
-	logger *zerolog.Logger,
-	summarizer summarizer,
-	embedder embedder,
-	activityRepo activityStore,
-	sourceRepo sourceStore,
-) *Registry {
-	r := &Registry{
-		activityRepo:  activityRepo,
-		sourceRepo:    sourceRepo,
-		activityQueue: make(chan types.Activity),
-		errorQueue:    make(chan error),
-		done:          make(chan struct{}),
-		logger:        logger,
-		summarizer:    summarizer,
-		embedder:      embedder,
+func NewRegistry(logger *zerolog.Logger) *Registry {
+	return &Registry{
+		fetchers: make([]types.Fetcher, 0),
+		logger:   logger,
 	}
-
-	// Tweak the number of workers as needed.
-	r.startWorkers(10)
-
-	return r
 }
 
+// Initialize sets up the fetchers for each source type
 func (r *Registry) Initialize() error {
-	sources, err := r.sourceRepo.List()
+	rssFetcher, err := rss.NewFeedFetcher(r.logger)
 	if err != nil {
-		return fmt.Errorf("list sources: %w", err)
+		return fmt.Errorf("initialize RSS fetcher: %w", err)
 	}
+	r.fetchers = append(r.fetchers, rssFetcher)
+	r.fetchers = append(r.fetchers, github.NewIssuesFetcher(r.logger))
+	r.fetchers = append(r.fetchers, github.NewReleasesFetcher(r.logger))
+	r.fetchers = append(r.fetchers, reddit.NewSubredditFetcher(r.logger))
+	r.fetchers = append(r.fetchers, hackernews.NewPostsFetcher(r.logger))
+	r.fetchers = append(r.fetchers, lobsters.NewFeedFetcher(r.logger))
+	r.fetchers = append(r.fetchers, lobsters.NewTagFetcher(r.logger))
+	r.fetchers = append(r.fetchers, mastodon.NewAccountFetcher(r.logger))
+	r.fetchers = append(r.fetchers, mastodon.NewTagFetcher(r.logger))
 
-	r.logger.Info().Int("count", len(sources)).Msg("Initializing sources")
-
-	for _, source := range sources {
-		sLogger := sourceLogger(source, r.logger)
-		if err := source.Initialize(sLogger); err != nil {
-			sLogger.Error().
-				Err(err).
-				Msg("Failed to initialize source")
-			continue
-		}
-
-		activities, err := r.activityRepo.Search(types.SearchRequest{
-			SourceUIDs: []string{source.UID()},
-			Limit:      1,
-			SortBy:     types.SortByDate,
-		})
-		if err != nil {
-			return fmt.Errorf("search existing activities: %w", err)
-		}
-
-		var since types.Activity = nil
-		if len(activities) > 0 {
-			since = activities[0].Activity
-		}
-
-		ctx, cancel := context.WithCancel(context.Background())
-		go source.Stream(ctx, since, r.activityQueue, r.errorQueue)
-
-		r.cancelBySourceID.Store(source.UID(), cancel)
-
-		sLogger.Info().Msg("Source initialized")
-	}
-
-	r.logger.Info().Msg("Source initialization complete")
-	return nil
-}
-
-func (r *Registry) Add(source Source) error {
-	existing, _ := r.sourceRepo.GetByID(source.UID())
-
-	if existing != nil {
-		// source already exists, we don't need to do anything
-		return nil
-	}
-
-	if err := source.Initialize(sourceLogger(source, r.logger)); err != nil {
-		return fmt.Errorf("initialize source: %w", err)
-	}
-
-	err := r.sourceRepo.Add(source)
-	if err != nil {
-		return fmt.Errorf("add source: %w", err)
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	// Set to nil since there are no previous activities for this source yet.
-	var since types.Activity = nil
-	go source.Stream(ctx, since, r.activityQueue, r.errorQueue)
-
-	r.cancelBySourceID.Store(source.UID(), cancel)
+	r.logger.Info().
+		Int("count", len(r.fetchers)).
+		Msg("initialized source fetchers")
 
 	return nil
 }
 
-func (r *Registry) Remove(uid string) error {
-	existing, _ := r.sourceRepo.GetByID(uid)
+// Search searches for sources from available fetchers
+func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, error) {
+	g, gctx := errgroup.WithContext(ctx)
 
-	if existing != nil {
-		return fmt.Errorf("source '%s' not found", uid)
-	}
+	g.SetLimit(len(r.fetchers))
 
-	cancel, ok := r.cancelBySourceID.Load(uid)
-	if !ok {
-		return fmt.Errorf("source '%s' cancel func not found", uid)
-	}
-	cancel.(context.CancelFunc)()
-	r.cancelBySourceID.Delete(uid)
-
-	err := r.sourceRepo.Remove(uid)
-	if err != nil {
-		return fmt.Errorf("remove source: %w", err)
-	}
-
-	return nil
-}
-
-func (r *Registry) Sources() ([]Source, error) {
-	return r.sourceRepo.List()
-}
-
-func (r *Registry) Source(uid string) (Source, error) {
-	return r.sourceRepo.GetByID(uid)
-}
-
-func (r *Registry) Activities() ([]*types.DecoratedActivity, error) {
-	matches, err := r.activityRepo.List()
-	if err != nil {
-		return nil, fmt.Errorf("repo list: %w", err)
-	}
-
-	sort.Slice(matches, func(i, j int) bool {
-		return matches[i].Activity.CreatedAt().Before(matches[j].Activity.CreatedAt())
-	})
-
-	return matches, nil
-}
-
-func (r *Registry) ActivitiesBySource(sourceUID string) ([]*types.DecoratedActivity, error) {
-	activities, err := r.Activities()
-	if err != nil {
-		return nil, fmt.Errorf("list activities: %w", err)
-	}
-
-	matches := make([]*types.DecoratedActivity, 0)
-	for _, a := range activities {
-		if a.Activity.SourceUID() == sourceUID {
-			matches = append(matches, a)
-		}
-	}
-
-	return matches, nil
-}
-
-func (r *Registry) startWorkers(nWorkers int) {
-	var wg sync.WaitGroup
-
-	for i := range nWorkers {
-		wg.Add(1)
-		go func(workerID int) {
-			defer wg.Done()
-
-			wLogger := r.logger.With().Int("worker_id", workerID).Logger()
-
-			wLogger.Info().Msg("Worker started")
-			for {
-				select {
-				case act := <-r.activityQueue:
-
-					actLogger := activityLogger(act, &wLogger)
-
-					actLogger.Debug().Msg("Processing activity")
-
-					summary, err := r.summarizer.Summarize(context.Background(), act)
-					if err != nil {
-						actLogger.Error().
-							Err(err).
-							Msg("Error summarizing activity")
-						continue
-					}
-
-					// Compute embedding for the full summary
-					embedding, err := r.embedder.Embed(context.Background(), summary)
-					if err != nil {
-						actLogger.Error().
-							Err(err).
-							Msg("Error computing embedding")
-						continue
-					}
-
-					err = r.activityRepo.Upsert(&types.DecoratedActivity{
-						Activity:  act,
-						Summary:   summary,
-						Embedding: embedding,
-					})
-					if err != nil {
-						actLogger.Error().
-							Err(err).
-							Msg("Error storing activity")
-					}
-
-				case err := <-r.errorQueue:
-					// TODO: Decorate errors with source ID
-					wLogger.Error().
-						Err(err).
-						Msg("Error from source")
-
-				case <-r.done:
-					wLogger.Info().Msg("Worker shutting down")
-					return
-				}
+	results := make([]types.Source, len(r.fetchers))
+	for _, f := range r.fetchers {
+		g.Go(func() error {
+			res, err := f.Search(gctx, query)
+			if err != nil {
+				return fmt.Errorf("fetcher search: %w", err)
 			}
-		}(i + 1)
-	}
-}
-
-func (r *Registry) Shutdown() {
-	close(r.done)
-
-	r.cancelBySourceID.Range(func(key, value interface{}) bool {
-		cancel := value.(context.CancelFunc)
-		cancel()
-		return true
-	})
-	r.cancelBySourceID.Clear()
-}
-
-func (r *Registry) Search(ctx context.Context, query string, sourceUIDs []string, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
-	req := types.SearchRequest{
-		SourceUIDs:    sourceUIDs,
-		MinSimilarity: minSimilarity,
-		Limit:         limit,
-		SortBy:        sortBy,
-	}
-
-	if query != "" {
-		embedding, err := r.embedder.Embed(ctx, &types.ActivitySummary{
-			FullSummary: query,
+			results = append(results, res...)
+			return nil
 		})
-		if err != nil {
-			return nil, fmt.Errorf("compute query embedding: %w", err)
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("search sources: %w", err)
+	}
+
+	r.logger.Debug().
+		Str("query", query).
+		Int("count", len(results)).
+		Msg("searched sources")
+
+	adaptedSources := adaptSources(results)
+	return fuzzyReRank(adaptedSources, query), nil
+}
+
+// Adapter function to convert fetcher.Source to sources.Source
+func adaptSources(fetcherSources []types.Source) []types.Source {
+	var result []types.Source
+	for _, fs := range fetcherSources {
+		if s, ok := fs.(types.Source); ok {
+			result = append(result, s)
 		}
-		req.QueryEmbedding = embedding
+	}
+	return result
+}
+
+// sourceWithSearchText holds a source and its searchable text for fuzzy matching
+type sourceWithSearchText struct {
+	source     types.Source
+	searchText string
+}
+
+// fuzzyReRank reranks sources using fuzzy search scoring
+func fuzzyReRank(input []types.Source, query string) []types.Source {
+	if len(input) == 0 || query == "" {
+		return input
 	}
 
-	return r.activityRepo.Search(req)
-}
+	query = strings.TrimSpace(query)
 
-func (r *Registry) Summary(ctx context.Context, query string, sourceUIDs []string, sortBy types.SortBy) (*types.ActivitiesSummary, error) {
-	activities, err := r.Search(ctx, query, sourceUIDs, 0.0, 20, sortBy)
-	if err != nil {
-		return nil, fmt.Errorf("search activities: %w", err)
+	sourcesWithText := make([]sourceWithSearchText, len(input))
+	searchTexts := make([]string, len(input))
+
+	for i, source := range input {
+		searchText := buildSearchText(source)
+		sourcesWithText[i] = sourceWithSearchText{
+			source:     source,
+			searchText: searchText,
+		}
+		searchTexts[i] = searchText
 	}
 
-	return r.summarizer.SummarizeMany(ctx, activities, query)
+	ranks := fuzzy.RankFindNormalizedFold(query, searchTexts)
+
+	result := make([]types.Source, len(ranks))
+	for i, rank := range ranks {
+		result[i] = sourcesWithText[rank.OriginalIndex].source
+	}
+
+	return result
 }
 
-func sourceLogger(source Source, logger *zerolog.Logger) *zerolog.Logger {
-	out := logger.With().
-		Str("source_type", source.Type()).
-		Str("source_uid", source.UID()).
-		Logger()
+// buildSearchText creates a searchable text string from a source's key fields
+func buildSearchText(source types.Source) string {
+	parts := []string{
+		source.Name(),
+		source.Description(),
+	}
 
-	return &out
-}
+	var nonEmptyParts []string
+	for _, part := range parts {
+		if strings.TrimSpace(part) != "" {
+			nonEmptyParts = append(nonEmptyParts, part)
+		}
+	}
 
-func activityLogger(activity types.Activity, logger *zerolog.Logger) *zerolog.Logger {
-	out := logger.With().
-		Str("activity_id", activity.UID()).
-		Str("source_type", activity.SourceType()).
-		Str("source_uid", activity.SourceUID()).
-		Logger()
-
-	return &out
+	return strings.Join(nonEmptyParts, " ")
 }

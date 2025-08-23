@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
@@ -33,7 +32,11 @@ func (s *SourceIssues) UID() string {
 }
 
 func (s *SourceIssues) Name() string {
-	return fmt.Sprintf("Issue Activity (%s)", s.Repository)
+	return fmt.Sprintf("Issues on %s", s.Repository)
+}
+
+func (s *SourceIssues) Description() string {
+	return fmt.Sprintf("Recent issue activity from %s", s.Repository)
 }
 
 func (s *SourceIssues) URL() string {

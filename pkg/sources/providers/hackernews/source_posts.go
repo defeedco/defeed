@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
-
 	"github.com/alexferrari88/gohn/pkg/gohn"
 	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
 
@@ -33,7 +32,20 @@ func (s *SourcePosts) UID() string {
 }
 
 func (s *SourcePosts) Name() string {
-	return fmt.Sprintf("HackerNews (%s)", s.FeedName)
+	return fmt.Sprintf("%s on Hacker News", lib.Capitalize(s.FeedName))
+}
+
+func (s *SourcePosts) Description() string {
+	switch s.FeedName {
+	case "top":
+		return "Top trending stories from Hacker News"
+	case "new":
+		return "Latest new stories from Hacker News"
+	case "best":
+		return "Best stories from Hacker News"
+	default:
+		return fmt.Sprintf("%s stories from Hacker News", lib.Capitalize(s.FeedName))
+	}
 }
 
 func (s *SourcePosts) URL() string {

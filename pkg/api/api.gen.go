@@ -261,10 +261,11 @@ type RssFeedConfig struct {
 
 // Source defines model for Source.
 type Source struct {
-	Name string     `json:"name"`
-	Type SourceType `json:"type"`
-	Uid  string     `json:"uid"`
-	Url  string     `json:"url"`
+	Description string     `json:"description"`
+	Name        string     `json:"name"`
+	Type        SourceType `json:"type"`
+	Uid         string     `json:"uid"`
+	Url         string     `json:"url"`
 }
 
 // SourceType defines model for SourceType.
@@ -298,6 +299,12 @@ type GetActivitiesSummaryParams struct {
 
 	// SortBy Field to sort activities for the summary by
 	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
+}
+
+// ListSourcesParams defines parameters for ListSources.
+type ListSourcesParams struct {
+	// Query Filter sources by name or description.
+	Query *string `form:"query,omitempty" json:"query,omitempty"`
 }
 
 // CreateSourceJSONRequestBody defines body for CreateSource for application/json ContentType.
@@ -642,7 +649,7 @@ type ServerInterface interface {
 	GetActivitiesSummary(w http.ResponseWriter, r *http.Request, params GetActivitiesSummaryParams)
 	// List all sources
 	// (GET /sources)
-	ListSources(w http.ResponseWriter, r *http.Request)
+	ListSources(w http.ResponseWriter, r *http.Request, params ListSourcesParams)
 	// Create a new source
 	// (POST /sources)
 	CreateSource(w http.ResponseWriter, r *http.Request)
@@ -778,8 +785,21 @@ func (siw *ServerInterfaceWrapper) GetActivitiesSummary(w http.ResponseWriter, r
 // ListSources operation middleware
 func (siw *ServerInterfaceWrapper) ListSources(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListSourcesParams
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ListSources(w, r)
+		siw.Handler.ListSources(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
