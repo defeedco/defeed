@@ -166,19 +166,14 @@ func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
-	presetMap, err := s.presetRegistry.GetAllPresets(r.Context())
+	// TODO: Accept a query parameter
+	result, err := s.presetRegistry.Search(r.Context(), "")
 	if err != nil {
-		s.internalError(w, err, "list sources")
+		s.internalError(w, err, "search source presets")
 		return
 	}
 
-	// Flatten the map of presets into a single slice for backward compatibility
-	var allSources []sources.Source
-	for _, sources := range presetMap {
-		allSources = append(allSources, sources...)
-	}
-
-	res, err := serializeSources(allSources)
+	res, err := serializeSources(result)
 	if err != nil {
 		s.internalError(w, err, "serialize sources")
 		return

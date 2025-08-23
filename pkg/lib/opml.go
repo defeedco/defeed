@@ -1,4 +1,4 @@
-package presets
+package lib
 
 import (
 	"encoding/xml"
