@@ -1,0 +1,53 @@
+package hackernews
+
+import (
+	"context"
+	"strings"
+
+	"github.com/glanceapp/glance/pkg/sources/fetcher"
+	"github.com/rs/zerolog"
+)
+
+// PostsFetcher implements preset search functionality for HackerNews
+type PostsFetcher struct {
+	Logger *zerolog.Logger
+}
+
+func NewPostsFetcher(logger *zerolog.Logger) *PostsFetcher {
+	return &PostsFetcher{
+		Logger: logger,
+	}
+}
+
+var hackerNewsFeeds = []struct {
+	name        string
+	description string
+}{
+	{"new", "Latest posts from Hacker News"},
+	{"top", "Top posts from Hacker News"},
+	{"best", "Best posts from Hacker News"},
+}
+
+func (f *PostsFetcher) Search(ctx context.Context, query string) ([]fetcher.Source, error) {
+	query = strings.ToLower(query)
+	var matchingSources []fetcher.Source
+
+	for _, feed := range hackerNewsFeeds {
+		feedName := strings.ToLower(feed.name)
+		description := strings.ToLower(feed.description)
+
+		if query == "" || strings.Contains(feedName, query) || strings.Contains(description, query) {
+			source := &SourcePosts{
+				FeedName: feed.name,
+			}
+			matchingSources = append(matchingSources, source)
+		}
+	}
+
+	f.Logger.Debug().
+		Str("query", query).
+		Int("matches", len(matchingSources)).
+		Msg("HackerNews fetcher found feeds")
+
+	return matchingSources, nil
+}

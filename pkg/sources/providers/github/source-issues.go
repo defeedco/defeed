@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"

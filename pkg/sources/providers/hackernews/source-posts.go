@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
-
 	"github.com/alexferrari88/gohn/pkg/gohn"
 	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
 

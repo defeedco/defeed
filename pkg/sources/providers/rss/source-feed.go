@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/mmcdole/gofeed"
 	gofeedext "github.com/mmcdole/gofeed/extensions"

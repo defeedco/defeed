@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/mattn/go-mastodon"
 	"github.com/rs/zerolog"

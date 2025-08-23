@@ -6,6 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
+	"io"
+	"net/http"
+	"slices"
+	"strings"
+	"time"
+
 	"github.com/glanceapp/glance/pkg/sources/presets"
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
 	"github.com/glanceapp/glance/pkg/sources/providers/github"
@@ -14,12 +21,6 @@ import (
 	"github.com/glanceapp/glance/pkg/sources/providers/mastodon"
 	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
 	"github.com/glanceapp/glance/pkg/sources/providers/rss"
-	"html/template"
-	"io"
-	"net/http"
-	"slices"
-	"strings"
-	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/sources/nlp"
@@ -165,13 +166,19 @@ func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
-	out, err := s.presetRegistry.Sources()
+	presetMap, err := s.presetRegistry.GetAllPresets(r.Context())
 	if err != nil {
 		s.internalError(w, err, "list sources")
 		return
 	}
 
-	res, err := serializeSources(out)
+	// Flatten the map of presets into a single slice for backward compatibility
+	var allSources []sources.Source
+	for _, sources := range presetMap {
+		allSources = append(allSources, sources...)
+	}
+
+	res, err := serializeSources(allSources)
 	if err != nil {
 		s.internalError(w, err, "serialize sources")
 		return
