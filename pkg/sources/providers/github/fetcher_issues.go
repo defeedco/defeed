@@ -26,6 +26,7 @@ func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]fetcher.Sou
 		return nil, nil
 	}
 
+	// TODO: Move to config struct
 	token := os.Getenv("GITHUB_TOKEN")
 	var client *github.Client
 	if token != "" {

@@ -165,9 +165,13 @@ func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
 	s.serializeRes(w, activities)
 }
 
-func (s *Server) ListSources(w http.ResponseWriter, r *http.Request) {
-	// TODO: Accept a query parameter
-	result, err := s.presetRegistry.Search(r.Context(), "")
+func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params ListSourcesParams) {
+	var query string
+	if params.Query != nil {
+		query = *params.Query
+	}
+
+	result, err := s.presetRegistry.Search(r.Context(), query)
 	if err != nil {
 		s.internalError(w, err, "search source presets")
 		return

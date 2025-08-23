@@ -4,6 +4,9 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+
+	"strings"
+
 	"github.com/glanceapp/glance/pkg/sources"
 	"github.com/glanceapp/glance/pkg/sources/fetcher"
 	"github.com/glanceapp/glance/pkg/sources/providers/github"
@@ -12,6 +15,7 @@ import (
 	"github.com/glanceapp/glance/pkg/sources/providers/mastodon"
 	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
 	"github.com/glanceapp/glance/pkg/sources/providers/rss"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 )
@@ -78,8 +82,8 @@ func (r *Registry) Search(ctx context.Context, query string) ([]sources.Source, 
 		Int("count", len(results)).
 		Msg("searched sources")
 
-	// TODO: rerank results with fuzzy search
-	return adaptSources(results), nil
+	adaptedSources := adaptSources(results)
+	return fuzzyReRank(adaptedSources, query), nil
 }
 
 // Adapter function to convert fetcher.Source to sources.Source
@@ -91,4 +95,57 @@ func adaptSources(fetcherSources []fetcher.Source) []sources.Source {
 		}
 	}
 	return result
+}
+
+// sourceWithSearchText holds a source and its searchable text for fuzzy matching
+type sourceWithSearchText struct {
+	source     sources.Source
+	searchText string
+}
+
+// fuzzyReRank reranks sources using fuzzy search scoring
+func fuzzyReRank(input []sources.Source, query string) []sources.Source {
+	if len(input) == 0 || query == "" {
+		return input
+	}
+
+	query = strings.TrimSpace(query)
+
+	sourcesWithText := make([]sourceWithSearchText, len(input))
+	searchTexts := make([]string, len(input))
+
+	for i, source := range input {
+		searchText := buildSearchText(source)
+		sourcesWithText[i] = sourceWithSearchText{
+			source:     source,
+			searchText: searchText,
+		}
+		searchTexts[i] = searchText
+	}
+
+	ranks := fuzzy.RankFindNormalizedFold(query, searchTexts)
+
+	result := make([]sources.Source, len(ranks))
+	for i, rank := range ranks {
+		result[i] = sourcesWithText[rank.OriginalIndex].source
+	}
+
+	return result
+}
+
+// buildSearchText creates a searchable text string from a source's key fields
+func buildSearchText(source sources.Source) string {
+	parts := []string{
+		source.Name(),
+		source.Description(),
+	}
+
+	var nonEmptyParts []string
+	for _, part := range parts {
+		if strings.TrimSpace(part) != "" {
+			nonEmptyParts = append(nonEmptyParts, part)
+		}
+	}
+
+	return strings.Join(nonEmptyParts, " ")
 }
