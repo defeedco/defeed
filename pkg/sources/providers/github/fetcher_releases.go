@@ -22,10 +22,6 @@ func NewReleasesFetcher(logger *zerolog.Logger) *ReleasesFetcher {
 }
 
 func (f *ReleasesFetcher) Search(ctx context.Context, query string) ([]fetcher.Source, error) {
-	if query == "" {
-		return nil, nil
-	}
-
 	// TODO: Move to config struct
 	token := os.Getenv("GITHUB_TOKEN")
 	var client *github.Client
@@ -35,7 +31,14 @@ func (f *ReleasesFetcher) Search(ctx context.Context, query string) ([]fetcher.S
 		client = github.NewClient(nil)
 	}
 
-	searchResult, _, err := client.Search.Repositories(ctx, query, &github.SearchOptions{
+	var searchQuery string
+	if query == "" {
+		searchQuery = trendingRepositoriesQuery()
+	} else {
+		searchQuery = query
+	}
+
+	searchResult, _, err := client.Search.Repositories(ctx, searchQuery, &github.SearchOptions{
 		ListOptions: github.ListOptions{
 			PerPage: 10,
 		},

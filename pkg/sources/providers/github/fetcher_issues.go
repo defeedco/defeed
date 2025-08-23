@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/fetcher"
 	"github.com/google/go-github/v72/github"
@@ -22,10 +23,6 @@ func NewIssuesFetcher(logger *zerolog.Logger) *IssuesFetcher {
 }
 
 func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]fetcher.Source, error) {
-	if query == "" {
-		return nil, nil
-	}
-
 	// TODO: Move to config struct
 	token := os.Getenv("GITHUB_TOKEN")
 	var client *github.Client
@@ -35,7 +32,14 @@ func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]fetcher.Sou
 		client = github.NewClient(nil)
 	}
 
-	searchResult, _, err := client.Search.Repositories(ctx, query, &github.SearchOptions{
+	var searchQuery string
+	if query == "" {
+		searchQuery = trendingRepositoriesQuery()
+	} else {
+		searchQuery = query
+	}
+
+	searchResult, _, err := client.Search.Repositories(ctx, searchQuery, &github.SearchOptions{
 		ListOptions: github.ListOptions{
 			PerPage: 10,
 		},
@@ -57,9 +61,16 @@ func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]fetcher.Sou
 	}
 
 	f.Logger.Debug().
-		Str("query", query).
+		Str("original_query", query).
+		Str("search_query", searchQuery).
 		Int("results", len(sources)).
 		Msg("GitHub Issues fetcher found repositories")
 
 	return sources, nil
+}
+
+// trendingRepositoriesQuery returns an approximate query for trending repositories
+func trendingRepositoriesQuery() string {
+	oneMonthAgo := time.Now().AddDate(0, -1, 0).Format(time.DateOnly)
+	return fmt.Sprintf("created:>%s stars:>1000 sort:stars-desc", oneMonthAgo)
 }
