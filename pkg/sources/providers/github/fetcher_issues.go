@@ -3,10 +3,10 @@ package github
 import (
 	"context"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/types"
 	"os"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/sources/fetcher"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
@@ -22,7 +22,7 @@ func NewIssuesFetcher(logger *zerolog.Logger) *IssuesFetcher {
 	}
 }
 
-func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]fetcher.Source, error) {
+func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
 	// TODO: Move to config struct
 	token := os.Getenv("GITHUB_TOKEN")
 	var client *github.Client
@@ -48,7 +48,7 @@ func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]fetcher.Sou
 		return nil, fmt.Errorf("search repositories: %w", err)
 	}
 
-	var sources []fetcher.Source
+	var sources []types.Source
 	for _, repo := range searchResult.Repositories {
 		if repo.FullName == nil {
 			continue

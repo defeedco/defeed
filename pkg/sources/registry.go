@@ -1,14 +1,13 @@
-package presets
+package sources
 
 import (
 	"context"
 	_ "embed"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/sources"
-	"github.com/glanceapp/glance/pkg/sources/fetcher"
 	"github.com/glanceapp/glance/pkg/sources/providers/github"
 	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
 	"github.com/glanceapp/glance/pkg/sources/providers/lobsters"
@@ -22,13 +21,13 @@ import (
 
 // Registry manages available source configurations through fetchers.
 type Registry struct {
-	fetchers []fetcher.Fetcher
+	fetchers []types.Fetcher
 	logger   *zerolog.Logger
 }
 
 func NewRegistry(logger *zerolog.Logger) *Registry {
 	return &Registry{
-		fetchers: make([]fetcher.Fetcher, 0),
+		fetchers: make([]types.Fetcher, 0),
 		logger:   logger,
 	}
 }
@@ -57,12 +56,12 @@ func (r *Registry) Initialize() error {
 }
 
 // Search searches for sources from available fetchers
-func (r *Registry) Search(ctx context.Context, query string) ([]sources.Source, error) {
+func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.SetLimit(len(r.fetchers))
 
-	results := make([]fetcher.Source, len(r.fetchers))
+	results := make([]types.Source, len(r.fetchers))
 	for _, f := range r.fetchers {
 		g.Go(func() error {
 			res, err := f.Search(gctx, query)
@@ -88,10 +87,10 @@ func (r *Registry) Search(ctx context.Context, query string) ([]sources.Source, 
 }
 
 // Adapter function to convert fetcher.Source to sources.Source
-func adaptSources(fetcherSources []fetcher.Source) []sources.Source {
-	var result []sources.Source
+func adaptSources(fetcherSources []types.Source) []types.Source {
+	var result []types.Source
 	for _, fs := range fetcherSources {
-		if s, ok := fs.(sources.Source); ok {
+		if s, ok := fs.(types.Source); ok {
 			result = append(result, s)
 		}
 	}
@@ -100,12 +99,12 @@ func adaptSources(fetcherSources []fetcher.Source) []sources.Source {
 
 // sourceWithSearchText holds a source and its searchable text for fuzzy matching
 type sourceWithSearchText struct {
-	source     sources.Source
+	source     types.Source
 	searchText string
 }
 
 // fuzzyReRank reranks sources using fuzzy search scoring
-func fuzzyReRank(input []sources.Source, query string) []sources.Source {
+func fuzzyReRank(input []types.Source, query string) []types.Source {
 	if len(input) == 0 || query == "" {
 		return input
 	}
@@ -126,7 +125,7 @@ func fuzzyReRank(input []sources.Source, query string) []sources.Source {
 
 	ranks := fuzzy.RankFindNormalizedFold(query, searchTexts)
 
-	result := make([]sources.Source, len(ranks))
+	result := make([]types.Source, len(ranks))
 	for i, rank := range ranks {
 		result[i] = sourcesWithText[rank.OriginalIndex].source
 	}
@@ -135,7 +134,7 @@ func fuzzyReRank(input []sources.Source, query string) []sources.Source {
 }
 
 // buildSearchText creates a searchable text string from a source's key fields
-func buildSearchText(source sources.Source) string {
+func buildSearchText(source types.Source) string {
 	parts := []string{
 		source.Name(),
 		source.Description(),

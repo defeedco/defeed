@@ -2,9 +2,9 @@ package lobsters
 
 import (
 	"context"
+	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/sources/fetcher"
 	"github.com/rs/zerolog"
 )
 
@@ -45,9 +45,9 @@ var popularLobstersTags = []struct {
 	{"testing", "Software testing"},
 }
 
-func (f *TagFetcher) Search(ctx context.Context, query string) ([]fetcher.Source, error) {
+func (f *TagFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
 	query = strings.ToLower(query)
-	var matchingSources []fetcher.Source
+	var matchingSources []types.Source
 
 	for _, tag := range popularLobstersTags {
 		tagName := strings.ToLower(tag.tag)

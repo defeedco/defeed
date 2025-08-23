@@ -2,9 +2,9 @@ package mastodon
 
 import (
 	"context"
+	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/sources/fetcher"
 	"github.com/rs/zerolog"
 )
 
@@ -35,9 +35,9 @@ var popularMastodonTags = []struct {
 	{"rust", "Rust programming language"},
 }
 
-func (f *TagFetcher) Search(ctx context.Context, query string) ([]fetcher.Source, error) {
+func (f *TagFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
 	query = strings.ToLower(query)
-	var matchingSources []fetcher.Source
+	var matchingSources []types.Source
 
 	for _, tag := range popularMastodonTags {
 		tagName := strings.ToLower(tag.tag)

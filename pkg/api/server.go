@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	types2 "github.com/glanceapp/glance/pkg/sources/types"
 	"html/template"
 	"io"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/sources/presets"
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
 	"github.com/glanceapp/glance/pkg/sources/providers/github"
 	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
@@ -37,10 +37,10 @@ import (
 var openapiSpecYaml string
 
 type Server struct {
-	executor       *sources.Executor
-	presetRegistry *presets.Registry
-	logger         *zerolog.Logger
-	http           http.Server
+	executor *sources.Executor
+	registry *sources.Registry
+	logger   *zerolog.Logger
+	http     http.Server
 }
 
 var _ ServerInterface = (*Server)(nil)
@@ -71,17 +71,17 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		return nil, fmt.Errorf("initialize executor: %w", err)
 	}
 
-	presetRegistry := presets.NewRegistry(logger)
-	if err := presetRegistry.Initialize(); err != nil {
+	registry := sources.NewRegistry(logger)
+	if err := registry.Initialize(); err != nil {
 		return nil, fmt.Errorf("initialize preset registry: %w", err)
 	}
 
 	mux := http.NewServeMux()
 
 	server := &Server{
-		logger:         logger,
-		presetRegistry: presetRegistry,
-		executor:       executor,
+		logger:   logger,
+		registry: registry,
+		executor: executor,
 		http: http.Server{
 			Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 			Handler: corsMiddleware(mux, cfg.CORSOrigin),
@@ -171,7 +171,7 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params List
 		query = *params.Query
 	}
 
-	result, err := s.presetRegistry.Search(r.Context(), query)
+	result, err := s.registry.Search(r.Context(), query)
 	if err != nil {
 		s.internalError(w, err, "search source presets")
 		return
@@ -364,7 +364,7 @@ func (s *Server) badRequest(w http.ResponseWriter, err error, msg string) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
 }
 
-func deserializeCreateSourceRequest(req CreateSourceRequest) (sources.Source, error) {
+func deserializeCreateSourceRequest(req CreateSourceRequest) (types2.Source, error) {
 	disc, err := req.Discriminator()
 	if err != nil {
 		return nil, fmt.Errorf("read discriminator: %w", err)
@@ -495,7 +495,7 @@ func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
 	}, nil
 }
 
-func serializeSources(in []sources.Source) ([]Source, error) {
+func serializeSources(in []types2.Source) ([]Source, error) {
 	out := make([]Source, 0, len(in))
 
 	for _, e := range in {
@@ -509,7 +509,7 @@ func serializeSources(in []sources.Source) ([]Source, error) {
 	return out, nil
 }
 
-func serializeSource(in sources.Source) (Source, error) {
+func serializeSource(in types2.Source) (Source, error) {
 	sourceType, err := serializeSourceType(in.Type())
 	if err != nil {
 		return Source{}, fmt.Errorf("serialize source type: %w", err)

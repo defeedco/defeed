@@ -5,9 +5,9 @@ import (
 	_ "embed"
 	"fmt"
 	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/sources/fetcher"
 	"github.com/rs/zerolog"
 )
 
@@ -33,10 +33,10 @@ func NewFeedFetcher(logger *zerolog.Logger) (*FeedFetcher, error) {
 	}, nil
 }
 
-func (f *FeedFetcher) Search(ctx context.Context, query string) ([]fetcher.Source, error) {
+func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
 	if query == "" {
 		// Convert to fetcher.Source interface
-		var fetcherSources []fetcher.Source
+		var fetcherSources []types.Source
 		for _, s := range f.OpmlSources {
 			fetcherSources = append(fetcherSources, s)
 		}
@@ -44,7 +44,7 @@ func (f *FeedFetcher) Search(ctx context.Context, query string) ([]fetcher.Sourc
 	}
 
 	query = strings.ToLower(query)
-	var matchingSources []fetcher.Source
+	var matchingSources []types.Source
 
 	for _, rssSource := range f.OpmlSources {
 		title := strings.ToLower(rssSource.Title)

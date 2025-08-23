@@ -2,9 +2,9 @@ package lobsters
 
 import (
 	"context"
+	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/sources/fetcher"
 	"github.com/rs/zerolog"
 )
 
@@ -27,9 +27,9 @@ var lobstersFeeds = []struct {
 	{"newest", "Newest posts from Lobsters"},
 }
 
-func (f *FeedFetcher) Search(ctx context.Context, query string) ([]fetcher.Source, error) {
+func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
 	query = strings.ToLower(query)
-	var matchingSources []fetcher.Source
+	var matchingSources []types.Source
 
 	for _, feed := range lobstersFeeds {
 		feedName := strings.ToLower(feed.feedName)

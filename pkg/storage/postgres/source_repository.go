@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent"
@@ -18,7 +19,7 @@ func NewSourceRepository(db *DB) *SourceRepository {
 	return &SourceRepository{db: db}
 }
 
-func (r *SourceRepository) Add(s sources.Source) error {
+func (r *SourceRepository) Add(s types.Source) error {
 	ctx := context.Background()
 
 	rawJson, err := json.Marshal(s)
@@ -42,7 +43,7 @@ func (r *SourceRepository) Remove(uid string) error {
 	return r.db.Client().Source.DeleteOneID(uid).Exec(ctx)
 }
 
-func (r *SourceRepository) List() ([]sources.Source, error) {
+func (r *SourceRepository) List() ([]types.Source, error) {
 	ctx := context.Background()
 
 	sourcesEnt, err := r.db.Client().Source.Query().All(ctx)
@@ -50,7 +51,7 @@ func (r *SourceRepository) List() ([]sources.Source, error) {
 		return nil, err
 	}
 
-	result := make([]sources.Source, len(sourcesEnt))
+	result := make([]types.Source, len(sourcesEnt))
 	for i, s := range sourcesEnt {
 		out, err := sourceFromEnt(s)
 		if err != nil {
@@ -62,7 +63,7 @@ func (r *SourceRepository) List() ([]sources.Source, error) {
 	return result, nil
 }
 
-func (r *SourceRepository) GetByID(uid string) (sources.Source, error) {
+func (r *SourceRepository) GetByID(uid string) (types.Source, error) {
 	ctx := context.Background()
 
 	s, err := r.db.Client().Source.Query().Where(source.ID(uid)).Only(ctx)
@@ -76,7 +77,7 @@ func (r *SourceRepository) GetByID(uid string) (sources.Source, error) {
 	return sourceFromEnt(s)
 }
 
-func sourceFromEnt(in *ent.Source) (sources.Source, error) {
+func sourceFromEnt(in *ent.Source) (types.Source, error) {
 	out, err := sources.NewSource(in.Type)
 	if err != nil {
 		return nil, fmt.Errorf("new source: %w", err)

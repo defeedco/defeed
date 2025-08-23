@@ -2,9 +2,9 @@ package hackernews
 
 import (
 	"context"
+	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/sources/fetcher"
 	"github.com/rs/zerolog"
 )
 
@@ -28,9 +28,9 @@ var hackerNewsFeeds = []struct {
 	{"best", "Best posts from Hacker News"},
 }
 
-func (f *PostsFetcher) Search(ctx context.Context, query string) ([]fetcher.Source, error) {
+func (f *PostsFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
 	query = strings.ToLower(query)
-	var matchingSources []fetcher.Source
+	var matchingSources []types.Source
 
 	for _, feed := range hackerNewsFeeds {
 		feedName := strings.ToLower(feed.name)

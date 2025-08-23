@@ -3,6 +3,7 @@ package sources
 import (
 	"context"
 	"fmt"
+	types2 "github.com/glanceapp/glance/pkg/sources/types"
 	"sort"
 	"sync"
 
@@ -34,10 +35,10 @@ type Executor struct {
 }
 
 type sourceStore interface {
-	Add(source Source) error
+	Add(source types2.Source) error
 	Remove(uid string) error
-	List() ([]Source, error)
-	GetByID(uid string) (Source, error)
+	List() ([]types2.Source, error)
+	GetByID(uid string) (types2.Source, error)
 }
 
 type activityStore interface {
@@ -123,7 +124,7 @@ func (r *Executor) Initialize() error {
 	return nil
 }
 
-func (r *Executor) Add(source Source) error {
+func (r *Executor) Add(source types2.Source) error {
 	existing, _ := r.sourceRepo.GetByID(source.UID())
 
 	if existing != nil {
@@ -173,11 +174,11 @@ func (r *Executor) Remove(uid string) error {
 	return nil
 }
 
-func (r *Executor) Sources() ([]Source, error) {
+func (r *Executor) Sources() ([]types2.Source, error) {
 	return r.sourceRepo.List()
 }
 
-func (r *Executor) Source(uid string) (Source, error) {
+func (r *Executor) Source(uid string) (types2.Source, error) {
 	return r.sourceRepo.GetByID(uid)
 }
 
@@ -313,7 +314,7 @@ func (r *Executor) Summary(ctx context.Context, query string, sourceUIDs []strin
 	return r.summarizer.SummarizeMany(ctx, activities, query)
 }
 
-func sourceLogger(source Source, logger *zerolog.Logger) *zerolog.Logger {
+func sourceLogger(source types2.Source, logger *zerolog.Logger) *zerolog.Logger {
 	out := logger.With().
 		Str("source_type", source.Type()).
 		Str("source_uid", source.UID()).
