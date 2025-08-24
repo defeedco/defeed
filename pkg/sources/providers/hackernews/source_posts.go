@@ -27,8 +27,8 @@ func NewSourcePosts() *SourcePosts {
 	}
 }
 
-func (s *SourcePosts) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeHackerNewsPosts, s.FeedName)
+func (s *SourcePosts) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeHackerNewsPosts, s.FeedName)
 }
 
 func (s *SourcePosts) Name() string {
@@ -55,9 +55,9 @@ func (s *SourcePosts) URL() string {
 func (s *SourcePosts) Validate() []error { return lib.ValidateStruct(s) }
 
 type Post struct {
-	Post            *gohn.Item   `json:"post"`
-	ArticleTextBody string       `json:"article_text_body"`
-	SourceID        lib.TypedUID `json:"source_id"`
+	Post            *gohn.Item     `json:"post"`
+	ArticleTextBody string         `json:"article_text_body"`
+	SourceID        types.TypedUID `json:"source_id"`
 }
 
 func NewPost() *Post {
@@ -87,11 +87,11 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (p *Post) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeHackerNewsPosts, fmt.Sprintf("%d", *p.Post.ID))
+func (p *Post) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeHackerNewsPosts, fmt.Sprintf("%d", *p.Post.ID))
 }
 
-func (p *Post) SourceUID() lib.TypedUID {
+func (p *Post) SourceUID() types.TypedUID {
 	return p.SourceID
 }
 

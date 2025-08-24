@@ -27,7 +27,7 @@ func NewIssuesSource() *SourceIssues {
 	return &SourceIssues{}
 }
 
-func (s *SourceIssues) UID() lib.TypedUID {
+func (s *SourceIssues) UID() types.TypedUID {
 	return &TypedUID{
 		Typ:   TypeGithubIssues,
 		Owner: s.Owner,
@@ -75,10 +75,10 @@ func (s *SourceIssues) UnmarshalJSON(data []byte) error {
 }
 
 type Issue struct {
-	Owner    string        `json:"owner"`
-	Repo     string        `json:"repo"`
-	Issue    *github.Issue `json:"issue"`
-	SourceID lib.TypedUID  `json:"source_id"`
+	Owner    string         `json:"owner"`
+	Repo     string         `json:"repo"`
+	Issue    *github.Issue  `json:"issue"`
+	SourceID types.TypedUID `json:"source_id"`
 }
 
 func NewIssue() *Issue {
@@ -108,11 +108,11 @@ func (i *Issue) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (i *Issue) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeGithubIssues, fmt.Sprintf("%d", i.Issue.GetNumber()))
+func (i *Issue) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeGithubIssues, fmt.Sprintf("%d", i.Issue.GetNumber()))
 }
 
-func (i *Issue) SourceUID() lib.TypedUID {
+func (i *Issue) SourceUID() types.TypedUID {
 	return i.SourceID
 }
 

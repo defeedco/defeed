@@ -2,6 +2,7 @@ package mastodon
 
 import (
 	"encoding/json"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"regexp"
 	"strings"
 	"time"
@@ -14,7 +15,7 @@ import (
 
 type Post struct {
 	Status    *mastodon.Status `json:"status"`
-	SourceID  lib.TypedUID     `json:"source_id"`
+	SourceID  types.TypedUID   `json:"source_id"`
 	SourceTyp string           `json:"source_type"`
 }
 
@@ -45,11 +46,11 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (p *Post) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(p.SourceTyp, string(p.Status.ID))
+func (p *Post) UID() types.TypedUID {
+	return lib.NewTypedUID(p.SourceTyp, string(p.Status.ID))
 }
 
-func (p *Post) SourceUID() lib.TypedUID {
+func (p *Post) SourceUID() types.TypedUID {
 	return p.SourceID
 }
 

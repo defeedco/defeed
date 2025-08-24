@@ -44,8 +44,8 @@ func NewSourceFeed() *SourceFeed {
 	return &SourceFeed{}
 }
 
-func (s *SourceFeed) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeRSSFeed, lib.StripURL(s.FeedURL))
+func (s *SourceFeed) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeRSSFeed, lib.StripURL(s.FeedURL))
 }
 
 func (s *SourceFeed) Name() string {
@@ -143,10 +143,10 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activ
 }
 
 type FeedItem struct {
-	Item      *gofeed.Item `json:"item"`
-	FeedURL   string       `json:"feed_url"`
-	SourceID  lib.TypedUID `json:"source_id"`
-	SourceTyp string       `json:"source_type"`
+	Item      *gofeed.Item   `json:"item"`
+	FeedURL   string         `json:"feed_url"`
+	SourceID  types.TypedUID `json:"source_id"`
+	SourceTyp string         `json:"source_type"`
 }
 
 func NewFeedItem() *FeedItem {
@@ -172,15 +172,15 @@ func (e *FeedItem) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (e *FeedItem) UID() lib.TypedUID {
+func (e *FeedItem) UID() types.TypedUID {
 	id := e.Item.GUID
 	if id == "" {
 		id = lib.StripURL(e.URL())
 	}
-	return lib.NewSimpleTypedUID(e.SourceTyp, id)
+	return lib.NewTypedUID(e.SourceTyp, id)
 }
 
-func (e *FeedItem) SourceUID() lib.TypedUID {
+func (e *FeedItem) SourceUID() types.TypedUID {
 	return e.SourceID
 }
 

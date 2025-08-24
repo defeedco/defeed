@@ -30,7 +30,7 @@ func NewReleaseSource() *SourceRelease {
 	}
 }
 
-func (s *SourceRelease) UID() lib.TypedUID {
+func (s *SourceRelease) UID() types.TypedUID {
 	return &TypedUID{
 		Typ:   TypeGithubReleases,
 		Owner: s.Owner,
@@ -118,7 +118,7 @@ type Release struct {
 	Owner    string                    `json:"owner"`
 	Repo     string                    `json:"repo"`
 	Release  *github.RepositoryRelease `json:"release"`
-	SourceID lib.TypedUID              `json:"source_id"`
+	SourceID types.TypedUID            `json:"source_id"`
 }
 
 func NewRelease() *Release {
@@ -148,11 +148,11 @@ func (r *Release) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (r *Release) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeGithubReleases, fmt.Sprintf("%d", r.Release.GetID()))
+func (r *Release) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeGithubReleases, fmt.Sprintf("%d", r.Release.GetID()))
 }
 
-func (r *Release) SourceUID() lib.TypedUID {
+func (r *Release) SourceUID() types.TypedUID {
 	return r.SourceID
 }
 

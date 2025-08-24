@@ -11,7 +11,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/lib"
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
@@ -473,7 +472,7 @@ func serializeFeed(in *feeds.Feed) Feed {
 	}
 }
 
-func serializeSourceUIDs(in []lib.TypedUID) []string {
+func serializeSourceUIDs(in []types.TypedUID) []string {
 	out := make([]string, len(in))
 	for i, uid := range in {
 		out[i] = uid.String()
@@ -572,8 +571,8 @@ func serializeSourceType(in string) (SourceType, error) {
 	return "", fmt.Errorf("unknown source type: %s", in)
 }
 
-func deserializeSourceUIDs(in []string) ([]lib.TypedUID, error) {
-	out := make([]lib.TypedUID, len(in))
+func deserializeSourceUIDs(in []string) ([]types.TypedUID, error) {
+	out := make([]types.TypedUID, len(in))
 	for i, uid := range in {
 		uid, err := sources.NewTypedUID(uid)
 		if err != nil {

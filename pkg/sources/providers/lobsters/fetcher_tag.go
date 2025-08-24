@@ -3,6 +3,7 @@ package lobsters
 import (
 	"context"
 	"fmt"
+	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
@@ -101,7 +102,7 @@ var tagSources = []types.Source{
 	},
 }
 
-func (f *TagFetcher) FindByID(ctx context.Context, id lib.TypedUID) (types.Source, error) {
+func (f *TagFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
 	for _, source := range tagSources {
 		if lib.Equals(source.UID(), id) {
 			return source, nil

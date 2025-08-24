@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources"
 	activities "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/google/uuid"
@@ -20,7 +19,7 @@ type Feed struct {
 	// Query is a semantic search query.
 	Query string
 	// SourceUIDs is a list of sources where activities are pulled from.
-	SourceUIDs []lib.TypedUID
+	SourceUIDs []activities.TypedUID
 	// UserID is the user who owns the feed.
 	UserID string
 
@@ -49,7 +48,7 @@ type FeedParameters struct {
 	UserID     string
 	Query      string
 	SortBy     activities.SortBy
-	SourceUIDs []lib.TypedUID
+	SourceUIDs []activities.TypedUID
 }
 
 func (p FeedParameters) Equal(p1 FeedParameters) bool {
@@ -89,7 +88,7 @@ type CreateFeedRequest struct {
 	Name       string
 	Icon       string
 	Query      string
-	SourceUIDs []lib.TypedUID
+	SourceUIDs []activities.TypedUID
 	UserID     string
 }
 
@@ -127,7 +126,6 @@ func (r *Registry) Update(ctx context.Context, request Feed) error {
 }
 
 func (r *Registry) executeAndUpsert(ctx context.Context, feed Feed) error {
-	// TODO: Add the sources to the executor
 	err := r.store.Upsert(ctx, feed)
 	if err != nil {
 		return fmt.Errorf("upsert feed: %w", err)
@@ -138,7 +136,11 @@ func (r *Registry) executeAndUpsert(ctx context.Context, feed Feed) error {
 		if err != nil {
 			return fmt.Errorf("find source: %w", err)
 		}
-		r.sourceExecutor.Add(source)
+
+		err = r.sourceExecutor.Add(source)
+		if err != nil {
+			return fmt.Errorf("add source to executor: %w", err)
+		}
 	}
 
 	return nil

@@ -26,8 +26,8 @@ func NewSourceFeed() *SourceFeed {
 	}
 }
 
-func (s *SourceFeed) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeLobstersFeed, lib.StripURL(s.InstanceURL), s.FeedName)
+func (s *SourceFeed) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeLobstersFeed, lib.StripURL(s.InstanceURL), s.FeedName)
 }
 
 func (s *SourceFeed) Name() string {

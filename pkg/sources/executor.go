@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/glanceapp/glance/pkg/lib"
-
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
@@ -101,7 +99,7 @@ func (r *Executor) Initialize() error {
 		}
 
 		activities, err := r.activityRepo.Search(types.SearchRequest{
-			SourceUIDs: []lib.TypedUID{source.UID()},
+			SourceUIDs: []types.TypedUID{source.UID()},
 			Limit:      1,
 			SortBy:     types.SortByDate,
 		})
@@ -251,7 +249,7 @@ func (r *Executor) Shutdown() {
 	r.cancelBySourceID.Clear()
 }
 
-func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []lib.TypedUID, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
+func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []types.TypedUID, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
 	req := types.SearchRequest{
 		SourceUIDs:    sourceUIDs,
 		MinSimilarity: minSimilarity,

@@ -3,10 +3,10 @@ package github
 import (
 	"context"
 	"fmt"
+	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"os"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/google/go-github/v72/github"
@@ -28,7 +28,7 @@ func (f *IssuesFetcher) SourceType() string {
 	return TypeGithubIssues
 }
 
-func (f *IssuesFetcher) FindByID(ctx context.Context, id lib.TypedUID) (types.Source, error) {
+func (f *IssuesFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
 	// TODO: Move to Initialize() func and read from Config struct (add to providers/config.go)
 	token := os.Getenv("GITHUB_TOKEN")
 	var client *github.Client

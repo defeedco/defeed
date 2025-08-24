@@ -5,8 +5,8 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
-	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"strings"
@@ -58,7 +58,7 @@ func (r *Registry) Initialize() error {
 	return nil
 }
 
-func (r *Registry) FindByUID(ctx context.Context, uid lib.TypedUID) (types.Source, error) {
+func (r *Registry) FindByUID(ctx context.Context, uid types2.TypedUID) (types.Source, error) {
 	var fetcher types.Fetcher
 	for _, f := range r.fetchers {
 		if f.SourceType() == uid.Type() {

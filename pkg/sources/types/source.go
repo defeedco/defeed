@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/lib"
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
@@ -14,7 +13,7 @@ type Source interface {
 	json.Marshaler
 	json.Unmarshaler
 	// UID is the unique identifier for the source.
-	UID() lib.TypedUID
+	UID() activitytypes.TypedUID
 	// Name is a short human-readable descriptor.
 	// Example: "Programming Subreddit"
 	Name() string

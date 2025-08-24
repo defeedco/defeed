@@ -3,6 +3,7 @@ package reddit
 import (
 	"context"
 	"fmt"
+	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
@@ -148,7 +149,7 @@ var popularSubredditSources = []types.Source{
 	},
 }
 
-func (f *SubredditFetcher) FindByID(ctx context.Context, id lib.TypedUID) (types.Source, error) {
+func (f *SubredditFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
 	for _, source := range popularSubredditSources {
 		if lib.Equals(source.UID(), id) {
 			return source, nil

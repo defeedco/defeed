@@ -2,9 +2,8 @@ package github
 
 import (
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"strings"
-
-	"github.com/glanceapp/glance/pkg/lib"
 )
 
 // TypedUID is a custom TypedUID implementation for GitHub repository sources.
@@ -36,7 +35,7 @@ func (s TypedUID) String() string {
 	return fmt.Sprintf("%s:%s:%s", s.Typ, s.Owner, s.Repo)
 }
 
-func NewTypedUIDFromString(s string) (lib.TypedUID, error) {
+func NewTypedUIDFromString(s string) (types.TypedUID, error) {
 	parts := strings.SplitN(s, ":", 3)
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("invalid GitHub typed UID: %s", s)

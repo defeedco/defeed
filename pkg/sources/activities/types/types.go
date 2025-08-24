@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"github.com/glanceapp/glance/pkg/lib"
 	"time"
 )
 
@@ -11,13 +10,21 @@ type Activity interface {
 	json.Unmarshaler
 	// UID is the unique identifier for the activity.
 	// It should not contain any slashes.
-	UID() lib.TypedUID
-	SourceUID() lib.TypedUID
+	UID() TypedUID
+	SourceUID() TypedUID
 	Title() string
 	Body() string
 	URL() string
 	ImageURL() string
 	CreatedAt() time.Time
+}
+
+// TypedUID is a semi-structured ID format for easy resource type extraction.
+type TypedUID interface {
+	json.Marshaler
+	json.Unmarshaler
+	Type() string
+	String() string
 }
 
 type ActivitySummary struct {
@@ -54,8 +61,8 @@ type SearchRequest struct {
 	// MinSimilarity filters out entries with lower vector embedding similarity
 	MinSimilarity float32
 	// SourceUIDs ignored if empty
-	SourceUIDs []lib.TypedUID
-	// Limit maximum number of results to return
+	SourceUIDs []TypedUID
+	// Limit the maximum number of results to return
 	Limit int
 	// SortBy specifies the field to sort results by (similarity or date)
 	SortBy SortBy

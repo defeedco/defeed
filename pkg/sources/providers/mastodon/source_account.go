@@ -28,8 +28,8 @@ func NewSourceAccount() *SourceAccount {
 	}
 }
 
-func (s *SourceAccount) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeMastodonAccount, lib.StripURL(s.InstanceURL), s.Account)
+func (s *SourceAccount) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeMastodonAccount, lib.StripURL(s.InstanceURL), s.Account)
 }
 
 func (s *SourceAccount) Name() string {

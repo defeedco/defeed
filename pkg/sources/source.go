@@ -2,6 +2,7 @@ package sources
 
 import (
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"strings"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -15,13 +16,13 @@ import (
 	sourcestypes "github.com/glanceapp/glance/pkg/sources/types"
 )
 
-func NewTypedUID(uid string) (lib.TypedUID, error) {
+func NewTypedUID(uid string) (types.TypedUID, error) {
 	parts := strings.SplitN(uid, ":", 2)
 	switch parts[0] {
 	case github.TypeGithubIssues, github.TypeGithubReleases:
 		return github.NewTypedUIDFromString(uid)
 	default:
-		return lib.NewSimpleTypedUIDFromString(uid)
+		return lib.NewTypedUIDFromString(uid)
 	}
 }
 

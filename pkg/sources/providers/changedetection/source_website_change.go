@@ -26,8 +26,8 @@ func NewSourceWebsiteChange() *SourceWebsiteChange {
 	return &SourceWebsiteChange{}
 }
 
-func (s *SourceWebsiteChange) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeChangedetectionWebsite, lib.StripURL(s.InstanceURL), s.WatchUUID)
+func (s *SourceWebsiteChange) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeChangedetectionWebsite, lib.StripURL(s.InstanceURL), s.WatchUUID)
 }
 
 func (s *SourceWebsiteChange) Name() string {
@@ -130,7 +130,7 @@ type WebsiteChange struct {
 	lastChanged  time.Time
 	diffURL      string
 	previousHash string
-	sourceUID    lib.TypedUID
+	sourceUID    types.TypedUID
 }
 
 func NewWebsiteChange() *WebsiteChange {
@@ -167,12 +167,12 @@ func (c *WebsiteChange) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (c *WebsiteChange) SourceUID() lib.TypedUID {
+func (c *WebsiteChange) SourceUID() types.TypedUID {
 	return c.sourceUID
 }
 
-func (c *WebsiteChange) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeChangedetectionWebsite, lib.StripURL(c.url), fmt.Sprintf("%d", c.lastChanged.Unix()))
+func (c *WebsiteChange) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeChangedetectionWebsite, lib.StripURL(c.url), fmt.Sprintf("%d", c.lastChanged.Unix()))
 }
 
 func (c *WebsiteChange) Title() string {

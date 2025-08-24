@@ -26,8 +26,8 @@ func NewSourceTag() *SourceTag {
 	}
 }
 
-func (s *SourceTag) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeLobstersTag, lib.StripURL(s.InstanceURL), s.Tag)
+func (s *SourceTag) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeLobstersTag, lib.StripURL(s.InstanceURL), s.Tag)
 }
 
 func (s *SourceTag) Name() string {

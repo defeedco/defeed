@@ -34,8 +34,8 @@ func NewSourceSubreddit() *SourceSubreddit {
 	return &SourceSubreddit{}
 }
 
-func (s *SourceSubreddit) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
+func (s *SourceSubreddit) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
 }
 
 func (s *SourceSubreddit) Name() string {
@@ -71,10 +71,10 @@ func (s *SourceSubreddit) URL() string {
 func (s *SourceSubreddit) Validate() []error { return lib.ValidateStruct(s) }
 
 type Post struct {
-	Post            *reddit.Post `json:"post"`
-	ExternalContent string       `json:"external_content"`
-	SourceID        lib.TypedUID `json:"source_id"`
-	SourceTyp       string       `json:"source_type"`
+	Post            *reddit.Post   `json:"post"`
+	ExternalContent string         `json:"external_content"`
+	SourceID        types.TypedUID `json:"source_id"`
+	SourceTyp       string         `json:"source_type"`
 }
 
 func NewPost() *Post {
@@ -104,11 +104,11 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (p *Post) UID() lib.TypedUID {
-	return lib.NewSimpleTypedUID(p.SourceTyp, p.Post.ID)
+func (p *Post) UID() types.TypedUID {
+	return lib.NewTypedUID(p.SourceTyp, p.Post.ID)
 }
 
-func (p *Post) SourceUID() lib.TypedUID {
+func (p *Post) SourceUID() types.TypedUID {
 	return p.SourceID
 }
 
