@@ -216,7 +216,7 @@ func (r *Registry) summarize(ctx context.Context, query string, sourceUIDs []act
 	return summary, nil
 }
 
-func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy activities.SortBy, queryOverride string) ([]*activities.DecoratedActivity, error) {
+func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy activities.SortBy, limit int, queryOverride string) ([]*activities.DecoratedActivity, error) {
 	feed, err := r.store.GetByID(ctx, feedID)
 	if err != nil {
 		return nil, fmt.Errorf("get feed: %w", err)
@@ -232,7 +232,7 @@ func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy
 	}
 
 	// TODO(optimisation): Cache query embeddings
-	acts, err := r.sourceExecutor.Search(ctx, feed.Query, feed.SourceUIDs, 0.0, 20, sortBy)
+	acts, err := r.sourceExecutor.Search(ctx, feed.Query, feed.SourceUIDs, 0.0, limit, sortBy)
 	if err != nil {
 		return nil, fmt.Errorf("search activities: %w", err)
 	}

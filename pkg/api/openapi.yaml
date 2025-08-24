@@ -185,6 +185,12 @@ paths:
           description: Filter query. Authenticated users can override the default feed query.
           schema:
             type: string
+        - name: limit
+          in: query
+          description: Maximum number of activities to return.
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
           description: Activities list

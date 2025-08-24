@@ -37,7 +37,9 @@ import (
 //go:embed openapi.yaml
 var openapiSpecYaml string
 
-const userIDContextKey = "userID"
+type UserIDContextKey string
+
+const userIDContextKey UserIDContextKey = "userID"
 
 type Server struct {
 	executor     *sources.Executor
@@ -206,13 +208,18 @@ func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid 
 		queryOverride = *params.Query
 	}
 
+	limit := 20
+	if params.Limit != nil {
+		limit = *params.Limit
+	}
+
 	sortBy, err := deserializeSortBy(params.SortBy)
 	if err != nil {
 		s.badRequest(w, err, "deserialize sort by")
 		return
 	}
 
-	out, err := s.feedRegistry.Activities(r.Context(), uid, userID, sortBy, queryOverride)
+	out, err := s.feedRegistry.Activities(r.Context(), uid, userID, sortBy, limit, queryOverride)
 	if err != nil {
 		s.internalError(w, err, "list feed activities")
 		return

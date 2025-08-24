@@ -469,10 +469,11 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
          * @param {string} uid 
          * @param {ActivitySortBy} [sortBy] Sort method.
          * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+         * @param {number} [limit] Maximum number of activities to return.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listFeedActivities: async (uid: string, sortBy?: ActivitySortBy, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        listFeedActivities: async (uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uid' is not null or undefined
             assertParamExists('listFeedActivities', 'uid', uid)
             const localVarPath = `/feeds/{uid}/activities`
@@ -498,6 +499,10 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
 
             if (query !== undefined) {
                 localVarQueryParameter['query'] = query;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
             }
 
 
@@ -645,11 +650,12 @@ export const FeedsApiFp = function(configuration?: Configuration) {
          * @param {string} uid 
          * @param {ActivitySortBy} [sortBy] Sort method.
          * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+         * @param {number} [limit] Maximum number of activities to return.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listFeedActivities(uid, sortBy, query, options);
+        async listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listFeedActivities(uid, sortBy, query, limit, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FeedsApi.listFeedActivities']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -727,11 +733,12 @@ export const FeedsApiFactory = function (configuration?: Configuration, basePath
          * @param {string} uid 
          * @param {ActivitySortBy} [sortBy] Sort method.
          * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+         * @param {number} [limit] Maximum number of activities to return.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
-            return localVarFp.listFeedActivities(uid, sortBy, query, options).then((request) => request(axios, basePath));
+        listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
+            return localVarFp.listFeedActivities(uid, sortBy, query, limit, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -806,12 +813,13 @@ export class FeedsApi extends BaseAPI {
      * @param {string} uid 
      * @param {ActivitySortBy} [sortBy] Sort method.
      * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+     * @param {number} [limit] Maximum number of activities to return.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeedsApi
      */
-    public listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, options?: RawAxiosRequestConfig) {
-        return FeedsApiFp(this.configuration).listFeedActivities(uid, sortBy, query, options).then((request) => request(this.axios, this.basePath));
+    public listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).listFeedActivities(uid, sortBy, query, limit, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

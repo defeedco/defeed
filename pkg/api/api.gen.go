@@ -122,6 +122,9 @@ type ListFeedActivitiesParams struct {
 
 	// Query Filter query. Authenticated users can override the default feed query.
 	Query *string `form:"query,omitempty" json:"query,omitempty"`
+
+	// Limit Maximum number of activities to return.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
 // GetFeedSummaryParams defines parameters for GetFeedSummary.
@@ -317,6 +320,14 @@ func (siw *ServerInterfaceWrapper) ListFeedActivities(w http.ResponseWriter, r *
 	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
 		return
 	}
 
