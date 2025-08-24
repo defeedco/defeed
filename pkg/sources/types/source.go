@@ -3,6 +3,8 @@ package types
 import (
 	"context"
 	"encoding/json"
+	"strings"
+
 	"github.com/glanceapp/glance/pkg/lib"
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
@@ -32,4 +34,19 @@ type Source interface {
 	// Err is a channel to send errors to.
 	// The caller should close the channels when done.
 	Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, err chan<- error)
+}
+
+func IsFuzzyMatch(source Source, query string) bool {
+	// Currently a very naive fuzzy match implementation.
+	query = strings.ToLower(query)
+
+	if strings.Contains(source.Name(), query) {
+		return true
+	}
+
+	if strings.Contains(source.Description(), query) {
+		return true
+	}
+
+	return false
 }

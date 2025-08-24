@@ -31,7 +31,7 @@ func (r *SourceRepository) Add(s types.Source) error {
 		SetID(s.UID().String()).
 		SetName(s.Name()).
 		SetURL(s.URL()).
-		SetType(s.UID().Type).
+		SetType(s.UID().Type()).
 		SetRawJSON(string(rawJson)).
 		Save(ctx)
 

@@ -2,8 +2,9 @@ package lobsters
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/rs/zerolog"
@@ -24,63 +25,112 @@ func (f *TagFetcher) SourceType() string {
 	return TypeLobstersTag
 }
 
-var popularLobstersTags = []struct {
-	tag         string
-	description string
-}{
-	{"programming", "Programming discussions and articles"},
-	{"javascript", "JavaScript programming"},
-	{"python", "Python programming"},
-	{"go", "Go programming language"},
-	{"rust", "Rust programming language"},
-	{"web", "Web development"},
-	{"security", "Security and cybersecurity topics"},
-	{"linux", "Linux operating system"},
-	{"opensource", "Open source projects"},
-	{"devops", "DevOps and infrastructure"},
-	{"databases", "Database technologies"},
-	{"ai", "Artificial intelligence"},
-	{"networking", "Computer networking"},
-	{"mobile", "Mobile development"},
-	{"performance", "Performance optimization"},
-	{"algorithms", "Algorithms and data structures"},
-	{"distributed", "Distributed systems"},
-	{"crypto", "Cryptography"},
-	{"containers", "Containers and Docker"},
-	{"testing", "Software testing"},
+var defaultInstanceURL = "https://lobste.rs"
+var tagSources = []types.Source{
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "programming",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "javascript",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "rust",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "web",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "security",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "linux",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "opensource",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "distributed",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "crypto",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "containers",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "testing",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "performance",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "algorithms",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "networking",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "mobile",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "devops",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "databases",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "ai",
+	},
+}
+
+func (f *TagFetcher) FindByID(ctx context.Context, id lib.TypedUID) (types.Source, error) {
+	for _, source := range tagSources {
+		if lib.Equals(source.UID(), id) {
+			return source, nil
+		}
+	}
+	return nil, fmt.Errorf("source not found")
 }
 
 func (f *TagFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	query = strings.ToLower(query)
+	if query == "" {
+		return tagSources, nil
+	}
+
 	var matchingSources []types.Source
-
-	for _, tag := range popularLobstersTags {
-		tagName := strings.ToLower(tag.tag)
-		description := strings.ToLower(tag.description)
-
-		if query == "" || strings.Contains(tagName, query) || strings.Contains(description, query) {
-			source := &SourceTag{
-				InstanceURL: "https://lobste.rs",
-				Tag:         tag.tag,
-			}
+	for _, source := range tagSources {
+		if types.IsFuzzyMatch(source, query) {
 			matchingSources = append(matchingSources, source)
 		}
 	}
 
 	// Custom tag (that's not necessarily valid) if no existing ones are found
 	// TODO: Handle this better
-	if query == "" && len(matchingSources) == 0 {
+	if query != "" && len(matchingSources) == 0 {
 		source := &SourceTag{
-			InstanceURL: "https://lobste.rs",
+			InstanceURL: defaultInstanceURL,
 			Tag:         query,
 		}
 		matchingSources = append(matchingSources, source)
 	}
-
-	f.Logger.Debug().
-		Str("query", query).
-		Int("matches", len(matchingSources)).
-		Msg("Lobsters Tag fetcher found tags")
 
 	return matchingSources, nil
 }

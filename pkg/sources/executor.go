@@ -274,7 +274,7 @@ func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []lib.Ty
 
 func sourceLogger(source sourcetypes.Source, logger *zerolog.Logger) *zerolog.Logger {
 	out := logger.With().
-		Str("source_type", source.UID().Type).
+		Str("source_type", source.UID().Type()).
 		Str("source_uid", source.UID().String()).
 		Logger()
 
@@ -284,7 +284,7 @@ func sourceLogger(source sourcetypes.Source, logger *zerolog.Logger) *zerolog.Lo
 func activityLogger(activity types.Activity, logger *zerolog.Logger) *zerolog.Logger {
 	out := logger.With().
 		Str("activity_id", activity.UID().String()).
-		Str("source_type", activity.UID().Type).
+		Str("source_type", activity.UID().Type()).
 		Str("source_uid", activity.SourceUID().String()).
 		Logger()
 

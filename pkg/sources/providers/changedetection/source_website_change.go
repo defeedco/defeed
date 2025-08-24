@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeChangedetectionWebsite = "changedetection:website"
+const TypeChangedetectionWebsite = "changedetectionwebsite"
 
 type SourceWebsiteChange struct {
 	WatchUUID   string `json:"watch" validate:"required"`
@@ -27,7 +27,7 @@ func NewSourceWebsiteChange() *SourceWebsiteChange {
 }
 
 func (s *SourceWebsiteChange) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeChangedetectionWebsite, lib.StripURL(s.InstanceURL), s.WatchUUID)
+	return lib.NewSimpleTypedUID(TypeChangedetectionWebsite, lib.StripURL(s.InstanceURL), s.WatchUUID)
 }
 
 func (s *SourceWebsiteChange) Name() string {
@@ -172,7 +172,7 @@ func (c *WebsiteChange) SourceUID() lib.TypedUID {
 }
 
 func (c *WebsiteChange) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeChangedetectionWebsite, lib.StripURL(c.url), fmt.Sprintf("%d", c.lastChanged.Unix()))
+	return lib.NewSimpleTypedUID(TypeChangedetectionWebsite, lib.StripURL(c.url), fmt.Sprintf("%d", c.lastChanged.Unix()))
 }
 
 func (c *WebsiteChange) Title() string {

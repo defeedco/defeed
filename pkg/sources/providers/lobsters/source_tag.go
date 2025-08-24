@@ -11,11 +11,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeLobstersTag = "lobsters:tag"
+const TypeLobstersTag = "lobsterstag"
 
 type SourceTag struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
-	CustomURL   string `json:"customUrl" validate:"omitempty,url"`
 	Tag         string `json:"tag" validate:"required"`
 	client      *LobstersClient
 	logger      *zerolog.Logger
@@ -28,7 +27,7 @@ func NewSourceTag() *SourceTag {
 }
 
 func (s *SourceTag) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeLobstersTag, lib.StripURL(s.InstanceURL), s.Tag)
+	return lib.NewSimpleTypedUID(TypeLobstersTag, lib.StripURL(s.InstanceURL), s.Tag)
 }
 
 func (s *SourceTag) Name() string {
@@ -68,14 +67,7 @@ func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<
 }
 
 func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	var stories []*Story
-	var err error
-
-	if s.CustomURL != "" {
-		stories, err = s.client.GetStoriesFromCustomURL(ctx, s.CustomURL)
-	} else {
-		stories, err = s.client.GetStoriesByTag(ctx, s.Tag)
-	}
+	stories, err := s.client.GetStoriesByTag(ctx, s.Tag)
 
 	if err != nil {
 		errs <- err

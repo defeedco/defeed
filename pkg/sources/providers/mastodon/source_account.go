@@ -12,11 +12,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeMastodonAccount = "mastodon:account"
+const TypeMastodonAccount = "mastodonaccount"
 
 type SourceAccount struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
 	Account     string `json:"account" validate:"required"`
+	AccountBio  string `json:"accountBio"`
 	client      *mastodon.Client
 	logger      *zerolog.Logger
 }
@@ -28,7 +29,7 @@ func NewSourceAccount() *SourceAccount {
 }
 
 func (s *SourceAccount) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeMastodonAccount, lib.StripURL(s.InstanceURL), s.Account)
+	return lib.NewSimpleTypedUID(TypeMastodonAccount, lib.StripURL(s.InstanceURL), s.Account)
 }
 
 func (s *SourceAccount) Name() string {
@@ -36,6 +37,11 @@ func (s *SourceAccount) Name() string {
 }
 
 func (s *SourceAccount) Description() string {
+	description := s.AccountBio
+	if description != "" {
+		return description
+	}
+
 	instanceName, err := lib.StripURLHost(s.InstanceURL)
 	if err != nil {
 		return fmt.Sprintf("Posts from @%s account on %s", s.Account, instanceName)

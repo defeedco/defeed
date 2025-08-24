@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"strings"
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
@@ -19,7 +18,7 @@ var awesomeTechRSS string
 
 // FeedFetcher implements preset search functionality for RSS feeds
 type FeedFetcher struct {
-	OpmlSources []*SourceFeed
+	OpmlSources []types.Source
 	Logger      *zerolog.Logger
 }
 
@@ -38,38 +37,21 @@ func (f *FeedFetcher) SourceType() string {
 	return TypeRSSFeed
 }
 
-func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	if query == "" {
-		// Convert to fetcher.Source interface
-		var fetcherSources []types.Source
-		for _, s := range f.OpmlSources {
-			fetcherSources = append(fetcherSources, s)
-		}
-		return fetcherSources, nil
-	}
-
-	query = strings.ToLower(query)
-	var matchingSources []types.Source
-
-	for _, rssSource := range f.OpmlSources {
-		title := strings.ToLower(rssSource.Title)
-		url := strings.ToLower(rssSource.FeedURL)
-
-		if strings.Contains(title, query) || strings.Contains(url, query) {
-			matchingSources = append(matchingSources, rssSource)
+func (f *FeedFetcher) FindByID(ctx context.Context, id lib.TypedUID) (types.Source, error) {
+	for _, source := range f.OpmlSources {
+		if lib.Equals(source.UID(), id) {
+			return source, nil
 		}
 	}
-
-	f.Logger.Debug().
-		Str("query", query).
-		Int("total_opml", len(f.OpmlSources)).
-		Int("matches", len(matchingSources)).
-		Msg("RSS fetcher searched OPML sources")
-
-	return matchingSources, nil
+	return nil, fmt.Errorf("source not found")
 }
 
-func loadOPMLSources(logger *zerolog.Logger) ([]*SourceFeed, error) {
+func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
+	// Ignore the query, since the set of all available sources is small
+	return f.OpmlSources, nil
+}
+
+func loadOPMLSources(logger *zerolog.Logger) ([]types.Source, error) {
 	opml, err := lib.ParseOPML(awesomeTechRSS)
 	if err != nil {
 		return nil, fmt.Errorf("parse OPML: %w", err)
@@ -87,8 +69,8 @@ func loadOPMLSources(logger *zerolog.Logger) ([]*SourceFeed, error) {
 	return opmlSources, nil
 }
 
-func opmlToRSSSources(opml *lib.OPML) ([]*SourceFeed, error) {
-	var result []*SourceFeed
+func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
+	var result []types.Source
 
 	for _, category := range opml.Body.Outlines {
 		for _, outline := range category.Outlines {
@@ -100,12 +82,10 @@ func opmlToRSSSources(opml *lib.OPML) ([]*SourceFeed, error) {
 				return nil, fmt.Errorf("outline missing url: %s", outline.Text)
 			}
 
-			rssSource := &SourceFeed{
+			result = append(result, &SourceFeed{
 				Title:   outline.Title,
 				FeedURL: outline.XMLUrl,
-			}
-
-			result = append(result, rssSource)
+			})
 		}
 	}
 

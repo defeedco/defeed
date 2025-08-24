@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeHackerNewsPosts = "hackernews:posts"
+const TypeHackerNewsPosts = "hackernewsposts"
 
 type SourcePosts struct {
 	FeedName     string        `json:"feedName" validate:"required,oneof=top new best"`
@@ -28,7 +28,7 @@ func NewSourcePosts() *SourcePosts {
 }
 
 func (s *SourcePosts) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeHackerNewsPosts, s.FeedName)
+	return lib.NewSimpleTypedUID(TypeHackerNewsPosts, s.FeedName)
 }
 
 func (s *SourcePosts) Name() string {
@@ -88,7 +88,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 }
 
 func (p *Post) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeHackerNewsPosts, fmt.Sprintf("%d", *p.Post.ID))
+	return lib.NewSimpleTypedUID(TypeHackerNewsPosts, fmt.Sprintf("%d", *p.Post.ID))
 }
 
 func (p *Post) SourceUID() lib.TypedUID {

@@ -2,8 +2,9 @@ package hackernews
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/rs/zerolog"
@@ -24,35 +25,28 @@ func (f *PostsFetcher) SourceType() string {
 	return TypeHackerNewsPosts
 }
 
-var hackerNewsFeeds = []struct {
-	name        string
-	description string
-}{
-	{"new", "Latest posts from Hacker News"},
-	{"top", "Top posts from Hacker News"},
-	{"best", "Best posts from Hacker News"},
+var feedSources = []types.Source{
+	&SourcePosts{
+		FeedName: "new",
+	},
+	&SourcePosts{
+		FeedName: "top",
+	},
+	&SourcePosts{
+		FeedName: "best",
+	},
 }
 
-func (f *PostsFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	query = strings.ToLower(query)
-	var matchingSources []types.Source
-
-	for _, feed := range hackerNewsFeeds {
-		feedName := strings.ToLower(feed.name)
-		description := strings.ToLower(feed.description)
-
-		if query == "" || strings.Contains(feedName, query) || strings.Contains(description, query) {
-			source := &SourcePosts{
-				FeedName: feed.name,
-			}
-			matchingSources = append(matchingSources, source)
+func (f *PostsFetcher) FindByID(ctx context.Context, id lib.TypedUID) (types.Source, error) {
+	for _, source := range feedSources {
+		if lib.Equals(source.UID(), id) {
+			return source, nil
 		}
 	}
+	return nil, fmt.Errorf("source not found")
+}
 
-	f.Logger.Debug().
-		Str("query", query).
-		Int("matches", len(matchingSources)).
-		Msg("HackerNews fetcher found feeds")
-
-	return matchingSources, nil
+func (f *PostsFetcher) Search(_ context.Context, _ string) ([]types.Source, error) {
+	// Ignore the query, since the set of all available sources is small
+	return feedSources, nil
 }

@@ -38,7 +38,7 @@ func (r *ActivityRepository) Upsert(activity *types.DecoratedActivity) error {
 		SetURL(activity.Activity.URL()).
 		SetImageURL(activity.Activity.ImageURL()).
 		SetCreatedAt(activity.Activity.CreatedAt()).
-		SetSourceType(activity.Activity.SourceUID().Type).
+		SetSourceType(activity.Activity.SourceUID().Type()).
 		SetRawJSON(string(rawJson)).
 		SetShortSummary(activity.Summary.ShortSummary).
 		SetFullSummary(activity.Summary.FullSummary).
@@ -165,7 +165,7 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 				ShortSummary: a.ShortSummary,
 				FullSummary:  a.FullSummary,
 			},
-			// Embedding:  a.Embedding.Slice(),
+			Embedding:  a.Embedding.Slice(),
 			Similarity: float32(a.Similarity),
 		}
 	}

@@ -255,7 +255,7 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params List
 }
 
 func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
-	typedUID, err := lib.NewTypedUIDFromString(uid)
+	typedUID, err := sources.NewTypedUID(uid)
 	if err != nil {
 		s.badRequest(w, err, "deserialize source UID")
 		return
@@ -263,7 +263,7 @@ func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
 
 	out, err := s.registry.FindByUID(r.Context(), typedUID)
 	if err != nil {
-		s.internalError(w, err, "remove source")
+		s.internalError(w, err, "find source by UID")
 		return
 	}
 
@@ -496,7 +496,7 @@ func serializeActivities(in []*types.DecoratedActivity) ([]*Activity, error) {
 }
 
 func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
-	sourceType, err := serializeSourceType(in.Activity.SourceUID().Type)
+	sourceType, err := serializeSourceType(in.Activity.SourceUID().Type())
 	if err != nil {
 		return nil, fmt.Errorf("serialize source type: %w", err)
 	}
@@ -531,7 +531,7 @@ func serializeSources(in []sourcetypes.Source) ([]Source, error) {
 }
 
 func serializeSource(in sourcetypes.Source) (Source, error) {
-	sourceType, err := serializeSourceType(in.UID().Type)
+	sourceType, err := serializeSourceType(in.UID().Type())
 	if err != nil {
 		return Source{}, fmt.Errorf("serialize source type: %w", err)
 	}
@@ -575,7 +575,7 @@ func serializeSourceType(in string) (SourceType, error) {
 func deserializeSourceUIDs(in []string) ([]lib.TypedUID, error) {
 	out := make([]lib.TypedUID, len(in))
 	for i, uid := range in {
-		uid, err := lib.NewTypedUIDFromString(uid)
+		uid, err := sources.NewTypedUID(uid)
 		if err != nil {
 			return nil, fmt.Errorf("deserialize source UID: %w", err)
 		}

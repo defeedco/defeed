@@ -13,15 +13,16 @@ import (
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
-const TypeRedditSubreddit = "reddit:subreddit"
+const TypeRedditSubreddit = "redditsubreddit"
 
 type SourceSubreddit struct {
-	Subreddit string `json:"subreddit" validate:"required"`
-	SortBy    string `json:"sortBy" validate:"required,oneof=hot new top rising"`
-	TopPeriod string `json:"topPeriod" validate:"required,oneof=hour day week month year all"`
-	Search    string `json:"search"`
-	client    *reddit.Client
-	AppAuth   struct {
+	Subreddit        string `json:"subreddit" validate:"required"`
+	SubredditSummary string `json:"subredditSummary"`
+	SortBy           string `json:"sortBy" validate:"required,oneof=hot new top rising"`
+	TopPeriod        string `json:"topPeriod" validate:"required,oneof=hour day week month year all"`
+	Search           string `json:"search"`
+	client           *reddit.Client
+	AppAuth          struct {
 		Name   string `json:"name"`
 		ID     string `json:"ID"`
 		Secret string `json:"secret" validate:"required_with=ID"`
@@ -34,7 +35,7 @@ func NewSourceSubreddit() *SourceSubreddit {
 }
 
 func (s *SourceSubreddit) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
+	return lib.NewSimpleTypedUID(TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
 }
 
 func (s *SourceSubreddit) Name() string {
@@ -104,7 +105,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 }
 
 func (p *Post) UID() lib.TypedUID {
-	return lib.NewTypedUID(p.SourceTyp, p.Post.ID)
+	return lib.NewSimpleTypedUID(p.SourceTyp, p.Post.ID)
 }
 
 func (p *Post) SourceUID() lib.TypedUID {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/google/go-github/v72/github"
@@ -24,6 +25,33 @@ func NewReleasesFetcher(logger *zerolog.Logger) *ReleasesFetcher {
 
 func (f *ReleasesFetcher) SourceType() string {
 	return TypeGithubReleases
+}
+
+func (f *ReleasesFetcher) FindByID(ctx context.Context, id lib.TypedUID) (types.Source, error) {
+	// TODO: Move to Initialize() func and read from Config struct (add to providers/config.go)
+	token := os.Getenv("GITHUB_TOKEN")
+	var client *github.Client
+	if token != "" {
+		client = github.NewClient(nil).WithAuthToken(token)
+	} else {
+		client = github.NewClient(nil)
+	}
+
+	ghUID, ok := id.(*TypedUID)
+	if !ok {
+		return nil, fmt.Errorf("not a GitHub typed UID: %s", id.String())
+	}
+
+	repo, _, err := client.Repositories.Get(ctx, ghUID.Owner, ghUID.Repo)
+	if err != nil {
+		return nil, fmt.Errorf("get repository: %w", err)
+	}
+
+	return &SourceRelease{
+		Owner:            *repo.Owner.Login,
+		Repo:             *repo.Name,
+		IncludePreleases: false,
+	}, nil
 }
 
 func (f *ReleasesFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
@@ -59,7 +87,8 @@ func (f *ReleasesFetcher) Search(ctx context.Context, query string) ([]types.Sou
 		}
 
 		source := &SourceRelease{
-			Repository:       *repo.FullName,
+			Owner:            *repo.Owner.Login,
+			Repo:             *repo.Name,
 			IncludePreleases: false,
 		}
 		sources = append(sources, source)

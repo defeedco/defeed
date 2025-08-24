@@ -12,11 +12,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeMastodonTag = "mastodon:tag"
+const TypeMastodonTag = "mastodontag"
 
 type SourceTag struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
 	Tag         string `json:"tag" validate:"required"`
+	TagSummary  string `json:"tagSummary"`
 	client      *mastodon.Client
 	logger      *zerolog.Logger
 }
@@ -28,7 +29,7 @@ func NewSourceTag() *SourceTag {
 }
 
 func (s *SourceTag) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeMastodonTag, lib.StripURL(s.InstanceURL), s.Tag)
+	return lib.NewSimpleTypedUID(TypeMastodonTag, lib.StripURL(s.InstanceURL), s.Tag)
 }
 
 func (s *SourceTag) Name() string {
@@ -36,6 +37,11 @@ func (s *SourceTag) Name() string {
 }
 
 func (s *SourceTag) Description() string {
+	description := s.TagSummary
+	if description != "" {
+		return description
+	}
+
 	instanceName, err := lib.StripURLHost(s.InstanceURL)
 	if err != nil {
 		return fmt.Sprintf("Posts with #%s hashtag from %s", s.Tag, instanceName)

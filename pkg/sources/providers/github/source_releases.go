@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -14,10 +13,11 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeGithubReleases = "github:releases"
+const TypeGithubReleases = "githubreleases"
 
 type SourceRelease struct {
-	Repository       string `json:"repository" validate:"required,contains=/"`
+	Owner            string `json:"owner" validate:"required"`
+	Repo             string `json:"repo" validate:"required"`
 	Token            string `json:"token"`
 	IncludePreleases bool   `json:"includePrereleases"`
 	client           *github.Client
@@ -31,22 +31,26 @@ func NewReleaseSource() *SourceRelease {
 }
 
 func (s *SourceRelease) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeGithubReleases, s.Repository)
+	return &TypedUID{
+		Typ:   TypeGithubReleases,
+		Owner: s.Owner,
+		Repo:  s.Repo,
+	}
 }
 
 func (s *SourceRelease) Name() string {
-	return fmt.Sprintf("Releases on %s", s.Repository)
+	return fmt.Sprintf("Releases on %s/%s", s.Owner, s.Repo)
 }
 
 func (s *SourceRelease) Description() string {
 	if s.IncludePreleases {
-		return fmt.Sprintf("All releases from %s", s.Repository)
+		return fmt.Sprintf("All releases from %s/%s", s.Owner, s.Repo)
 	}
-	return fmt.Sprintf("Stable releases from %s", s.Repository)
+	return fmt.Sprintf("Stable releases from %s/%s", s.Owner, s.Repo)
 }
 
 func (s *SourceRelease) URL() string {
-	return fmt.Sprintf("https://github.com/%s", s.Repository)
+	return fmt.Sprintf("https://github.com/%s/%s/releases", s.Owner, s.Repo)
 }
 
 func (s *SourceRelease) Validate() []error { return lib.ValidateStruct(s) }
@@ -111,9 +115,10 @@ func (s *SourceRelease) UnmarshalJSON(data []byte) error {
 }
 
 type Release struct {
-	Repository string                    `json:"repository"`
-	Release    *github.RepositoryRelease `json:"release"`
-	SourceID   lib.TypedUID              `json:"source_id"`
+	Owner    string                    `json:"owner"`
+	Repo     string                    `json:"repo"`
+	Release  *github.RepositoryRelease `json:"release"`
+	SourceID lib.TypedUID              `json:"source_id"`
 }
 
 func NewRelease() *Release {
@@ -144,7 +149,7 @@ func (r *Release) UnmarshalJSON(data []byte) error {
 }
 
 func (r *Release) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeGithubReleases, fmt.Sprintf("%d", r.Release.GetID()))
+	return lib.NewSimpleTypedUID(TypeGithubReleases, fmt.Sprintf("%d", r.Release.GetID()))
 }
 
 func (r *Release) SourceUID() lib.TypedUID {
@@ -165,9 +170,10 @@ func (r *Release) URL() string {
 
 func (r *Release) ImageURL() string {
 	return fmt.Sprintf(
-		"https://opengraph.githubassets.com/%d/%s/releases/tag/%s",
+		"https://opengraph.githubassets.com/%d/%s/%s/releases/tag/%s",
 		r.Release.CreatedAt.Unix(),
-		r.Repository,
+		r.Owner,
+		r.Repo,
 		*r.Release.TagName,
 	)
 }
@@ -177,13 +183,6 @@ func (r *Release) CreatedAt() time.Time {
 }
 
 func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	parts := strings.Split(s.Repository, "/")
-	if len(parts) != 2 {
-		errs <- fmt.Errorf("invalid Repository format: %s", s.Repository)
-		return
-	}
-	owner, repo := parts[0], parts[1]
-
 	sinceTime := time.Now().Add(-1 * time.Hour)
 	if since != nil {
 		sinceTime = since.CreatedAt()
@@ -192,7 +191,7 @@ func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since types.Act
 	page := 1
 outer:
 	for {
-		releases, _, err := s.client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{
+		releases, _, err := s.client.Repositories.ListReleases(ctx, s.Owner, s.Repo, &github.ListOptions{
 			PerPage: 10,
 			Page:    page,
 		})
@@ -202,7 +201,7 @@ outer:
 		}
 
 		s.logger.Debug().
-			Str("repository", s.Repository).
+			Str("repository", fmt.Sprintf("%s/%s", s.Owner, s.Repo)).
 			Time("since", sinceTime).
 			Int("count", len(releases)).
 			Msg("Fetched releases")
@@ -225,9 +224,10 @@ outer:
 			}
 
 			releaseActivity := &Release{
-				Release:    release,
-				Repository: s.Repository,
-				SourceID:   s.UID(),
+				Release:  release,
+				Owner:    s.Owner,
+				Repo:     s.Repo,
+				SourceID: s.UID(),
 			}
 
 			feed <- releaseActivity

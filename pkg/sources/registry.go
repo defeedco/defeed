@@ -61,7 +61,7 @@ func (r *Registry) Initialize() error {
 func (r *Registry) FindByUID(ctx context.Context, uid lib.TypedUID) (types.Source, error) {
 	var fetcher types.Fetcher
 	for _, f := range r.fetchers {
-		if f.SourceType() == uid.Type {
+		if f.SourceType() == uid.Type() {
 			fetcher = f
 			break
 		}
@@ -69,13 +69,11 @@ func (r *Registry) FindByUID(ctx context.Context, uid lib.TypedUID) (types.Sourc
 	if fetcher == nil {
 		return nil, errors.New("source not found")
 	}
-	// TODO: Implement FindByUID
-	// source, err := fetcher.FindByUID(ctx, uid)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return source, nil
-	panic("not implemented")
+	source, err := fetcher.FindByID(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+	return source, nil
 }
 
 // Search searches for sources from available fetchers

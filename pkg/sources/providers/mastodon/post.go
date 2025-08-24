@@ -46,7 +46,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 }
 
 func (p *Post) UID() lib.TypedUID {
-	return lib.NewTypedUID(p.SourceTyp, string(p.Status.ID))
+	return lib.NewSimpleTypedUID(p.SourceTyp, string(p.Status.ID))
 }
 
 func (p *Post) SourceUID() lib.TypedUID {

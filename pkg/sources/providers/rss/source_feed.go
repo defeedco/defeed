@@ -18,7 +18,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeRSSFeed = "rss:feed"
+const TypeRSSFeed = "rssfeed"
 
 type customTransport struct {
 	headers map[string]string
@@ -45,7 +45,7 @@ func NewSourceFeed() *SourceFeed {
 }
 
 func (s *SourceFeed) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeRSSFeed, lib.StripURL(s.FeedURL))
+	return lib.NewSimpleTypedUID(TypeRSSFeed, lib.StripURL(s.FeedURL))
 }
 
 func (s *SourceFeed) Name() string {
@@ -177,7 +177,7 @@ func (e *FeedItem) UID() lib.TypedUID {
 	if id == "" {
 		id = lib.StripURL(e.URL())
 	}
-	return lib.NewTypedUID(e.SourceTyp, id)
+	return lib.NewSimpleTypedUID(e.SourceTyp, id)
 }
 
 func (e *FeedItem) SourceUID() lib.TypedUID {

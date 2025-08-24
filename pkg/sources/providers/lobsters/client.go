@@ -3,10 +3,11 @@ package lobsters
 import (
 	"context"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/lib"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/lib"
 )
 
 // There is no official REST API, but each page can be fetched as JSON.
@@ -51,30 +52,6 @@ func (c *LobstersClient) GetStoriesByTag(ctx context.Context, tag string) ([]*St
 }
 
 func (c *LobstersClient) fetchStories(ctx context.Context, url string) ([]*Story, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("creating request: %v", err)
-	}
-
-	var stories []*Story
-	stories, err = lib.DecodeJSONFromRequest[[]*Story](c.httpClient, req)
-	if err != nil {
-		return nil, fmt.Errorf("fetching stories: %v", err)
-	}
-
-	// Parse timestamps
-	for _, story := range stories {
-		parsedTime, err := time.Parse(time.RFC3339, story.CreatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("parsing time for story %s: %v", story.ID, err)
-		}
-		story.ParsedTime = parsedTime
-	}
-
-	return stories, nil
-}
-
-func (c *LobstersClient) GetStoriesFromCustomURL(ctx context.Context, url string) ([]*Story, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %v", err)

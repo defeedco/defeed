@@ -7,6 +7,7 @@ import (
 
 	"github.com/glanceapp/glance/pkg/feeds"
 	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/glanceapp/glance/pkg/sources"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent"
 	entfeed "github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 )
@@ -92,7 +93,7 @@ func feedFromEnt(in *ent.Feed) (*feeds.Feed, error) {
 
 	sourceUIDs := make([]lib.TypedUID, len(in.SourceUids))
 	for i, uid := range in.SourceUids {
-		typedUID, err := lib.NewTypedUIDFromString(uid)
+		typedUID, err := sources.NewTypedUID(uid)
 		if err != nil {
 			return nil, fmt.Errorf("deserialize source UID: %w", err)
 		}

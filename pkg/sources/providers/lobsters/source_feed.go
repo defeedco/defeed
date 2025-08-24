@@ -11,11 +11,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeLobstersFeed = "lobsters:feed"
+const TypeLobstersFeed = "lobstersfeed"
 
 type SourceFeed struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
-	CustomURL   string `json:"customUrl" validate:"omitempty,url"`
 	FeedName    string `json:"feed" validate:"required,oneof=hottest newest"`
 	client      *LobstersClient
 	logger      *zerolog.Logger
@@ -28,7 +27,7 @@ func NewSourceFeed() *SourceFeed {
 }
 
 func (s *SourceFeed) UID() lib.TypedUID {
-	return lib.NewTypedUID(TypeLobstersFeed, lib.StripURL(s.InstanceURL), s.FeedName)
+	return lib.NewSimpleTypedUID(TypeLobstersFeed, lib.StripURL(s.InstanceURL), s.FeedName)
 }
 
 func (s *SourceFeed) Name() string {
@@ -80,22 +79,7 @@ func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan
 }
 
 func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	feedLogger := s.logger.With().
-		Str("feed", s.FeedName).
-		Str("instance_url", s.InstanceURL).
-		Logger()
-
-	var stories []*Story
-	var err error
-
-	if s.CustomURL != "" {
-		stories, err = s.client.GetStoriesFromCustomURL(ctx, s.CustomURL)
-	} else {
-		stories, err = s.client.GetStoriesByFeed(ctx, s.FeedName)
-	}
-
-	feedLogger.Debug().Int("count", len(stories)).Msg("Fetched stories")
-
+	stories, err := s.client.GetStoriesByFeed(ctx, s.FeedName)
 	if err != nil {
 		errs <- err
 		return
