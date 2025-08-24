@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
@@ -29,8 +27,8 @@ func NewSourceTag() *SourceTag {
 	}
 }
 
-func (s *SourceTag) UID() string {
-	return fmt.Sprintf("%s:%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.InstanceURL), "/", ":"), s.Tag)
+func (s *SourceTag) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeLobstersTag, lib.StripURL(s.InstanceURL), s.Tag)
 }
 
 func (s *SourceTag) Name() string {
@@ -47,10 +45,6 @@ func (s *SourceTag) Description() string {
 
 func (s *SourceTag) URL() string {
 	return fmt.Sprintf("https://lobste.rs/t/%s", s.Tag)
-}
-
-func (s *SourceTag) Type() string {
-	return TypeLobstersTag
 }
 
 func (s *SourceTag) Validate() []error {
@@ -94,7 +88,7 @@ func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Acti
 	}
 
 	for _, story := range stories {
-		post := &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+		post := &Post{Post: story, SourceTyp: TypeLobstersTag, SourceID: s.UID()}
 		if since == nil || post.CreatedAt().After(sinceTime) {
 			feed <- post
 		}
@@ -114,7 +108,7 @@ func (s *SourceTag) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeLobstersTag,
 	})
 }
 

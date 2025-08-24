@@ -30,8 +30,8 @@ func NewReleaseSource() *SourceRelease {
 	}
 }
 
-func (s *SourceRelease) UID() string {
-	return fmt.Sprintf("%s:%s", s.Type(), s.Repository)
+func (s *SourceRelease) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeGithubReleases, s.Repository)
 }
 
 func (s *SourceRelease) Name() string {
@@ -47,10 +47,6 @@ func (s *SourceRelease) Description() string {
 
 func (s *SourceRelease) URL() string {
 	return fmt.Sprintf("https://github.com/%s", s.Repository)
-}
-
-func (s *SourceRelease) Type() string {
-	return TypeGithubReleases
 }
 
 func (s *SourceRelease) Validate() []error { return lib.ValidateStruct(s) }
@@ -96,7 +92,7 @@ func (s *SourceRelease) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeGithubReleases,
 	})
 }
 
@@ -117,7 +113,7 @@ func (s *SourceRelease) UnmarshalJSON(data []byte) error {
 type Release struct {
 	Repository string                    `json:"repository"`
 	Release    *github.RepositoryRelease `json:"release"`
-	SourceID   string                    `json:"source_id"`
+	SourceID   lib.TypedUID              `json:"source_id"`
 }
 
 func NewRelease() *Release {
@@ -147,11 +143,11 @@ func (r *Release) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (r *Release) UID() string {
-	return fmt.Sprintf("%s:%d", r.SourceID, r.Release.GetID())
+func (r *Release) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeGithubReleases, fmt.Sprintf("%d", r.Release.GetID()))
 }
 
-func (r *Release) SourceUID() string {
+func (r *Release) SourceUID() lib.TypedUID {
 	return r.SourceID
 }
 

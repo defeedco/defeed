@@ -30,15 +30,15 @@ func (r *ActivityRepository) Upsert(activity *types.DecoratedActivity) error {
 	}
 
 	err = r.db.Client().Activity.Create().
-		SetID(activity.Activity.UID()).
-		SetUID(activity.Activity.UID()).
-		SetSourceUID(activity.Activity.SourceUID()).
+		SetID(activity.Activity.UID().String()).
+		SetUID(activity.Activity.UID().String()).
+		SetSourceUID(activity.Activity.SourceUID().String()).
 		SetTitle(activity.Activity.Title()).
 		SetBody(activity.Activity.Body()).
 		SetURL(activity.Activity.URL()).
 		SetImageURL(activity.Activity.ImageURL()).
 		SetCreatedAt(activity.Activity.CreatedAt()).
-		SetSourceType(activity.Activity.SourceType()).
+		SetSourceType(activity.Activity.SourceUID().Type).
 		SetRawJSON(string(rawJson)).
 		SetShortSummary(activity.Summary.ShortSummary).
 		SetFullSummary(activity.Summary.FullSummary).
@@ -89,7 +89,11 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 	query := r.db.Client().Activity.Query()
 
 	if len(req.SourceUIDs) > 0 {
-		query = query.Where(entactivity.SourceUIDIn(req.SourceUIDs...))
+		sourceUIDs := make([]string, len(req.SourceUIDs))
+		for i, uid := range req.SourceUIDs {
+			sourceUIDs[i] = uid.String()
+		}
+		query = query.Where(entactivity.SourceUIDIn(sourceUIDs...))
 	}
 
 	query = query.Order(func(s *sql.Selector) {

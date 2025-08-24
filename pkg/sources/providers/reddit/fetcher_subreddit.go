@@ -2,8 +2,9 @@ package reddit
 
 import (
 	"context"
-	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
+
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/rs/zerolog"
 )
@@ -17,6 +18,10 @@ func NewSubredditFetcher(logger *zerolog.Logger) *SubredditFetcher {
 	return &SubredditFetcher{
 		Logger: logger,
 	}
+}
+
+func (f *SubredditFetcher) SourceType() string {
+	return TypeRedditSubreddit
 }
 
 var popularSubreddits = []struct {

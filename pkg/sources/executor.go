@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	types2 "github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/glanceapp/glance/pkg/lib"
+
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
@@ -35,10 +37,10 @@ type Executor struct {
 }
 
 type sourceStore interface {
-	Add(source types2.Source) error
+	Add(source sourcetypes.Source) error
 	Remove(uid string) error
-	List() ([]types2.Source, error)
-	GetByID(uid string) (types2.Source, error)
+	List() ([]sourcetypes.Source, error)
+	GetByID(uid string) (sourcetypes.Source, error)
 }
 
 type activityStore interface {
@@ -99,7 +101,7 @@ func (r *Executor) Initialize() error {
 		}
 
 		activities, err := r.activityRepo.Search(types.SearchRequest{
-			SourceUIDs: []string{source.UID()},
+			SourceUIDs: []lib.TypedUID{source.UID()},
 			Limit:      1,
 			SortBy:     types.SortByDate,
 		})
@@ -125,8 +127,8 @@ func (r *Executor) Initialize() error {
 }
 
 // Add starts processing activities from the source.
-func (r *Executor) Add(source types2.Source) error {
-	existing, _ := r.activeSourceRepo.GetByID(source.UID())
+func (r *Executor) Add(source sourcetypes.Source) error {
+	existing, _ := r.activeSourceRepo.GetByID(source.UID().String())
 
 	if existing != nil {
 		// source already exists, we don't need to do anything
@@ -249,7 +251,7 @@ func (r *Executor) Shutdown() {
 	r.cancelBySourceID.Clear()
 }
 
-func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []string, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
+func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []lib.TypedUID, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
 	req := types.SearchRequest{
 		SourceUIDs:    sourceUIDs,
 		MinSimilarity: minSimilarity,
@@ -270,10 +272,10 @@ func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []string
 	return r.activityRepo.Search(req)
 }
 
-func sourceLogger(source types2.Source, logger *zerolog.Logger) *zerolog.Logger {
+func sourceLogger(source sourcetypes.Source, logger *zerolog.Logger) *zerolog.Logger {
 	out := logger.With().
-		Str("source_type", source.Type()).
-		Str("source_uid", source.UID()).
+		Str("source_type", source.UID().Type).
+		Str("source_uid", source.UID().String()).
 		Logger()
 
 	return &out
@@ -281,9 +283,9 @@ func sourceLogger(source types2.Source, logger *zerolog.Logger) *zerolog.Logger 
 
 func activityLogger(activity types.Activity, logger *zerolog.Logger) *zerolog.Logger {
 	out := logger.With().
-		Str("activity_id", activity.UID()).
-		Str("source_type", activity.SourceType()).
-		Str("source_uid", activity.SourceUID()).
+		Str("activity_id", activity.UID().String()).
+		Str("source_type", activity.UID().Type).
+		Str("source_uid", activity.SourceUID().String()).
 		Logger()
 
 	return &out

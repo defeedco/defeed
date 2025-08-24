@@ -2,8 +2,9 @@ package mastodon
 
 import (
 	"context"
-	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
+
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/rs/zerolog"
 )
@@ -17,6 +18,10 @@ func NewTagFetcher(logger *zerolog.Logger) *TagFetcher {
 	return &TagFetcher{
 		Logger: logger,
 	}
+}
+
+func (f *TagFetcher) SourceType() string {
+	return TypeMastodonTag
 }
 
 var popularMastodonTags = []struct {

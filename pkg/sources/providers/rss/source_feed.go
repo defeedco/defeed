@@ -44,8 +44,8 @@ func NewSourceFeed() *SourceFeed {
 	return &SourceFeed{}
 }
 
-func (s *SourceFeed) UID() string {
-	return fmt.Sprintf("%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.FeedURL), "/", ":"))
+func (s *SourceFeed) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeRSSFeed, lib.StripURL(s.FeedURL))
 }
 
 func (s *SourceFeed) Name() string {
@@ -67,10 +67,6 @@ func (s *SourceFeed) Description() string {
 
 func (s *SourceFeed) URL() string {
 	return s.FeedURL
-}
-
-func (s *SourceFeed) Type() string {
-	return TypeRSSFeed
 }
 
 func (s *SourceFeed) Validate() []error { return lib.ValidateStruct(s) }
@@ -138,7 +134,7 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activ
 		feedItem := &FeedItem{
 			Item:      item,
 			FeedURL:   s.FeedURL,
-			SourceTyp: s.Type(),
+			SourceTyp: TypeRSSFeed,
 			SourceID:  s.UID(),
 		}
 
@@ -149,16 +145,12 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activ
 type FeedItem struct {
 	Item      *gofeed.Item `json:"item"`
 	FeedURL   string       `json:"feed_url"`
-	SourceID  string       `json:"source_id"`
+	SourceID  lib.TypedUID `json:"source_id"`
 	SourceTyp string       `json:"source_type"`
 }
 
 func NewFeedItem() *FeedItem {
 	return &FeedItem{}
-}
-
-func (e *FeedItem) SourceType() string {
-	return e.SourceTyp
 }
 
 func (e *FeedItem) MarshalJSON() ([]byte, error) {
@@ -180,20 +172,15 @@ func (e *FeedItem) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (e *FeedItem) UID() string {
+func (e *FeedItem) UID() lib.TypedUID {
 	id := e.Item.GUID
 	if id == "" {
-		id = e.URL()
-		id = strings.TrimPrefix(id, "https://")
-		id = strings.TrimPrefix(id, "http://")
-		id = strings.TrimPrefix(id, "www.")
-		id = strings.TrimSuffix(id, "/")
-		id = strings.ReplaceAll(id, "/", ":")
+		id = lib.StripURL(e.URL())
 	}
-	return fmt.Sprintf("%s:%s", e.SourceID, id)
+	return lib.NewTypedUID(e.SourceTyp, id)
 }
 
-func (e *FeedItem) SourceUID() string {
+func (e *FeedItem) SourceUID() lib.TypedUID {
 	return e.SourceID
 }
 
@@ -323,7 +310,7 @@ func (s *SourceFeed) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeRSSFeed,
 	})
 }
 

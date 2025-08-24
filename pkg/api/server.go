@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
@@ -254,7 +255,13 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params List
 }
 
 func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
-	out, err := s.registry.FindByUID(r.Context(), uid)
+	typedUID, err := lib.NewTypedUIDFromString(uid)
+	if err != nil {
+		s.badRequest(w, err, "deserialize source UID")
+		return
+	}
+
+	out, err := s.registry.FindByUID(r.Context(), typedUID)
 	if err != nil {
 		s.internalError(w, err, "remove source")
 		return
@@ -279,11 +286,17 @@ func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sourceUIDs, err := deserializeSourceUIDs(req.SourceUids)
+	if err != nil {
+		s.badRequest(w, err, "deserialize source UIDs")
+		return
+	}
+
 	createReq := feeds.CreateFeedRequest{
 		Name:       req.Name,
 		Icon:       req.Icon,
 		Query:      req.Query,
-		SourceUIDs: req.SourceUids,
+		SourceUIDs: sourceUIDs,
 		UserID:     userID,
 	}
 
@@ -293,15 +306,7 @@ func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	feed := Feed{
-		Name:       createdFeed.Name,
-		Icon:       createdFeed.Icon,
-		Query:      createdFeed.Query,
-		SourceUids: createdFeed.SourceUIDs,
-		Uid:        createdFeed.ID,
-	}
-
-	s.serializeRes(w, feed)
+	s.serializeRes(w, serializeFeed(createdFeed))
 }
 
 func (s *Server) ListOwnFeeds(w http.ResponseWriter, r *http.Request) {
@@ -326,30 +331,28 @@ func (s *Server) UpdateOwnFeed(w http.ResponseWriter, r *http.Request, uid strin
 
 	userID := r.Context().Value(userIDKey).(string)
 
-	updatedFeed := feeds.Feed{
+	sourceUIDs, err := deserializeSourceUIDs(req.SourceUids)
+	if err != nil {
+		s.badRequest(w, err, "deserialize source UIDs")
+		return
+	}
+
+	updatedFeed := &feeds.Feed{
 		ID:         uid,
 		UserID:     userID,
 		Name:       req.Name,
 		Icon:       req.Icon,
 		Query:      req.Query,
-		SourceUIDs: req.SourceUids,
+		SourceUIDs: sourceUIDs,
 	}
 
-	err = s.feedRegistry.Update(r.Context(), updatedFeed)
+	err = s.feedRegistry.Update(r.Context(), *updatedFeed)
 	if err != nil {
 		s.internalError(w, err, "update feed")
 		return
 	}
 
-	feed := Feed{
-		Uid:        uid,
-		Name:       req.Name,
-		Icon:       req.Icon,
-		Query:      req.Query,
-		SourceUids: req.SourceUids,
-	}
-
-	s.serializeRes(w, feed)
+	s.serializeRes(w, serializeFeed(updatedFeed))
 }
 
 func (s *Server) DeleteOwnFeed(w http.ResponseWriter, r *http.Request, uid string) {
@@ -455,15 +458,27 @@ func serializeFeedSummary(in *feeds.FeedSummary) FeedSummary {
 func serializeFeeds(in []*feeds.Feed) []Feed {
 	feeds := make([]Feed, len(in))
 	for i, f := range in {
-		feeds[i] = Feed{
-			Uid:        f.ID,
-			Name:       f.Name,
-			Icon:       f.Icon,
-			Query:      f.Query,
-			SourceUids: f.SourceUIDs,
-		}
+		feeds[i] = serializeFeed(f)
 	}
 	return feeds
+}
+
+func serializeFeed(in *feeds.Feed) Feed {
+	return Feed{
+		Uid:        in.ID,
+		Name:       in.Name,
+		Icon:       in.Icon,
+		Query:      in.Query,
+		SourceUids: serializeSourceUIDs(in.SourceUIDs),
+	}
+}
+
+func serializeSourceUIDs(in []lib.TypedUID) []string {
+	out := make([]string, len(in))
+	for i, uid := range in {
+		out[i] = uid.String()
+	}
+	return out
 }
 
 func serializeActivities(in []*types.DecoratedActivity) ([]*Activity, error) {
@@ -481,7 +496,7 @@ func serializeActivities(in []*types.DecoratedActivity) ([]*Activity, error) {
 }
 
 func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
-	sourceType, err := serializeSourceType(in.Activity.SourceType())
+	sourceType, err := serializeSourceType(in.Activity.SourceUID().Type)
 	if err != nil {
 		return nil, fmt.Errorf("serialize source type: %w", err)
 	}
@@ -492,10 +507,10 @@ func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
 		ImageUrl:     in.Activity.ImageURL(),
 		FullSummary:  in.Summary.FullSummary,
 		ShortSummary: in.Summary.ShortSummary,
-		SourceUid:    in.Activity.SourceUID(),
+		SourceUid:    in.Activity.SourceUID().String(),
 		SourceType:   sourceType,
 		Title:        in.Activity.Title(),
-		Uid:          in.Activity.UID(),
+		Uid:          in.Activity.UID().String(),
 		Url:          in.Activity.URL(),
 		Similarity:   &in.Similarity,
 	}, nil
@@ -516,13 +531,13 @@ func serializeSources(in []sourcetypes.Source) ([]Source, error) {
 }
 
 func serializeSource(in sourcetypes.Source) (Source, error) {
-	sourceType, err := serializeSourceType(in.Type())
+	sourceType, err := serializeSourceType(in.UID().Type)
 	if err != nil {
 		return Source{}, fmt.Errorf("serialize source type: %w", err)
 	}
 
 	return Source{
-		Uid:         in.UID(),
+		Uid:         in.UID().String(),
 		Type:        sourceType,
 		Url:         in.URL(),
 		Name:        in.Name(),
@@ -555,6 +570,18 @@ func serializeSourceType(in string) (SourceType, error) {
 	}
 
 	return "", fmt.Errorf("unknown source type: %s", in)
+}
+
+func deserializeSourceUIDs(in []string) ([]lib.TypedUID, error) {
+	out := make([]lib.TypedUID, len(in))
+	for i, uid := range in {
+		uid, err := lib.NewTypedUIDFromString(uid)
+		if err != nil {
+			return nil, fmt.Errorf("deserialize source UID: %w", err)
+		}
+		out[i] = uid
+	}
+	return out, nil
 }
 
 func deserializeSortBy(in *ActivitySortBy) (types.SortBy, error) {

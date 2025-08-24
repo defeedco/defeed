@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -28,8 +27,8 @@ func NewSourceFeed() *SourceFeed {
 	}
 }
 
-func (s *SourceFeed) UID() string {
-	return fmt.Sprintf("%s:%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.InstanceURL), "/", ":"), s.FeedName)
+func (s *SourceFeed) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeLobstersFeed, lib.StripURL(s.InstanceURL), s.FeedName)
 }
 
 func (s *SourceFeed) Name() string {
@@ -54,10 +53,6 @@ func (s *SourceFeed) Description() string {
 
 func (s *SourceFeed) URL() string {
 	return fmt.Sprintf("https://lobste.rs/%s", s.FeedName)
-}
-
-func (s *SourceFeed) Type() string {
-	return TypeLobstersFeed
 }
 
 func (s *SourceFeed) Validate() []error { return lib.ValidateStruct(s) }
@@ -124,7 +119,7 @@ func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Act
 }
 
 func (s *SourceFeed) buildPost(ctx context.Context, story *Story) (*Post, error) {
-	post := &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+	post := &Post{Post: story, SourceTyp: TypeLobstersFeed, SourceID: s.UID()}
 	if story.URL != "" {
 		externalContent, err := lib.FetchTextFromURL(ctx, story.URL)
 		if err != nil {
@@ -142,7 +137,7 @@ func (s *SourceFeed) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeLobstersFeed,
 	})
 }
 

@@ -2,8 +2,9 @@ package mastodon
 
 import (
 	"context"
-	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
+
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/rs/zerolog"
 )
@@ -17,6 +18,10 @@ func NewAccountFetcher(logger *zerolog.Logger) *AccountFetcher {
 	return &AccountFetcher{
 		Logger: logger,
 	}
+}
+
+func (f *AccountFetcher) SourceType() string {
+	return TypeMastodonAccount
 }
 
 var popularTechAccounts = []struct {

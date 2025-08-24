@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: Pulse Feed Aggregation API
+  title: DeFeed API
   version: 1.0.0
-  description: API for managing feed sources and retrieving aggregated content
+  description: Defeat your fragmented feeds 💪
 
 servers:
   - url: http://localhost:8080

@@ -7,5 +7,6 @@ import "context"
 // - Return static presets filtered by fuzzy search
 // - Query external APIs to find matching sources
 type Fetcher interface {
+	SourceType() string
 	Search(ctx context.Context, query string) ([]Source, error)
 }

@@ -2,8 +2,9 @@ package lobsters
 
 import (
 	"context"
-	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
+
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/rs/zerolog"
 )
@@ -17,6 +18,10 @@ func NewFeedFetcher(logger *zerolog.Logger) *FeedFetcher {
 	return &FeedFetcher{
 		Logger: logger,
 	}
+}
+
+func (f *FeedFetcher) SourceType() string {
+	return TypeLobstersFeed
 }
 
 var lobstersFeeds = []struct {

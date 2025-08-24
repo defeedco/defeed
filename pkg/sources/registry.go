@@ -3,8 +3,10 @@ package sources
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"strings"
@@ -56,15 +58,23 @@ func (r *Registry) Initialize() error {
 	return nil
 }
 
-func (r *Registry) FindByUID(ctx context.Context, uid string) (types.Source, error) {
+func (r *Registry) FindByUID(ctx context.Context, uid lib.TypedUID) (types.Source, error) {
+	var fetcher types.Fetcher
+	for _, f := range r.fetchers {
+		if f.SourceType() == uid.Type {
+			fetcher = f
+			break
+		}
+	}
+	if fetcher == nil {
+		return nil, errors.New("source not found")
+	}
 	// TODO: Implement FindByUID
-	// for _, f := range r.fetchers {
-	// 	source, err := f.FindByUID(ctx, uid)
-	// 	if err == nil {
-	// 		return source, nil
-	// 	}
+	// source, err := fetcher.FindByUID(ctx, uid)
+	// if err != nil {
+	// 	return nil, err
 	// }
-	// return nil, errors.New("source not found")
+	// return source, nil
 	panic("not implemented")
 }
 

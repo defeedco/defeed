@@ -27,8 +27,8 @@ func NewIssuesSource() *SourceIssues {
 	return &SourceIssues{}
 }
 
-func (s *SourceIssues) UID() string {
-	return fmt.Sprintf("%s:%s", s.Type(), s.Repository)
+func (s *SourceIssues) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeGithubIssues, s.Repository)
 }
 
 func (s *SourceIssues) Name() string {
@@ -43,10 +43,6 @@ func (s *SourceIssues) URL() string {
 	return fmt.Sprintf("https://github.com/%s", s.Repository)
 }
 
-func (s *SourceIssues) Type() string {
-	return TypeGithubIssues
-}
-
 func (s *SourceIssues) Validate() []error { return lib.ValidateStruct(s) }
 
 func (s *SourceIssues) MarshalJSON() ([]byte, error) {
@@ -56,7 +52,7 @@ func (s *SourceIssues) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeGithubIssues,
 	})
 }
 
@@ -77,7 +73,7 @@ func (s *SourceIssues) UnmarshalJSON(data []byte) error {
 type Issue struct {
 	Repository string        `json:"repository"`
 	Issue      *github.Issue `json:"issue"`
-	SourceID   string        `json:"source_id"`
+	SourceID   lib.TypedUID  `json:"source_id"`
 }
 
 func NewIssue() *Issue {
@@ -107,11 +103,11 @@ func (i *Issue) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (i *Issue) UID() string {
-	return fmt.Sprintf("%s:%d", i.SourceID, i.Issue.GetNumber())
+func (i *Issue) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeGithubIssues, fmt.Sprintf("%d", i.Issue.GetNumber()))
 }
 
-func (i *Issue) SourceUID() string {
+func (i *Issue) SourceUID() lib.TypedUID {
 	return i.SourceID
 }
 

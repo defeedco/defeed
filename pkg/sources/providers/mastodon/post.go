@@ -2,19 +2,19 @@ package mastodon
 
 import (
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/mattn/go-mastodon"
 	"golang.org/x/net/html"
 )
 
 type Post struct {
 	Status    *mastodon.Status `json:"status"`
-	SourceID  string           `json:"source_id"`
+	SourceID  lib.TypedUID     `json:"source_id"`
 	SourceTyp string           `json:"source_type"`
 }
 
@@ -45,11 +45,11 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (p *Post) UID() string {
-	return fmt.Sprintf("%s:%s", p.SourceID, p.Status.ID)
+func (p *Post) UID() lib.TypedUID {
+	return lib.NewTypedUID(p.SourceTyp, string(p.Status.ID))
 }
 
-func (p *Post) SourceUID() string {
+func (p *Post) SourceUID() lib.TypedUID {
 	return p.SourceID
 }
 

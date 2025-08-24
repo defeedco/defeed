@@ -3,8 +3,9 @@ package github
 import (
 	"context"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/types"
 	"os"
+
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
@@ -19,6 +20,10 @@ func NewReleasesFetcher(logger *zerolog.Logger) *ReleasesFetcher {
 	return &ReleasesFetcher{
 		Logger: logger,
 	}
+}
+
+func (f *ReleasesFetcher) SourceType() string {
+	return TypeGithubReleases
 }
 
 func (f *ReleasesFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {

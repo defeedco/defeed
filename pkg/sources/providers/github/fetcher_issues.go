@@ -3,9 +3,10 @@ package github
 import (
 	"context"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/types"
 	"os"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
@@ -20,6 +21,10 @@ func NewIssuesFetcher(logger *zerolog.Logger) *IssuesFetcher {
 	return &IssuesFetcher{
 		Logger: logger,
 	}
+}
+
+func (f *IssuesFetcher) SourceType() string {
+	return TypeGithubIssues
 }
 
 func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {

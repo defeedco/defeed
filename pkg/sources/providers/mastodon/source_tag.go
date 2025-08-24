@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -28,8 +27,8 @@ func NewSourceTag() *SourceTag {
 	}
 }
 
-func (s *SourceTag) UID() string {
-	return fmt.Sprintf("%s:%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.InstanceURL), "/", ":"), s.Tag)
+func (s *SourceTag) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeMastodonTag, lib.StripURL(s.InstanceURL), s.Tag)
 }
 
 func (s *SourceTag) Name() string {
@@ -46,10 +45,6 @@ func (s *SourceTag) Description() string {
 
 func (s *SourceTag) URL() string {
 	return fmt.Sprintf("%s/tags/%s", s.InstanceURL, s.Tag)
-}
-
-func (s *SourceTag) Type() string {
-	return TypeMastodonTag
 }
 
 func (s *SourceTag) Validate() []error { return lib.ValidateStruct(s) }
@@ -120,7 +115,7 @@ outer:
 		for _, status := range statuses {
 			post := &Post{
 				Status:    status,
-				SourceTyp: s.Type(),
+				SourceTyp: TypeMastodonTag,
 				SourceID:  s.UID(),
 			}
 			feed <- post
@@ -153,7 +148,7 @@ func (s *SourceTag) fetchLatestPosts(ctx context.Context, feed chan<- types.Acti
 	for _, status := range statuses {
 		post := &Post{
 			Status:    status,
-			SourceTyp: s.Type(),
+			SourceTyp: TypeMastodonTag,
 			SourceID:  s.UID(),
 		}
 		feed <- post
@@ -169,7 +164,7 @@ func (s *SourceTag) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeMastodonTag,
 	})
 }
 

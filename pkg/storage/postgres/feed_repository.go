@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/glanceapp/glance/pkg/feeds"
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent"
 	entfeed "github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 )
@@ -19,12 +20,18 @@ func NewFeedRepository(db *DB) *FeedRepository {
 }
 
 func (r *FeedRepository) Upsert(ctx context.Context, f feeds.Feed) error {
+
+	sourceUIDs := make([]string, len(f.SourceUIDs))
+	for i, uid := range f.SourceUIDs {
+		sourceUIDs[i] = uid.String()
+	}
+
 	err := r.db.Client().Feed.Create().
 		SetUserID(f.UserID).
 		SetName(f.Name).
 		SetIcon(f.Icon).
 		SetQuery(f.Query).
-		SetSourceUids(f.SourceUIDs).
+		SetSourceUids(sourceUIDs).
 		SetUpdatedAt(f.UpdatedAt).
 		SetSummaries(f.Summaries).
 		// https://github.com/ent/ent/issues/2494#issuecomment-1182015427
@@ -83,13 +90,22 @@ func feedFromEnt(in *ent.Feed) (*feeds.Feed, error) {
 		}
 	}
 
+	sourceUIDs := make([]lib.TypedUID, len(in.SourceUids))
+	for i, uid := range in.SourceUids {
+		typedUID, err := lib.NewTypedUIDFromString(uid)
+		if err != nil {
+			return nil, fmt.Errorf("deserialize source UID: %w", err)
+		}
+		sourceUIDs[i] = typedUID
+	}
+
 	return &feeds.Feed{
 		ID:         in.ID,
 		UserID:     in.UserID,
 		Name:       in.Name,
 		Icon:       in.Icon,
 		Query:      in.Query,
-		SourceUIDs: in.SourceUids,
+		SourceUIDs: sourceUIDs,
 		CreatedAt:  in.CreatedAt,
 		UpdatedAt:  in.UpdatedAt,
 		Summaries:  summaries,

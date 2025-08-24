@@ -4,9 +4,10 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"strings"
+
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
-	"strings"
 
 	"github.com/rs/zerolog"
 )
@@ -31,6 +32,10 @@ func NewFeedFetcher(logger *zerolog.Logger) (*FeedFetcher, error) {
 		OpmlSources: opmlSources,
 		Logger:      logger,
 	}, nil
+}
+
+func (f *FeedFetcher) SourceType() string {
+	return TypeRSSFeed
 }
 
 func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {

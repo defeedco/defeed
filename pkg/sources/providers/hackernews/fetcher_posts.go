@@ -2,8 +2,9 @@ package hackernews
 
 import (
 	"context"
-	"github.com/glanceapp/glance/pkg/sources/types"
 	"strings"
+
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/rs/zerolog"
 )
@@ -17,6 +18,10 @@ func NewPostsFetcher(logger *zerolog.Logger) *PostsFetcher {
 	return &PostsFetcher{
 		Logger: logger,
 	}
+}
+
+func (f *PostsFetcher) SourceType() string {
+	return TypeHackerNewsPosts
 }
 
 var hackerNewsFeeds = []struct {

@@ -27,8 +27,8 @@ func NewSourcePosts() *SourcePosts {
 	}
 }
 
-func (s *SourcePosts) UID() string {
-	return fmt.Sprintf("%s:%s", s.Type(), s.FeedName)
+func (s *SourcePosts) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeHackerNewsPosts, s.FeedName)
 }
 
 func (s *SourcePosts) Name() string {
@@ -52,16 +52,12 @@ func (s *SourcePosts) URL() string {
 	return fmt.Sprintf("https://news.ycombinator.com/%s", s.FeedName)
 }
 
-func (s *SourcePosts) Type() string {
-	return TypeHackerNewsPosts
-}
-
 func (s *SourcePosts) Validate() []error { return lib.ValidateStruct(s) }
 
 type Post struct {
-	Post            *gohn.Item `json:"post"`
-	ArticleTextBody string     `json:"article_text_body"`
-	SourceID        string     `json:"source_id"`
+	Post            *gohn.Item   `json:"post"`
+	ArticleTextBody string       `json:"article_text_body"`
+	SourceID        lib.TypedUID `json:"source_id"`
 }
 
 func NewPost() *Post {
@@ -91,11 +87,11 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (p *Post) UID() string {
-	return fmt.Sprintf("%s:%d", p.SourceID, *p.Post.ID)
+func (p *Post) UID() lib.TypedUID {
+	return lib.NewTypedUID(TypeHackerNewsPosts, fmt.Sprintf("%d", *p.Post.ID))
 }
 
-func (p *Post) SourceUID() string {
+func (p *Post) SourceUID() lib.TypedUID {
 	return p.SourceID
 }
 
@@ -277,7 +273,7 @@ func (s *SourcePosts) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeHackerNewsPosts,
 	})
 }
 

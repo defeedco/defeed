@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources"
 	activities "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/google/uuid"
@@ -19,7 +20,7 @@ type Feed struct {
 	// Query is a semantic search query.
 	Query string
 	// SourceUIDs is a list of sources where activities are pulled from.
-	SourceUIDs []string
+	SourceUIDs []lib.TypedUID
 	// UserID is the user who owns the feed.
 	UserID string
 
@@ -48,13 +49,13 @@ type FeedParameters struct {
 	UserID     string
 	Query      string
 	SortBy     activities.SortBy
-	SourceUIDs []string
+	SourceUIDs []lib.TypedUID
 }
 
 func (p FeedParameters) Equal(p1 FeedParameters) bool {
 	sourcesEqual := len(p.SourceUIDs) == len(p1.SourceUIDs)
 	for i := range p.SourceUIDs {
-		if p.SourceUIDs[i] != p1.SourceUIDs[i] {
+		if p.SourceUIDs[i].String() != p1.SourceUIDs[i].String() {
 			sourcesEqual = false
 			break
 		}
@@ -88,7 +89,7 @@ type CreateFeedRequest struct {
 	Name       string
 	Icon       string
 	Query      string
-	SourceUIDs []string
+	SourceUIDs []lib.TypedUID
 	UserID     string
 }
 

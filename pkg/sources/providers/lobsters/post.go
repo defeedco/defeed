@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/lib"
 )
 
 type Post struct {
-	Post            *Story `json:"post"`
-	SourceID        string `json:"source_id"`
-	SourceTyp       string `json:"source_type"`
-	ExternalContent string `json:"external_content"`
+	Post            *Story       `json:"post"`
+	SourceID        lib.TypedUID `json:"source_id"`
+	SourceTyp       string       `json:"source_type"`
+	ExternalContent string       `json:"external_content"`
 }
 
 func NewPost() *Post {
@@ -40,11 +42,11 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &aux)
 }
 
-func (p *Post) UID() string {
-	return fmt.Sprintf("%s:%s", p.SourceID, p.Post.ID)
+func (p *Post) UID() lib.TypedUID {
+	return lib.NewTypedUID(p.SourceTyp, p.Post.ID)
 }
 
-func (p *Post) SourceUID() string {
+func (p *Post) SourceUID() lib.TypedUID {
 	return p.SourceID
 }
 

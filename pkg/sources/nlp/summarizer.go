@@ -144,7 +144,7 @@ For each highlight, you must also list the IDs of the source activities that con
 
 	for i, activity := range activities {
 		input.Activities[i] = multiActivityInputActivity{
-			ID:        activity.Activity.UID(),
+			ID:        activity.Activity.UID().String(),
 			Title:     activity.Activity.Title(),
 			Body:      activity.Activity.Body(),
 			URL:       activity.Activity.URL(),
