@@ -6,8 +6,7 @@
 package api
 
 import (
-	"encoding/json"
-	"errors"
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -15,41 +14,14 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+const (
+	BearerAuthScopes = "bearerAuth.Scopes"
+)
+
 // Defines values for ActivitySortBy.
 const (
 	CreationDate ActivitySortBy = "creationDate"
 	Similarity   ActivitySortBy = "similarity"
-)
-
-// Defines values for HackernewsPostsConfigFeedName.
-const (
-	HackernewsPostsConfigFeedNameBest HackernewsPostsConfigFeedName = "best"
-	HackernewsPostsConfigFeedNameNew  HackernewsPostsConfigFeedName = "new"
-	HackernewsPostsConfigFeedNameTop  HackernewsPostsConfigFeedName = "top"
-)
-
-// Defines values for LobstersFeedConfigFeed.
-const (
-	Hottest LobstersFeedConfigFeed = "hottest"
-	Newest  LobstersFeedConfigFeed = "newest"
-)
-
-// Defines values for RedditSubredditConfigSortBy.
-const (
-	RedditSubredditConfigSortByHot    RedditSubredditConfigSortBy = "hot"
-	RedditSubredditConfigSortByNew    RedditSubredditConfigSortBy = "new"
-	RedditSubredditConfigSortByRising RedditSubredditConfigSortBy = "rising"
-	RedditSubredditConfigSortByTop    RedditSubredditConfigSortBy = "top"
-)
-
-// Defines values for RedditSubredditConfigTopPeriod.
-const (
-	All   RedditSubredditConfigTopPeriod = "all"
-	Day   RedditSubredditConfigTopPeriod = "day"
-	Hour  RedditSubredditConfigTopPeriod = "hour"
-	Month RedditSubredditConfigTopPeriod = "month"
-	Week  RedditSubredditConfigTopPeriod = "week"
-	Year  RedditSubredditConfigTopPeriod = "year"
 )
 
 // Defines values for SourceType.
@@ -65,15 +37,6 @@ const (
 	RedditSubreddit        SourceType = "redditSubreddit"
 	RssFeed                SourceType = "rssFeed"
 )
-
-// ActivitiesSummary defines model for ActivitiesSummary.
-type ActivitiesSummary struct {
-	// Highlights List of key highlights extracted from the activities
-	Highlights []ActivityHighlight `json:"highlights"`
-
-	// Overview A concise one-paragraph overview of the overall direction and themes
-	Overview string `json:"overview"`
-}
 
 // Activity defines model for Activity.
 type Activity struct {
@@ -96,8 +59,28 @@ type Activity struct {
 	Url        string     `json:"url"`
 }
 
-// ActivityHighlight defines model for ActivityHighlight.
-type ActivityHighlight struct {
+// ActivitySortBy defines model for ActivitySortBy.
+type ActivitySortBy string
+
+// CreateFeedRequest defines model for CreateFeedRequest.
+type CreateFeedRequest struct {
+	Icon       string   `json:"icon"`
+	Name       string   `json:"name"`
+	Query      string   `json:"query"`
+	SourceUids []string `json:"sourceUids"`
+}
+
+// Feed defines model for Feed.
+type Feed struct {
+	Icon       string   `json:"icon"`
+	Name       string   `json:"name"`
+	Query      string   `json:"query"`
+	SourceUids []string `json:"sourceUids"`
+	Uid        string   `json:"uid"`
+}
+
+// FeedHighlight defines model for FeedHighlight.
+type FeedHighlight struct {
 	// Content A concise highlight summarizing a key point
 	Content string `json:"content"`
 
@@ -105,158 +88,13 @@ type ActivityHighlight struct {
 	SourceActivityIds []string `json:"sourceActivityIds"`
 }
 
-// ActivitySortBy defines model for ActivitySortBy.
-type ActivitySortBy string
+// FeedSummary defines model for FeedSummary.
+type FeedSummary struct {
+	// Highlights List of key highlights extracted from the activities
+	Highlights []FeedHighlight `json:"highlights"`
 
-// ChangedetectionWebsiteConfig defines model for ChangedetectionWebsiteConfig.
-type ChangedetectionWebsiteConfig struct {
-	InstanceUrl *string `json:"instanceUrl,omitempty"`
-	Limit       *int    `json:"limit,omitempty"`
-	Token       *string `json:"token,omitempty"`
-	Watch       string  `json:"watch"`
-}
-
-// CreateSourceRequest defines model for CreateSourceRequest.
-type CreateSourceRequest struct {
-	union json.RawMessage
-}
-
-// CreateSourceRequestChangedetectionWebsite defines model for CreateSourceRequestChangedetectionWebsite.
-type CreateSourceRequestChangedetectionWebsite struct {
-	ChangedetectionWebsite ChangedetectionWebsiteConfig `json:"changedetectionWebsite"`
-	Type                   SourceType                   `json:"type"`
-}
-
-// CreateSourceRequestGithubIssues defines model for CreateSourceRequestGithubIssues.
-type CreateSourceRequestGithubIssues struct {
-	GithubIssues GithubIssuesConfig `json:"githubIssues"`
-	Type         SourceType         `json:"type"`
-}
-
-// CreateSourceRequestGithubReleases defines model for CreateSourceRequestGithubReleases.
-type CreateSourceRequestGithubReleases struct {
-	GithubReleases GithubReleasesConfig `json:"githubReleases"`
-	Type           SourceType           `json:"type"`
-}
-
-// CreateSourceRequestHackernewsPosts defines model for CreateSourceRequestHackernewsPosts.
-type CreateSourceRequestHackernewsPosts struct {
-	HackernewsPosts HackernewsPostsConfig `json:"hackernewsPosts"`
-	Type            SourceType            `json:"type"`
-}
-
-// CreateSourceRequestLobstersFeed defines model for CreateSourceRequestLobstersFeed.
-type CreateSourceRequestLobstersFeed struct {
-	LobstersFeed LobstersFeedConfig `json:"lobstersFeed"`
-	Type         SourceType         `json:"type"`
-}
-
-// CreateSourceRequestLobstersTag defines model for CreateSourceRequestLobstersTag.
-type CreateSourceRequestLobstersTag struct {
-	LobstersTag LobstersTagConfig `json:"lobstersTag"`
-	Type        SourceType        `json:"type"`
-}
-
-// CreateSourceRequestMastodonAccount defines model for CreateSourceRequestMastodonAccount.
-type CreateSourceRequestMastodonAccount struct {
-	MastodonAccount MastodonAccountConfig `json:"mastodonAccount"`
-	Type            SourceType            `json:"type"`
-}
-
-// CreateSourceRequestMastodonTag defines model for CreateSourceRequestMastodonTag.
-type CreateSourceRequestMastodonTag struct {
-	MastodonTag MastodonTagConfig `json:"mastodonTag"`
-	Type        SourceType        `json:"type"`
-}
-
-// CreateSourceRequestRedditSubreddit defines model for CreateSourceRequestRedditSubreddit.
-type CreateSourceRequestRedditSubreddit struct {
-	RedditSubreddit RedditSubredditConfig `json:"redditSubreddit"`
-	Type            SourceType            `json:"type"`
-}
-
-// CreateSourceRequestRssFeed defines model for CreateSourceRequestRssFeed.
-type CreateSourceRequestRssFeed struct {
-	RssFeed RssFeedConfig `json:"rssFeed"`
-	Type    SourceType    `json:"type"`
-}
-
-// GithubIssuesConfig defines model for GithubIssuesConfig.
-type GithubIssuesConfig struct {
-	// Repository owner/repo
-	Repository string  `json:"repository"`
-	Token      *string `json:"token,omitempty"`
-}
-
-// GithubReleasesConfig defines model for GithubReleasesConfig.
-type GithubReleasesConfig struct {
-	IncludePrereleases *bool `json:"includePrereleases,omitempty"`
-
-	// Repository owner/repo
-	Repository string  `json:"repository"`
-	Token      *string `json:"token,omitempty"`
-}
-
-// HackernewsPostsConfig defines model for HackernewsPostsConfig.
-type HackernewsPostsConfig struct {
-	FeedName HackernewsPostsConfigFeedName `json:"feedName"`
-}
-
-// HackernewsPostsConfigFeedName defines model for HackernewsPostsConfig.FeedName.
-type HackernewsPostsConfigFeedName string
-
-// LobstersFeedConfig defines model for LobstersFeedConfig.
-type LobstersFeedConfig struct {
-	CustomUrl   *string                `json:"customUrl,omitempty"`
-	Feed        LobstersFeedConfigFeed `json:"feed"`
-	InstanceUrl string                 `json:"instanceUrl"`
-}
-
-// LobstersFeedConfigFeed defines model for LobstersFeedConfig.Feed.
-type LobstersFeedConfigFeed string
-
-// LobstersTagConfig defines model for LobstersTagConfig.
-type LobstersTagConfig struct {
-	CustomUrl   *string `json:"customUrl,omitempty"`
-	InstanceUrl string  `json:"instanceUrl"`
-	Tag         string  `json:"tag"`
-}
-
-// MastodonAccountConfig defines model for MastodonAccountConfig.
-type MastodonAccountConfig struct {
-	Account     string `json:"account"`
-	InstanceUrl string `json:"instanceUrl"`
-}
-
-// MastodonTagConfig defines model for MastodonTagConfig.
-type MastodonTagConfig struct {
-	InstanceUrl string `json:"instanceUrl"`
-	Tag         string `json:"tag"`
-}
-
-// RedditSubredditConfig defines model for RedditSubredditConfig.
-type RedditSubredditConfig struct {
-	Auth *struct {
-		ID     *string `json:"ID,omitempty"`
-		Name   *string `json:"name,omitempty"`
-		Secret *string `json:"secret,omitempty"`
-	} `json:"auth,omitempty"`
-	Search    *string                        `json:"search,omitempty"`
-	SortBy    RedditSubredditConfigSortBy    `json:"sortBy"`
-	Subreddit string                         `json:"subreddit"`
-	TopPeriod RedditSubredditConfigTopPeriod `json:"topPeriod"`
-}
-
-// RedditSubredditConfigSortBy defines model for RedditSubredditConfig.SortBy.
-type RedditSubredditConfigSortBy string
-
-// RedditSubredditConfigTopPeriod defines model for RedditSubredditConfig.TopPeriod.
-type RedditSubredditConfigTopPeriod string
-
-// RssFeedConfig defines model for RssFeedConfig.
-type RssFeedConfig struct {
-	Headers *map[string]string `json:"headers,omitempty"`
-	Url     string             `json:"url"`
+	// Overview A concise one-paragraph overview of the overall direction and themes
+	Overview string `json:"overview"`
 }
 
 // Source defines model for Source.
@@ -271,35 +109,8 @@ type Source struct {
 // SourceType defines model for SourceType.
 type SourceType string
 
-// SearchActivitiesParams defines parameters for SearchActivities.
-type SearchActivitiesParams struct {
-	// Query Semantic search query text
-	Query *string `form:"query,omitempty" json:"query,omitempty"`
-
-	// Sources Filter by source UIDs (comma-separated)
-	Sources *string `form:"sources,omitempty" json:"sources,omitempty"`
-
-	// MinSimilarity Minimum similarity score (0-1). Can only be used when `query` is provided.
-	MinSimilarity *float32 `form:"minSimilarity,omitempty" json:"minSimilarity,omitempty"`
-
-	// Limit Maximum number of results to return
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
-
-	// SortBy Field to sort results by
-	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
-}
-
-// GetActivitiesSummaryParams defines parameters for GetActivitiesSummary.
-type GetActivitiesSummaryParams struct {
-	// Query Semantic search query text. If provided, the summary will be based on the query.
-	Query *string `form:"query,omitempty" json:"query,omitempty"`
-
-	// Sources Comma-separated list of source UIDs where the activities are from
-	Sources string `form:"sources" json:"sources"`
-
-	// SortBy Field to sort activities for the summary by
-	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
-}
+// UpdateFeedRequest defines model for UpdateFeedRequest.
+type UpdateFeedRequest = CreateFeedRequest
 
 // ListSourcesParams defines parameters for ListSources.
 type ListSourcesParams struct {
@@ -307,361 +118,56 @@ type ListSourcesParams struct {
 	Query *string `form:"query,omitempty" json:"query,omitempty"`
 }
 
-// CreateSourceJSONRequestBody defines body for CreateSource for application/json ContentType.
-type CreateSourceJSONRequestBody = CreateSourceRequest
+// ListFeedActivitiesParams defines parameters for ListFeedActivities.
+type ListFeedActivitiesParams struct {
+	// SortBy Sort method.
+	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 
-// AsCreateSourceRequestMastodonAccount returns the union data inside the CreateSourceRequest as a CreateSourceRequestMastodonAccount
-func (t CreateSourceRequest) AsCreateSourceRequestMastodonAccount() (CreateSourceRequestMastodonAccount, error) {
-	var body CreateSourceRequestMastodonAccount
-	err := json.Unmarshal(t.union, &body)
-	return body, err
+	// Query Filter query. Overrides the default feed query.
+	Query *string `form:"query,omitempty" json:"query,omitempty"`
 }
 
-// FromCreateSourceRequestMastodonAccount overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestMastodonAccount
-func (t *CreateSourceRequest) FromCreateSourceRequestMastodonAccount(v CreateSourceRequestMastodonAccount) error {
-	v.Type = "mastodonAccount"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
+// GetFeedSummaryParams defines parameters for GetFeedSummary.
+type GetFeedSummaryParams struct {
+	// SortBy Sort method.
+	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
+
+	// Query Filter query. Overrides the default feed query.
+	Query *string `form:"query,omitempty" json:"query,omitempty"`
 }
 
-// MergeCreateSourceRequestMastodonAccount performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestMastodonAccount
-func (t *CreateSourceRequest) MergeCreateSourceRequestMastodonAccount(v CreateSourceRequestMastodonAccount) error {
-	v.Type = "mastodonAccount"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
+// CreateOwnFeedJSONRequestBody defines body for CreateOwnFeed for application/json ContentType.
+type CreateOwnFeedJSONRequestBody = CreateFeedRequest
 
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateSourceRequestMastodonTag returns the union data inside the CreateSourceRequest as a CreateSourceRequestMastodonTag
-func (t CreateSourceRequest) AsCreateSourceRequestMastodonTag() (CreateSourceRequestMastodonTag, error) {
-	var body CreateSourceRequestMastodonTag
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateSourceRequestMastodonTag overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestMastodonTag
-func (t *CreateSourceRequest) FromCreateSourceRequestMastodonTag(v CreateSourceRequestMastodonTag) error {
-	v.Type = "mastodonTag"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateSourceRequestMastodonTag performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestMastodonTag
-func (t *CreateSourceRequest) MergeCreateSourceRequestMastodonTag(v CreateSourceRequestMastodonTag) error {
-	v.Type = "mastodonTag"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateSourceRequestHackernewsPosts returns the union data inside the CreateSourceRequest as a CreateSourceRequestHackernewsPosts
-func (t CreateSourceRequest) AsCreateSourceRequestHackernewsPosts() (CreateSourceRequestHackernewsPosts, error) {
-	var body CreateSourceRequestHackernewsPosts
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateSourceRequestHackernewsPosts overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestHackernewsPosts
-func (t *CreateSourceRequest) FromCreateSourceRequestHackernewsPosts(v CreateSourceRequestHackernewsPosts) error {
-	v.Type = "hackernewsPosts"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateSourceRequestHackernewsPosts performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestHackernewsPosts
-func (t *CreateSourceRequest) MergeCreateSourceRequestHackernewsPosts(v CreateSourceRequestHackernewsPosts) error {
-	v.Type = "hackernewsPosts"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateSourceRequestRedditSubreddit returns the union data inside the CreateSourceRequest as a CreateSourceRequestRedditSubreddit
-func (t CreateSourceRequest) AsCreateSourceRequestRedditSubreddit() (CreateSourceRequestRedditSubreddit, error) {
-	var body CreateSourceRequestRedditSubreddit
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateSourceRequestRedditSubreddit overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestRedditSubreddit
-func (t *CreateSourceRequest) FromCreateSourceRequestRedditSubreddit(v CreateSourceRequestRedditSubreddit) error {
-	v.Type = "redditSubreddit"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateSourceRequestRedditSubreddit performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestRedditSubreddit
-func (t *CreateSourceRequest) MergeCreateSourceRequestRedditSubreddit(v CreateSourceRequestRedditSubreddit) error {
-	v.Type = "redditSubreddit"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateSourceRequestLobstersTag returns the union data inside the CreateSourceRequest as a CreateSourceRequestLobstersTag
-func (t CreateSourceRequest) AsCreateSourceRequestLobstersTag() (CreateSourceRequestLobstersTag, error) {
-	var body CreateSourceRequestLobstersTag
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateSourceRequestLobstersTag overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestLobstersTag
-func (t *CreateSourceRequest) FromCreateSourceRequestLobstersTag(v CreateSourceRequestLobstersTag) error {
-	v.Type = "lobstersTag"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateSourceRequestLobstersTag performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestLobstersTag
-func (t *CreateSourceRequest) MergeCreateSourceRequestLobstersTag(v CreateSourceRequestLobstersTag) error {
-	v.Type = "lobstersTag"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateSourceRequestLobstersFeed returns the union data inside the CreateSourceRequest as a CreateSourceRequestLobstersFeed
-func (t CreateSourceRequest) AsCreateSourceRequestLobstersFeed() (CreateSourceRequestLobstersFeed, error) {
-	var body CreateSourceRequestLobstersFeed
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateSourceRequestLobstersFeed overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestLobstersFeed
-func (t *CreateSourceRequest) FromCreateSourceRequestLobstersFeed(v CreateSourceRequestLobstersFeed) error {
-	v.Type = "lobstersFeed"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateSourceRequestLobstersFeed performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestLobstersFeed
-func (t *CreateSourceRequest) MergeCreateSourceRequestLobstersFeed(v CreateSourceRequestLobstersFeed) error {
-	v.Type = "lobstersFeed"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateSourceRequestRssFeed returns the union data inside the CreateSourceRequest as a CreateSourceRequestRssFeed
-func (t CreateSourceRequest) AsCreateSourceRequestRssFeed() (CreateSourceRequestRssFeed, error) {
-	var body CreateSourceRequestRssFeed
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateSourceRequestRssFeed overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestRssFeed
-func (t *CreateSourceRequest) FromCreateSourceRequestRssFeed(v CreateSourceRequestRssFeed) error {
-	v.Type = "rssFeed"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateSourceRequestRssFeed performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestRssFeed
-func (t *CreateSourceRequest) MergeCreateSourceRequestRssFeed(v CreateSourceRequestRssFeed) error {
-	v.Type = "rssFeed"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateSourceRequestGithubReleases returns the union data inside the CreateSourceRequest as a CreateSourceRequestGithubReleases
-func (t CreateSourceRequest) AsCreateSourceRequestGithubReleases() (CreateSourceRequestGithubReleases, error) {
-	var body CreateSourceRequestGithubReleases
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateSourceRequestGithubReleases overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestGithubReleases
-func (t *CreateSourceRequest) FromCreateSourceRequestGithubReleases(v CreateSourceRequestGithubReleases) error {
-	v.Type = "githubReleases"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateSourceRequestGithubReleases performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestGithubReleases
-func (t *CreateSourceRequest) MergeCreateSourceRequestGithubReleases(v CreateSourceRequestGithubReleases) error {
-	v.Type = "githubReleases"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateSourceRequestGithubIssues returns the union data inside the CreateSourceRequest as a CreateSourceRequestGithubIssues
-func (t CreateSourceRequest) AsCreateSourceRequestGithubIssues() (CreateSourceRequestGithubIssues, error) {
-	var body CreateSourceRequestGithubIssues
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateSourceRequestGithubIssues overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestGithubIssues
-func (t *CreateSourceRequest) FromCreateSourceRequestGithubIssues(v CreateSourceRequestGithubIssues) error {
-	v.Type = "githubIssues"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateSourceRequestGithubIssues performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestGithubIssues
-func (t *CreateSourceRequest) MergeCreateSourceRequestGithubIssues(v CreateSourceRequestGithubIssues) error {
-	v.Type = "githubIssues"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsCreateSourceRequestChangedetectionWebsite returns the union data inside the CreateSourceRequest as a CreateSourceRequestChangedetectionWebsite
-func (t CreateSourceRequest) AsCreateSourceRequestChangedetectionWebsite() (CreateSourceRequestChangedetectionWebsite, error) {
-	var body CreateSourceRequestChangedetectionWebsite
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCreateSourceRequestChangedetectionWebsite overwrites any union data inside the CreateSourceRequest as the provided CreateSourceRequestChangedetectionWebsite
-func (t *CreateSourceRequest) FromCreateSourceRequestChangedetectionWebsite(v CreateSourceRequestChangedetectionWebsite) error {
-	v.Type = "changedetectionWebsite"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCreateSourceRequestChangedetectionWebsite performs a merge with any union data inside the CreateSourceRequest, using the provided CreateSourceRequestChangedetectionWebsite
-func (t *CreateSourceRequest) MergeCreateSourceRequestChangedetectionWebsite(v CreateSourceRequestChangedetectionWebsite) error {
-	v.Type = "changedetectionWebsite"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t CreateSourceRequest) Discriminator() (string, error) {
-	var discriminator struct {
-		Discriminator string `json:"type"`
-	}
-	err := json.Unmarshal(t.union, &discriminator)
-	return discriminator.Discriminator, err
-}
-
-func (t CreateSourceRequest) ValueByDiscriminator() (interface{}, error) {
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return nil, err
-	}
-	switch discriminator {
-	case "changedetectionWebsite":
-		return t.AsCreateSourceRequestChangedetectionWebsite()
-	case "githubIssues":
-		return t.AsCreateSourceRequestGithubIssues()
-	case "githubReleases":
-		return t.AsCreateSourceRequestGithubReleases()
-	case "hackernewsPosts":
-		return t.AsCreateSourceRequestHackernewsPosts()
-	case "lobstersFeed":
-		return t.AsCreateSourceRequestLobstersFeed()
-	case "lobstersTag":
-		return t.AsCreateSourceRequestLobstersTag()
-	case "mastodonAccount":
-		return t.AsCreateSourceRequestMastodonAccount()
-	case "mastodonTag":
-		return t.AsCreateSourceRequestMastodonTag()
-	case "redditSubreddit":
-		return t.AsCreateSourceRequestRedditSubreddit()
-	case "rssFeed":
-		return t.AsCreateSourceRequestRssFeed()
-	default:
-		return nil, errors.New("unknown discriminator value: " + discriminator)
-	}
-}
-
-func (t CreateSourceRequest) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *CreateSourceRequest) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
+// UpdateOwnFeedJSONRequestBody defines body for UpdateOwnFeed for application/json ContentType.
+type UpdateOwnFeedJSONRequestBody = UpdateFeedRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Search activities
-	// (GET /activities/search)
-	SearchActivities(w http.ResponseWriter, r *http.Request, params SearchActivitiesParams)
-	// Generate an executive summary of multiple activities
-	// (GET /activities/summary)
-	GetActivitiesSummary(w http.ResponseWriter, r *http.Request, params GetActivitiesSummaryParams)
-	// List all sources
+	// List available sources
 	// (GET /sources)
 	ListSources(w http.ResponseWriter, r *http.Request, params ListSourcesParams)
-	// Create a new source
-	// (POST /sources)
-	CreateSource(w http.ResponseWriter, r *http.Request)
-	// List all activities
-	// (GET /sources/activities)
-	ListAllActivities(w http.ResponseWriter, r *http.Request)
-	// Delete source
-	// (DELETE /sources/{uid})
-	DeleteSource(w http.ResponseWriter, r *http.Request, uid string)
 	// Get source by UID
 	// (GET /sources/{uid})
 	GetSource(w http.ResponseWriter, r *http.Request, uid string)
+	// List feeds belonging to the authenticated user
+	// (GET /users/me/feeds)
+	ListOwnFeeds(w http.ResponseWriter, r *http.Request)
+	// Create a feed belonging to the authenticated user
+	// (POST /users/me/feeds)
+	CreateOwnFeed(w http.ResponseWriter, r *http.Request)
+	// Delete a feed belonging to the authenticated user
+	// (DELETE /users/me/feeds/{uid})
+	DeleteOwnFeed(w http.ResponseWriter, r *http.Request, uid string)
+	// Update a feed belonging to the authenticated user
+	// (PUT /users/me/feeds/{uid})
+	UpdateOwnFeed(w http.ResponseWriter, r *http.Request, uid string)
+	// List activities for a feed
+	// (GET /users/me/feeds/{uid}/activities)
+	ListFeedActivities(w http.ResponseWriter, r *http.Request, uid string, params ListFeedActivitiesParams)
+	// Generate an executive summary of multiple activities
+	// (GET /users/me/feeds/{uid}/summary)
+	GetFeedSummary(w http.ResponseWriter, r *http.Request, uid string, params GetFeedSummaryParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -672,115 +178,6 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
-
-// SearchActivities operation middleware
-func (siw *ServerInterfaceWrapper) SearchActivities(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params SearchActivitiesParams
-
-	// ------------- Optional query parameter "query" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "sources" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "sources", r.URL.Query(), &params.Sources)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sources", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "minSimilarity" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "minSimilarity", r.URL.Query(), &params.MinSimilarity)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "minSimilarity", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "limit" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "sortBy" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "sortBy", r.URL.Query(), &params.SortBy)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sortBy", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.SearchActivities(w, r, params)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// GetActivitiesSummary operation middleware
-func (siw *ServerInterfaceWrapper) GetActivitiesSummary(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetActivitiesSummaryParams
-
-	// ------------- Optional query parameter "query" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
-		return
-	}
-
-	// ------------- Required query parameter "sources" -------------
-
-	if paramValue := r.URL.Query().Get("sources"); paramValue != "" {
-
-	} else {
-		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sources"})
-		return
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "sources", r.URL.Query(), &params.Sources)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sources", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "sortBy" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "sortBy", r.URL.Query(), &params.SortBy)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sortBy", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetActivitiesSummary(w, r, params)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
 
 // ListSources operation middleware
 func (siw *ServerInterfaceWrapper) ListSources(w http.ResponseWriter, r *http.Request) {
@@ -809,59 +206,6 @@ func (siw *ServerInterfaceWrapper) ListSources(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
-// CreateSource operation middleware
-func (siw *ServerInterfaceWrapper) CreateSource(w http.ResponseWriter, r *http.Request) {
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CreateSource(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// ListAllActivities operation middleware
-func (siw *ServerInterfaceWrapper) ListAllActivities(w http.ResponseWriter, r *http.Request) {
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ListAllActivities(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// DeleteSource operation middleware
-func (siw *ServerInterfaceWrapper) DeleteSource(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// ------------- Path parameter "uid" -------------
-	var uid string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "uid", r.PathValue("uid"), &uid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uid", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteSource(w, r, uid)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
 // GetSource operation middleware
 func (siw *ServerInterfaceWrapper) GetSource(w http.ResponseWriter, r *http.Request) {
 
@@ -878,6 +222,208 @@ func (siw *ServerInterfaceWrapper) GetSource(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetSource(w, r, uid)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListOwnFeeds operation middleware
+func (siw *ServerInterfaceWrapper) ListOwnFeeds(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListOwnFeeds(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateOwnFeed operation middleware
+func (siw *ServerInterfaceWrapper) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateOwnFeed(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteOwnFeed operation middleware
+func (siw *ServerInterfaceWrapper) DeleteOwnFeed(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "uid" -------------
+	var uid string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uid", r.PathValue("uid"), &uid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uid", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteOwnFeed(w, r, uid)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateOwnFeed operation middleware
+func (siw *ServerInterfaceWrapper) UpdateOwnFeed(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "uid" -------------
+	var uid string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uid", r.PathValue("uid"), &uid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uid", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateOwnFeed(w, r, uid)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListFeedActivities operation middleware
+func (siw *ServerInterfaceWrapper) ListFeedActivities(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "uid" -------------
+	var uid string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uid", r.PathValue("uid"), &uid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uid", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListFeedActivitiesParams
+
+	// ------------- Optional query parameter "sortBy" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sortBy", r.URL.Query(), &params.SortBy)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sortBy", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListFeedActivities(w, r, uid, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetFeedSummary operation middleware
+func (siw *ServerInterfaceWrapper) GetFeedSummary(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "uid" -------------
+	var uid string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uid", r.PathValue("uid"), &uid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uid", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetFeedSummaryParams
+
+	// ------------- Optional query parameter "sortBy" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sortBy", r.URL.Query(), &params.SortBy)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sortBy", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFeedSummary(w, r, uid, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1007,13 +553,14 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
-	m.HandleFunc("GET "+options.BaseURL+"/activities/search", wrapper.SearchActivities)
-	m.HandleFunc("GET "+options.BaseURL+"/activities/summary", wrapper.GetActivitiesSummary)
 	m.HandleFunc("GET "+options.BaseURL+"/sources", wrapper.ListSources)
-	m.HandleFunc("POST "+options.BaseURL+"/sources", wrapper.CreateSource)
-	m.HandleFunc("GET "+options.BaseURL+"/sources/activities", wrapper.ListAllActivities)
-	m.HandleFunc("DELETE "+options.BaseURL+"/sources/{uid}", wrapper.DeleteSource)
 	m.HandleFunc("GET "+options.BaseURL+"/sources/{uid}", wrapper.GetSource)
+	m.HandleFunc("GET "+options.BaseURL+"/users/me/feeds", wrapper.ListOwnFeeds)
+	m.HandleFunc("POST "+options.BaseURL+"/users/me/feeds", wrapper.CreateOwnFeed)
+	m.HandleFunc("DELETE "+options.BaseURL+"/users/me/feeds/{uid}", wrapper.DeleteOwnFeed)
+	m.HandleFunc("PUT "+options.BaseURL+"/users/me/feeds/{uid}", wrapper.UpdateOwnFeed)
+	m.HandleFunc("GET "+options.BaseURL+"/users/me/feeds/{uid}/activities", wrapper.ListFeedActivities)
+	m.HandleFunc("GET "+options.BaseURL+"/users/me/feeds/{uid}/summary", wrapper.GetFeedSummary)
 
 	return m
 }

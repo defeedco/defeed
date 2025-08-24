@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Activity is the client for interacting with the Activity builders.
 	Activity *ActivityClient
+	// Feed is the client for interacting with the Feed builders.
+	Feed *FeedClient
 	// Source is the client for interacting with the Source builders.
 	Source *SourceClient
 
@@ -148,6 +150,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Activity = NewActivityClient(tx.config)
+	tx.Feed = NewFeedClient(tx.config)
 	tx.Source = NewSourceClient(tx.config)
 }
 

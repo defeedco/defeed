@@ -11,7 +11,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/glanceapp/glance/pkg/feeds"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
+	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
 	pgvector "github.com/pgvector/pgvector-go"
@@ -27,6 +29,7 @@ const (
 
 	// Node types.
 	TypeActivity = "Activity"
+	TypeFeed     = "Feed"
 	TypeSource   = "Source"
 )
 
@@ -976,6 +979,771 @@ func (m *ActivityMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ActivityMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Activity edge %s", name)
+}
+
+// FeedMutation represents an operation that mutates the Feed nodes in the graph.
+type FeedMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *string
+	user_id           *string
+	name              *string
+	icon              *string
+	query             *string
+	source_uids       *[]string
+	appendsource_uids []string
+	created_at        *time.Time
+	updated_at        *time.Time
+	summaries         *[]feeds.FeedSummary
+	appendsummaries   []feeds.FeedSummary
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*Feed, error)
+	predicates        []predicate.Feed
+}
+
+var _ ent.Mutation = (*FeedMutation)(nil)
+
+// feedOption allows management of the mutation configuration using functional options.
+type feedOption func(*FeedMutation)
+
+// newFeedMutation creates new mutation for the Feed entity.
+func newFeedMutation(c config, op Op, opts ...feedOption) *FeedMutation {
+	m := &FeedMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeFeed,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withFeedID sets the ID field of the mutation.
+func withFeedID(id string) feedOption {
+	return func(m *FeedMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Feed
+		)
+		m.oldValue = func(ctx context.Context) (*Feed, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Feed.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withFeed sets the old Feed of the mutation.
+func withFeed(node *Feed) feedOption {
+	return func(m *FeedMutation) {
+		m.oldValue = func(context.Context) (*Feed, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m FeedMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m FeedMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Feed entities.
+func (m *FeedMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *FeedMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *FeedMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Feed.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUserID sets the "user_id" field.
+func (m *FeedMutation) SetUserID(s string) {
+	m.user_id = &s
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *FeedMutation) UserID() (r string, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the Feed entity.
+// If the Feed object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FeedMutation) OldUserID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *FeedMutation) ResetUserID() {
+	m.user_id = nil
+}
+
+// SetName sets the "name" field.
+func (m *FeedMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *FeedMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Feed entity.
+// If the Feed object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FeedMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *FeedMutation) ResetName() {
+	m.name = nil
+}
+
+// SetIcon sets the "icon" field.
+func (m *FeedMutation) SetIcon(s string) {
+	m.icon = &s
+}
+
+// Icon returns the value of the "icon" field in the mutation.
+func (m *FeedMutation) Icon() (r string, exists bool) {
+	v := m.icon
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIcon returns the old "icon" field's value of the Feed entity.
+// If the Feed object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FeedMutation) OldIcon(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIcon is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIcon requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIcon: %w", err)
+	}
+	return oldValue.Icon, nil
+}
+
+// ResetIcon resets all changes to the "icon" field.
+func (m *FeedMutation) ResetIcon() {
+	m.icon = nil
+}
+
+// SetQuery sets the "query" field.
+func (m *FeedMutation) SetQuery(s string) {
+	m.query = &s
+}
+
+// Query returns the value of the "query" field in the mutation.
+func (m *FeedMutation) Query() (r string, exists bool) {
+	v := m.query
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuery returns the old "query" field's value of the Feed entity.
+// If the Feed object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FeedMutation) OldQuery(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuery is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuery requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuery: %w", err)
+	}
+	return oldValue.Query, nil
+}
+
+// ResetQuery resets all changes to the "query" field.
+func (m *FeedMutation) ResetQuery() {
+	m.query = nil
+}
+
+// SetSourceUids sets the "source_uids" field.
+func (m *FeedMutation) SetSourceUids(s []string) {
+	m.source_uids = &s
+	m.appendsource_uids = nil
+}
+
+// SourceUids returns the value of the "source_uids" field in the mutation.
+func (m *FeedMutation) SourceUids() (r []string, exists bool) {
+	v := m.source_uids
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceUids returns the old "source_uids" field's value of the Feed entity.
+// If the Feed object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FeedMutation) OldSourceUids(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceUids is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceUids requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceUids: %w", err)
+	}
+	return oldValue.SourceUids, nil
+}
+
+// AppendSourceUids adds s to the "source_uids" field.
+func (m *FeedMutation) AppendSourceUids(s []string) {
+	m.appendsource_uids = append(m.appendsource_uids, s...)
+}
+
+// AppendedSourceUids returns the list of values that were appended to the "source_uids" field in this mutation.
+func (m *FeedMutation) AppendedSourceUids() ([]string, bool) {
+	if len(m.appendsource_uids) == 0 {
+		return nil, false
+	}
+	return m.appendsource_uids, true
+}
+
+// ResetSourceUids resets all changes to the "source_uids" field.
+func (m *FeedMutation) ResetSourceUids() {
+	m.source_uids = nil
+	m.appendsource_uids = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *FeedMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *FeedMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Feed entity.
+// If the Feed object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FeedMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *FeedMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *FeedMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *FeedMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Feed entity.
+// If the Feed object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FeedMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *FeedMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetSummaries sets the "summaries" field.
+func (m *FeedMutation) SetSummaries(fs []feeds.FeedSummary) {
+	m.summaries = &fs
+	m.appendsummaries = nil
+}
+
+// Summaries returns the value of the "summaries" field in the mutation.
+func (m *FeedMutation) Summaries() (r []feeds.FeedSummary, exists bool) {
+	v := m.summaries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSummaries returns the old "summaries" field's value of the Feed entity.
+// If the Feed object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FeedMutation) OldSummaries(ctx context.Context) (v []feeds.FeedSummary, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSummaries is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSummaries requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSummaries: %w", err)
+	}
+	return oldValue.Summaries, nil
+}
+
+// AppendSummaries adds fs to the "summaries" field.
+func (m *FeedMutation) AppendSummaries(fs []feeds.FeedSummary) {
+	m.appendsummaries = append(m.appendsummaries, fs...)
+}
+
+// AppendedSummaries returns the list of values that were appended to the "summaries" field in this mutation.
+func (m *FeedMutation) AppendedSummaries() ([]feeds.FeedSummary, bool) {
+	if len(m.appendsummaries) == 0 {
+		return nil, false
+	}
+	return m.appendsummaries, true
+}
+
+// ClearSummaries clears the value of the "summaries" field.
+func (m *FeedMutation) ClearSummaries() {
+	m.summaries = nil
+	m.appendsummaries = nil
+	m.clearedFields[feed.FieldSummaries] = struct{}{}
+}
+
+// SummariesCleared returns if the "summaries" field was cleared in this mutation.
+func (m *FeedMutation) SummariesCleared() bool {
+	_, ok := m.clearedFields[feed.FieldSummaries]
+	return ok
+}
+
+// ResetSummaries resets all changes to the "summaries" field.
+func (m *FeedMutation) ResetSummaries() {
+	m.summaries = nil
+	m.appendsummaries = nil
+	delete(m.clearedFields, feed.FieldSummaries)
+}
+
+// Where appends a list predicates to the FeedMutation builder.
+func (m *FeedMutation) Where(ps ...predicate.Feed) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the FeedMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *FeedMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Feed, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *FeedMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *FeedMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Feed).
+func (m *FeedMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *FeedMutation) Fields() []string {
+	fields := make([]string, 0, 8)
+	if m.user_id != nil {
+		fields = append(fields, feed.FieldUserID)
+	}
+	if m.name != nil {
+		fields = append(fields, feed.FieldName)
+	}
+	if m.icon != nil {
+		fields = append(fields, feed.FieldIcon)
+	}
+	if m.query != nil {
+		fields = append(fields, feed.FieldQuery)
+	}
+	if m.source_uids != nil {
+		fields = append(fields, feed.FieldSourceUids)
+	}
+	if m.created_at != nil {
+		fields = append(fields, feed.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, feed.FieldUpdatedAt)
+	}
+	if m.summaries != nil {
+		fields = append(fields, feed.FieldSummaries)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *FeedMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case feed.FieldUserID:
+		return m.UserID()
+	case feed.FieldName:
+		return m.Name()
+	case feed.FieldIcon:
+		return m.Icon()
+	case feed.FieldQuery:
+		return m.Query()
+	case feed.FieldSourceUids:
+		return m.SourceUids()
+	case feed.FieldCreatedAt:
+		return m.CreatedAt()
+	case feed.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case feed.FieldSummaries:
+		return m.Summaries()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *FeedMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case feed.FieldUserID:
+		return m.OldUserID(ctx)
+	case feed.FieldName:
+		return m.OldName(ctx)
+	case feed.FieldIcon:
+		return m.OldIcon(ctx)
+	case feed.FieldQuery:
+		return m.OldQuery(ctx)
+	case feed.FieldSourceUids:
+		return m.OldSourceUids(ctx)
+	case feed.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case feed.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case feed.FieldSummaries:
+		return m.OldSummaries(ctx)
+	}
+	return nil, fmt.Errorf("unknown Feed field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *FeedMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case feed.FieldUserID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case feed.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case feed.FieldIcon:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIcon(v)
+		return nil
+	case feed.FieldQuery:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuery(v)
+		return nil
+	case feed.FieldSourceUids:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceUids(v)
+		return nil
+	case feed.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case feed.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case feed.FieldSummaries:
+		v, ok := value.([]feeds.FeedSummary)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSummaries(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Feed field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *FeedMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *FeedMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *FeedMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Feed numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *FeedMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(feed.FieldSummaries) {
+		fields = append(fields, feed.FieldSummaries)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *FeedMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *FeedMutation) ClearField(name string) error {
+	switch name {
+	case feed.FieldSummaries:
+		m.ClearSummaries()
+		return nil
+	}
+	return fmt.Errorf("unknown Feed nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *FeedMutation) ResetField(name string) error {
+	switch name {
+	case feed.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case feed.FieldName:
+		m.ResetName()
+		return nil
+	case feed.FieldIcon:
+		m.ResetIcon()
+		return nil
+	case feed.FieldQuery:
+		m.ResetQuery()
+		return nil
+	case feed.FieldSourceUids:
+		m.ResetSourceUids()
+		return nil
+	case feed.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case feed.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case feed.FieldSummaries:
+		m.ResetSummaries()
+		return nil
+	}
+	return fmt.Errorf("unknown Feed field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *FeedMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *FeedMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *FeedMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *FeedMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *FeedMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *FeedMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *FeedMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Feed unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *FeedMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Feed edge %s", name)
 }
 
 // SourceMutation represents an operation that mutates the Source nodes in the graph.

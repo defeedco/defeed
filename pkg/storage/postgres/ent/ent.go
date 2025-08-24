@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
+	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
 )
 
@@ -75,6 +76,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			activity.Table: activity.ValidColumn,
+			feed.Table:     feed.ValidColumn,
 			source.Table:   source.ValidColumn,
 		})
 	})

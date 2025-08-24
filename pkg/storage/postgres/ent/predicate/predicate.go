@@ -9,5 +9,8 @@ import (
 // Activity is the predicate function for activity builders.
 type Activity func(*sql.Selector)
 
+// Feed is the predicate function for feed builders.
+type Feed func(*sql.Selector)
+
 // Source is the predicate function for source builders.
 type Source func(*sql.Selector)
