@@ -231,6 +231,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FeedSummary'
+        '202':
+          description: Insufficient activity to summarize. Retry later.
         '400':
           description: Invalid request
         '401':

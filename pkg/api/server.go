@@ -86,7 +86,7 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 	}
 
 	feedStore := postgres.NewFeedRepository(db)
-	feedRegistry := feeds.NewRegistry(feedStore, executor, summarizer)
+	feedRegistry := feeds.NewRegistry(feedStore, executor, registry, summarizer)
 
 	mux := http.NewServeMux()
 
@@ -378,6 +378,11 @@ func (s *Server) GetFeedSummary(w http.ResponseWriter, r *http.Request, feedID s
 
 	feedSummary, err := s.feedRegistry.Summary(r.Context(), feedID, userID, queryOverride)
 	if err != nil {
+		if errors.Is(err, feeds.ErrInsufficientActivity) {
+			s.statusCode(w, http.StatusAccepted)
+			return
+		}
+
 		s.internalError(w, err, "generate feed summary")
 		return
 	}
@@ -426,6 +431,10 @@ func (s *Server) internalError(w http.ResponseWriter, err error, msg string) {
 func (s *Server) badRequest(w http.ResponseWriter, err error, msg string) {
 	s.logger.Err(err).Msg(msg)
 	http.Error(w, err.Error(), http.StatusBadRequest)
+}
+
+func (s *Server) statusCode(w http.ResponseWriter, code int) {
+	w.WriteHeader(code)
 }
 
 func serializeFeedSummary(in *activitytypes.ActivitiesSummary) FeedSummary {

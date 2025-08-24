@@ -15,6 +15,9 @@ import (
 // TODO(subscription): Change to "ErrPayingUsersOnly" once we have subscription plans.
 var ErrAuthUsersOnly = errors.New("query override supported for authenticated users only")
 
+// ErrInsufficientActivity indicates there is not enough activity to create a summary.
+var ErrInsufficientActivity = errors.New("insufficient activity to summarize")
+
 type Registry struct {
 	store          feedStore
 	sourceExecutor *sources.Executor
@@ -33,8 +36,8 @@ type summarizer interface {
 	SummarizeMany(ctx context.Context, activities []*activities.DecoratedActivity, query string) (*activities.ActivitiesSummary, error)
 }
 
-func NewRegistry(store feedStore, sourceExecutor *sources.Executor, summarizer summarizer) *Registry {
-	return &Registry{store: store, sourceExecutor: sourceExecutor, summarizer: summarizer}
+func NewRegistry(store feedStore, sourceExecutor *sources.Executor, sourceRegistry *sources.Registry, summarizer summarizer) *Registry {
+	return &Registry{store: store, sourceExecutor: sourceExecutor, sourceRegistry: sourceRegistry, summarizer: summarizer}
 }
 
 type Feed struct {
@@ -203,9 +206,15 @@ func (r *Registry) Summary(ctx context.Context, feedID, userID, queryOverride st
 }
 
 func (r *Registry) summarize(ctx context.Context, query string, sourceUIDs []activities.TypedUID) (*activities.ActivitiesSummary, error) {
-	acts, err := r.sourceExecutor.Search(ctx, query, sourceUIDs, 0.3, 20, activities.SortBySimilarity)
+	limit := 20
+	acts, err := r.sourceExecutor.Search(ctx, query, sourceUIDs, 0.0, limit, activities.SortBySimilarity)
 	if err != nil {
 		return nil, fmt.Errorf("search: %w", err)
+	}
+
+	if len(acts) < limit {
+		// Not enough activities to summarize
+		return nil, ErrInsufficientActivity
 	}
 
 	summary, err := r.summarizer.SummarizeMany(ctx, acts, query)
