@@ -303,7 +303,7 @@ func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
 	s.serializeRes(w, serializeFeed(createdFeed))
 }
 
-func (s *Server) ListOwnFeeds(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ListFeeds(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(userIDContextKey).(string)
 
 	feedList, err := s.feedRegistry.ListByUserID(r.Context(), userID)

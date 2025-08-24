@@ -120,16 +120,13 @@ type ListFeedActivitiesParams struct {
 	// SortBy Sort method.
 	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 
-	// Query Filter query. Overrides the default feed query.
+	// Query Filter query. Authenticated users can override the default feed query.
 	Query *string `form:"query,omitempty" json:"query,omitempty"`
 }
 
 // GetFeedSummaryParams defines parameters for GetFeedSummary.
 type GetFeedSummaryParams struct {
-	// SortBy Sort method.
-	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
-
-	// Query Filter query. Overrides the default feed query.
+	// Query Filter query. Authenticated users can override the default feed query.
 	Query *string `form:"query,omitempty" json:"query,omitempty"`
 }
 
@@ -147,9 +144,9 @@ type UpdateOwnFeedJSONRequestBody = UpdateFeedRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// List feeds belonging to the authenticated user
+	// List public feeds and/or those belonging to the authenticated user
 	// (GET /feeds)
-	ListOwnFeeds(w http.ResponseWriter, r *http.Request)
+	ListFeeds(w http.ResponseWriter, r *http.Request)
 	// Create a feed belonging to the authenticated user
 	// (POST /feeds)
 	CreateOwnFeed(w http.ResponseWriter, r *http.Request)
@@ -182,8 +179,8 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// ListOwnFeeds operation middleware
-func (siw *ServerInterfaceWrapper) ListOwnFeeds(w http.ResponseWriter, r *http.Request) {
+// ListFeeds operation middleware
+func (siw *ServerInterfaceWrapper) ListFeeds(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
@@ -192,7 +189,7 @@ func (siw *ServerInterfaceWrapper) ListOwnFeeds(w http.ResponseWriter, r *http.R
 	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ListOwnFeeds(w, r)
+		siw.Handler.ListFeeds(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -356,14 +353,6 @@ func (siw *ServerInterfaceWrapper) GetFeedSummary(w http.ResponseWriter, r *http
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetFeedSummaryParams
-
-	// ------------- Optional query parameter "sortBy" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "sortBy", r.URL.Query(), &params.SortBy)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sortBy", Err: err})
-		return
-	}
 
 	// ------------- Optional query parameter "query" -------------
 
@@ -568,7 +557,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
-	m.HandleFunc("GET "+options.BaseURL+"/feeds", wrapper.ListOwnFeeds)
+	m.HandleFunc("GET "+options.BaseURL+"/feeds", wrapper.ListFeeds)
 	m.HandleFunc("POST "+options.BaseURL+"/feeds", wrapper.CreateOwnFeed)
 	m.HandleFunc("DELETE "+options.BaseURL+"/feeds/{uid}", wrapper.DeleteOwnFeed)
 	m.HandleFunc("PUT "+options.BaseURL+"/feeds/{uid}", wrapper.UpdateOwnFeed)

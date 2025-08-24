@@ -1,7 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * DeFeed API
+ * Defeed API
  * Defeat your fragmented feeds 💪
  *
  * The version of the OpenAPI document: 1.0.0
@@ -424,12 +424,11 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
          * 
          * @summary Generate an executive summary of multiple activities
          * @param {string} uid 
-         * @param {ActivitySortBy} [sortBy] Sort method.
-         * @param {string} [query] Filter query. Overrides the default feed query.
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getFeedSummary: async (uid: string, sortBy?: ActivitySortBy, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getFeedSummary: async (uid: string, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uid' is not null or undefined
             assertParamExists('getFeedSummary', 'uid', uid)
             const localVarPath = `/feeds/{uid}/summary`
@@ -448,10 +447,6 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
             // authentication bearerAuth required
             // http bearer authentication required
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-            if (sortBy !== undefined) {
-                localVarQueryParameter['sortBy'] = sortBy;
-            }
 
             if (query !== undefined) {
                 localVarQueryParameter['query'] = query;
@@ -473,7 +468,7 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
          * @summary List activities for a feed
          * @param {string} uid 
          * @param {ActivitySortBy} [sortBy] Sort method.
-         * @param {string} [query] Filter query. Overrides the default feed query.
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -518,11 +513,11 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * 
-         * @summary List feeds belonging to the authenticated user
+         * @summary List public feeds and/or those belonging to the authenticated user
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listOwnFeeds: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        listFeeds: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/feeds`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -634,13 +629,12 @@ export const FeedsApiFp = function(configuration?: Configuration) {
          * 
          * @summary Generate an executive summary of multiple activities
          * @param {string} uid 
-         * @param {ActivitySortBy} [sortBy] Sort method.
-         * @param {string} [query] Filter query. Overrides the default feed query.
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getFeedSummary(uid: string, sortBy?: ActivitySortBy, query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FeedSummary>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getFeedSummary(uid, sortBy, query, options);
+        async getFeedSummary(uid: string, query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FeedSummary>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFeedSummary(uid, query, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FeedsApi.getFeedSummary']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -650,7 +644,7 @@ export const FeedsApiFp = function(configuration?: Configuration) {
          * @summary List activities for a feed
          * @param {string} uid 
          * @param {ActivitySortBy} [sortBy] Sort method.
-         * @param {string} [query] Filter query. Overrides the default feed query.
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -662,14 +656,14 @@ export const FeedsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary List feeds belonging to the authenticated user
+         * @summary List public feeds and/or those belonging to the authenticated user
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listOwnFeeds(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Feed>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listOwnFeeds(options);
+        async listFeeds(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Feed>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listFeeds(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['FeedsApi.listOwnFeeds']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['FeedsApi.listFeeds']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -720,20 +714,19 @@ export const FeedsApiFactory = function (configuration?: Configuration, basePath
          * 
          * @summary Generate an executive summary of multiple activities
          * @param {string} uid 
-         * @param {ActivitySortBy} [sortBy] Sort method.
-         * @param {string} [query] Filter query. Overrides the default feed query.
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getFeedSummary(uid: string, sortBy?: ActivitySortBy, query?: string, options?: RawAxiosRequestConfig): AxiosPromise<FeedSummary> {
-            return localVarFp.getFeedSummary(uid, sortBy, query, options).then((request) => request(axios, basePath));
+        getFeedSummary(uid: string, query?: string, options?: RawAxiosRequestConfig): AxiosPromise<FeedSummary> {
+            return localVarFp.getFeedSummary(uid, query, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary List activities for a feed
          * @param {string} uid 
          * @param {ActivitySortBy} [sortBy] Sort method.
-         * @param {string} [query] Filter query. Overrides the default feed query.
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -742,12 +735,12 @@ export const FeedsApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * 
-         * @summary List feeds belonging to the authenticated user
+         * @summary List public feeds and/or those belonging to the authenticated user
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listOwnFeeds(options?: RawAxiosRequestConfig): AxiosPromise<Array<Feed>> {
-            return localVarFp.listOwnFeeds(options).then((request) => request(axios, basePath));
+        listFeeds(options?: RawAxiosRequestConfig): AxiosPromise<Array<Feed>> {
+            return localVarFp.listFeeds(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -798,14 +791,13 @@ export class FeedsApi extends BaseAPI {
      * 
      * @summary Generate an executive summary of multiple activities
      * @param {string} uid 
-     * @param {ActivitySortBy} [sortBy] Sort method.
-     * @param {string} [query] Filter query. Overrides the default feed query.
+     * @param {string} [query] Filter query. Authenticated users can override the default feed query.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeedsApi
      */
-    public getFeedSummary(uid: string, sortBy?: ActivitySortBy, query?: string, options?: RawAxiosRequestConfig) {
-        return FeedsApiFp(this.configuration).getFeedSummary(uid, sortBy, query, options).then((request) => request(this.axios, this.basePath));
+    public getFeedSummary(uid: string, query?: string, options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).getFeedSummary(uid, query, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -813,7 +805,7 @@ export class FeedsApi extends BaseAPI {
      * @summary List activities for a feed
      * @param {string} uid 
      * @param {ActivitySortBy} [sortBy] Sort method.
-     * @param {string} [query] Filter query. Overrides the default feed query.
+     * @param {string} [query] Filter query. Authenticated users can override the default feed query.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeedsApi
@@ -824,13 +816,13 @@ export class FeedsApi extends BaseAPI {
 
     /**
      * 
-     * @summary List feeds belonging to the authenticated user
+     * @summary List public feeds and/or those belonging to the authenticated user
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeedsApi
      */
-    public listOwnFeeds(options?: RawAxiosRequestConfig) {
-        return FeedsApiFp(this.configuration).listOwnFeeds(options).then((request) => request(this.axios, this.basePath));
+    public listFeeds(options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).listFeeds(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -84,7 +84,7 @@ paths:
           description: Unauthorized - Invalid or missing authentication token
     get:
       summary: List public feeds and/or those belonging to the authenticated user
-      operationId: listOwnFeeds
+      operationId: listFeeds
       tags:
         - feeds
       security:

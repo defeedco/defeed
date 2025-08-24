@@ -1,7 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * DeFeed API
+ * Defeed API
  * Defeat your fragmented feeds 💪
  *
  * The version of the OpenAPI document: 1.0.0
