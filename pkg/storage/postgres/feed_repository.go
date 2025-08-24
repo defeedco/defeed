@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
@@ -28,13 +27,16 @@ func (r *FeedRepository) Upsert(ctx context.Context, f feeds.Feed) error {
 	}
 
 	err := r.db.Client().Feed.Create().
+		SetID(f.ID).
 		SetUserID(f.UserID).
 		SetName(f.Name).
 		SetIcon(f.Icon).
 		SetQuery(f.Query).
 		SetSourceUids(sourceUIDs).
+		SetSummary(f.Summary).
+		SetPublic(f.Public).
 		SetUpdatedAt(f.UpdatedAt).
-		SetSummaries(f.Summaries).
+		SetCreatedAt(f.CreatedAt).
 		// https://github.com/ent/ent/issues/2494#issuecomment-1182015427
 		OnConflictColumns(entfeed.FieldID).
 		UpdateNewValues().
@@ -47,10 +49,8 @@ func (r *FeedRepository) Remove(ctx context.Context, uid string) error {
 	return r.db.Client().Feed.DeleteOneID(uid).Exec(ctx)
 }
 
-func (r *FeedRepository) ListByUserID(ctx context.Context, userID string) ([]*feeds.Feed, error) {
-	feedsEnt, err := r.db.Client().Feed.Query().
-		Where(entfeed.UserID(userID)).
-		All(ctx)
+func (r *FeedRepository) List(ctx context.Context) ([]*feeds.Feed, error) {
+	feedsEnt, err := r.db.Client().Feed.Query().All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -79,18 +79,6 @@ func (r *FeedRepository) GetByID(ctx context.Context, uid string) (*feeds.Feed, 
 }
 
 func feedFromEnt(in *ent.Feed) (*feeds.Feed, error) {
-	var summaries []feeds.FeedSummary
-	if in.Summaries != nil {
-		summariesJson, err := json.Marshal(in.Summaries)
-		if err != nil {
-			return nil, fmt.Errorf("marshal summaries from ent: %w", err)
-		}
-		err = json.Unmarshal(summariesJson, &summaries)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshal summaries: %w", err)
-		}
-	}
-
 	sourceUIDs := make([]types.TypedUID, len(in.SourceUids))
 	for i, uid := range in.SourceUids {
 		typedUID, err := sources.NewTypedUID(uid)
@@ -109,6 +97,7 @@ func feedFromEnt(in *ent.Feed) (*feeds.Feed, error) {
 		SourceUIDs: sourceUIDs,
 		CreatedAt:  in.CreatedAt,
 		UpdatedAt:  in.UpdatedAt,
-		Summaries:  summaries,
+		Public:     in.Public,
+		Summary:    in.Summary,
 	}, nil
 }

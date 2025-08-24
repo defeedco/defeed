@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
@@ -22,7 +23,7 @@ import (
 	"github.com/glanceapp/glance/pkg/sources/providers/rss"
 
 	"github.com/glanceapp/glance/pkg/feeds"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/sources/nlp"
 	httpswagger "github.com/swaggo/http-swagger"
 
@@ -36,9 +37,7 @@ import (
 //go:embed openapi.yaml
 var openapiSpecYaml string
 
-type contextKey string
-
-const userIDKey = contextKey("userID")
+const userIDContextKey = "userID"
 
 type Server struct {
 	executor     *sources.Executor
@@ -117,7 +116,10 @@ func authMiddleware(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 
 		if authHeader == "" {
-			http.Error(w, "missing authorization header", http.StatusUnauthorized)
+			// For the time being, we allow unauthenticated requests but with certain limitations.
+			emptyUserID := ""
+			ctx := context.WithValue(r.Context(), userIDContextKey, emptyUserID)
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 
@@ -132,10 +134,10 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// TODO: authorize when user resource is implemented
+		// TODO(auth): authorize when user resource/auth is implemented
 		userID := authToken
 
-		ctx := context.WithValue(r.Context(), userIDKey, userID)
+		ctx := context.WithValue(r.Context(), userIDContextKey, userID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -197,11 +199,11 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid string, params ListFeedActivitiesParams) {
-	userID := r.Context().Value(userIDKey).(string)
+	userID := r.Context().Value(userIDContextKey).(string)
 
-	var query string
+	var queryOverride string
 	if params.Query != nil {
-		query = *params.Query
+		queryOverride = *params.Query
 	}
 
 	sortBy, err := deserializeSortBy(params.SortBy)
@@ -210,14 +212,7 @@ func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid 
 		return
 	}
 
-	feedParams := feeds.FeedParameters{
-		FeedID: uid,
-		UserID: userID,
-		Query:  query,
-		SortBy: sortBy,
-	}
-
-	out, err := s.feedRegistry.Activities(r.Context(), feedParams)
+	out, err := s.feedRegistry.Activities(r.Context(), uid, userID, sortBy, queryOverride)
 	if err != nil {
 		s.internalError(w, err, "list feed activities")
 		return
@@ -276,7 +271,7 @@ func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
 }
 
 func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(userIDKey).(string)
+	userID := r.Context().Value(userIDContextKey).(string)
 
 	var req CreateFeedRequest
 	err := deserializeReq(r, &req)
@@ -309,7 +304,7 @@ func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) ListOwnFeeds(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(userIDKey).(string)
+	userID := r.Context().Value(userIDContextKey).(string)
 
 	feedList, err := s.feedRegistry.ListByUserID(r.Context(), userID)
 	if err != nil {
@@ -328,7 +323,7 @@ func (s *Server) UpdateOwnFeed(w http.ResponseWriter, r *http.Request, uid strin
 		return
 	}
 
-	userID := r.Context().Value(userIDKey).(string)
+	userID := r.Context().Value(userIDContextKey).(string)
 
 	sourceUIDs, err := deserializeSourceUIDs(req.SourceUids)
 	if err != nil {
@@ -355,7 +350,7 @@ func (s *Server) UpdateOwnFeed(w http.ResponseWriter, r *http.Request, uid strin
 }
 
 func (s *Server) DeleteOwnFeed(w http.ResponseWriter, r *http.Request, uid string) {
-	userID := r.Context().Value(userIDKey).(string)
+	userID := r.Context().Value(userIDContextKey).(string)
 
 	err := s.feedRegistry.Remove(r.Context(), uid, userID)
 	if err != nil {
@@ -366,28 +361,15 @@ func (s *Server) DeleteOwnFeed(w http.ResponseWriter, r *http.Request, uid strin
 	s.serializeRes(w, map[string]string{"message": "Feed deleted successfully"})
 }
 
-func (s *Server) GetFeedSummary(w http.ResponseWriter, r *http.Request, uid string, params GetFeedSummaryParams) {
-	userID := r.Context().Value(userIDKey).(string)
+func (s *Server) GetFeedSummary(w http.ResponseWriter, r *http.Request, feedID string, params GetFeedSummaryParams) {
+	userID := r.Context().Value(userIDContextKey).(string)
 
-	var query string
+	var queryOverride string
 	if params.Query != nil {
-		query = *params.Query
+		queryOverride = *params.Query
 	}
 
-	sortBy, err := deserializeSortBy(params.SortBy)
-	if err != nil {
-		s.badRequest(w, err, "deserialize sort by")
-		return
-	}
-
-	feedParams := feeds.FeedParameters{
-		FeedID: uid,
-		UserID: userID,
-		Query:  query,
-		SortBy: sortBy,
-	}
-
-	feedSummary, err := s.feedRegistry.Summary(r.Context(), feedParams)
+	feedSummary, err := s.feedRegistry.Summary(r.Context(), feedID, userID, queryOverride)
 	if err != nil {
 		s.internalError(w, err, "generate feed summary")
 		return
@@ -439,9 +421,9 @@ func (s *Server) badRequest(w http.ResponseWriter, err error, msg string) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
 }
 
-func serializeFeedSummary(in *feeds.FeedSummary) FeedSummary {
-	highlights := make([]FeedHighlight, 0, len(in.Summary.Highlights))
-	for _, h := range in.Summary.Highlights {
+func serializeFeedSummary(in *activitytypes.ActivitiesSummary) FeedSummary {
+	highlights := make([]FeedHighlight, 0, len(in.Highlights))
+	for _, h := range in.Highlights {
 		highlights = append(highlights, FeedHighlight{
 			Content:           h.Content,
 			SourceActivityIds: h.SourceActivityIDs,
@@ -449,17 +431,18 @@ func serializeFeedSummary(in *feeds.FeedSummary) FeedSummary {
 	}
 
 	return FeedSummary{
-		Overview:   in.Summary.Overview,
+		Overview:   in.Overview,
 		Highlights: highlights,
+		CreatedAt:  in.CreatedAt.Format(time.RFC3339),
 	}
 }
 
 func serializeFeeds(in []*feeds.Feed) []Feed {
-	feeds := make([]Feed, len(in))
+	out := make([]Feed, len(in))
 	for i, f := range in {
-		feeds[i] = serializeFeed(f)
+		out[i] = serializeFeed(f)
 	}
-	return feeds
+	return out
 }
 
 func serializeFeed(in *feeds.Feed) Feed {
@@ -472,7 +455,7 @@ func serializeFeed(in *feeds.Feed) Feed {
 	}
 }
 
-func serializeSourceUIDs(in []types.TypedUID) []string {
+func serializeSourceUIDs(in []activitytypes.TypedUID) []string {
 	out := make([]string, len(in))
 	for i, uid := range in {
 		out[i] = uid.String()
@@ -480,7 +463,7 @@ func serializeSourceUIDs(in []types.TypedUID) []string {
 	return out
 }
 
-func serializeActivities(in []*types.DecoratedActivity) ([]*Activity, error) {
+func serializeActivities(in []*activitytypes.DecoratedActivity) ([]*Activity, error) {
 	out := make([]*Activity, 0, len(in))
 
 	for _, e := range in {
@@ -494,7 +477,7 @@ func serializeActivities(in []*types.DecoratedActivity) ([]*Activity, error) {
 	return out, nil
 }
 
-func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
+func serializeActivity(in *activitytypes.DecoratedActivity) (*Activity, error) {
 	sourceType, err := serializeSourceType(in.Activity.SourceUID().Type())
 	if err != nil {
 		return nil, fmt.Errorf("serialize source type: %w", err)
@@ -571,8 +554,8 @@ func serializeSourceType(in string) (SourceType, error) {
 	return "", fmt.Errorf("unknown source type: %s", in)
 }
 
-func deserializeSourceUIDs(in []string) ([]types.TypedUID, error) {
-	out := make([]types.TypedUID, len(in))
+func deserializeSourceUIDs(in []string) ([]activitytypes.TypedUID, error) {
+	out := make([]activitytypes.TypedUID, len(in))
 	for i, uid := range in {
 		uid, err := sources.NewTypedUID(uid)
 		if err != nil {
@@ -583,16 +566,16 @@ func deserializeSourceUIDs(in []string) ([]types.TypedUID, error) {
 	return out, nil
 }
 
-func deserializeSortBy(in *ActivitySortBy) (types.SortBy, error) {
+func deserializeSortBy(in *ActivitySortBy) (activitytypes.SortBy, error) {
 	if in == nil {
-		return types.SortByDate, nil
+		return activitytypes.SortByDate, nil
 	}
 
 	switch *in {
 	case CreationDate:
-		return types.SortByDate, nil
+		return activitytypes.SortByDate, nil
 	case Similarity:
-		return types.SortBySimilarity, nil
+		return activitytypes.SortBySimilarity, nil
 	}
 
 	return "", fmt.Errorf("unknown sort by: %s", *in)

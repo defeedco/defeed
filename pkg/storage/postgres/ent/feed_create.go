@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/glanceapp/glance/pkg/feeds"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 )
 
@@ -48,6 +48,12 @@ func (fc *FeedCreate) SetQuery(s string) *FeedCreate {
 	return fc
 }
 
+// SetPublic sets the "public" field.
+func (fc *FeedCreate) SetPublic(b bool) *FeedCreate {
+	fc.mutation.SetPublic(b)
+	return fc
+}
+
 // SetSourceUids sets the "source_uids" field.
 func (fc *FeedCreate) SetSourceUids(s []string) *FeedCreate {
 	fc.mutation.SetSourceUids(s)
@@ -66,9 +72,17 @@ func (fc *FeedCreate) SetUpdatedAt(t time.Time) *FeedCreate {
 	return fc
 }
 
-// SetSummaries sets the "summaries" field.
-func (fc *FeedCreate) SetSummaries(fs []feeds.FeedSummary) *FeedCreate {
-	fc.mutation.SetSummaries(fs)
+// SetSummary sets the "summary" field.
+func (fc *FeedCreate) SetSummary(ts types.ActivitiesSummary) *FeedCreate {
+	fc.mutation.SetSummary(ts)
+	return fc
+}
+
+// SetNillableSummary sets the "summary" field if the given value is not nil.
+func (fc *FeedCreate) SetNillableSummary(ts *types.ActivitiesSummary) *FeedCreate {
+	if ts != nil {
+		fc.SetSummary(*ts)
+	}
 	return fc
 }
 
@@ -123,6 +137,9 @@ func (fc *FeedCreate) check() error {
 	}
 	if _, ok := fc.mutation.Query(); !ok {
 		return &ValidationError{Name: "query", err: errors.New(`ent: missing required field "Feed.query"`)}
+	}
+	if _, ok := fc.mutation.Public(); !ok {
+		return &ValidationError{Name: "public", err: errors.New(`ent: missing required field "Feed.public"`)}
 	}
 	if _, ok := fc.mutation.SourceUids(); !ok {
 		return &ValidationError{Name: "source_uids", err: errors.New(`ent: missing required field "Feed.source_uids"`)}
@@ -185,6 +202,10 @@ func (fc *FeedCreate) createSpec() (*Feed, *sqlgraph.CreateSpec) {
 		_spec.SetField(feed.FieldQuery, field.TypeString, value)
 		_node.Query = value
 	}
+	if value, ok := fc.mutation.Public(); ok {
+		_spec.SetField(feed.FieldPublic, field.TypeBool, value)
+		_node.Public = value
+	}
 	if value, ok := fc.mutation.SourceUids(); ok {
 		_spec.SetField(feed.FieldSourceUids, field.TypeJSON, value)
 		_node.SourceUids = value
@@ -197,9 +218,9 @@ func (fc *FeedCreate) createSpec() (*Feed, *sqlgraph.CreateSpec) {
 		_spec.SetField(feed.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := fc.mutation.Summaries(); ok {
-		_spec.SetField(feed.FieldSummaries, field.TypeJSON, value)
-		_node.Summaries = value
+	if value, ok := fc.mutation.Summary(); ok {
+		_spec.SetField(feed.FieldSummary, field.TypeJSON, value)
+		_node.Summary = value
 	}
 	return _node, _spec
 }
@@ -301,6 +322,18 @@ func (u *FeedUpsert) UpdateQuery() *FeedUpsert {
 	return u
 }
 
+// SetPublic sets the "public" field.
+func (u *FeedUpsert) SetPublic(v bool) *FeedUpsert {
+	u.Set(feed.FieldPublic, v)
+	return u
+}
+
+// UpdatePublic sets the "public" field to the value that was provided on create.
+func (u *FeedUpsert) UpdatePublic() *FeedUpsert {
+	u.SetExcluded(feed.FieldPublic)
+	return u
+}
+
 // SetSourceUids sets the "source_uids" field.
 func (u *FeedUpsert) SetSourceUids(v []string) *FeedUpsert {
 	u.Set(feed.FieldSourceUids, v)
@@ -337,21 +370,21 @@ func (u *FeedUpsert) UpdateUpdatedAt() *FeedUpsert {
 	return u
 }
 
-// SetSummaries sets the "summaries" field.
-func (u *FeedUpsert) SetSummaries(v []feeds.FeedSummary) *FeedUpsert {
-	u.Set(feed.FieldSummaries, v)
+// SetSummary sets the "summary" field.
+func (u *FeedUpsert) SetSummary(v types.ActivitiesSummary) *FeedUpsert {
+	u.Set(feed.FieldSummary, v)
 	return u
 }
 
-// UpdateSummaries sets the "summaries" field to the value that was provided on create.
-func (u *FeedUpsert) UpdateSummaries() *FeedUpsert {
-	u.SetExcluded(feed.FieldSummaries)
+// UpdateSummary sets the "summary" field to the value that was provided on create.
+func (u *FeedUpsert) UpdateSummary() *FeedUpsert {
+	u.SetExcluded(feed.FieldSummary)
 	return u
 }
 
-// ClearSummaries clears the value of the "summaries" field.
-func (u *FeedUpsert) ClearSummaries() *FeedUpsert {
-	u.SetNull(feed.FieldSummaries)
+// ClearSummary clears the value of the "summary" field.
+func (u *FeedUpsert) ClearSummary() *FeedUpsert {
+	u.SetNull(feed.FieldSummary)
 	return u
 }
 
@@ -459,6 +492,20 @@ func (u *FeedUpsertOne) UpdateQuery() *FeedUpsertOne {
 	})
 }
 
+// SetPublic sets the "public" field.
+func (u *FeedUpsertOne) SetPublic(v bool) *FeedUpsertOne {
+	return u.Update(func(s *FeedUpsert) {
+		s.SetPublic(v)
+	})
+}
+
+// UpdatePublic sets the "public" field to the value that was provided on create.
+func (u *FeedUpsertOne) UpdatePublic() *FeedUpsertOne {
+	return u.Update(func(s *FeedUpsert) {
+		s.UpdatePublic()
+	})
+}
+
 // SetSourceUids sets the "source_uids" field.
 func (u *FeedUpsertOne) SetSourceUids(v []string) *FeedUpsertOne {
 	return u.Update(func(s *FeedUpsert) {
@@ -501,24 +548,24 @@ func (u *FeedUpsertOne) UpdateUpdatedAt() *FeedUpsertOne {
 	})
 }
 
-// SetSummaries sets the "summaries" field.
-func (u *FeedUpsertOne) SetSummaries(v []feeds.FeedSummary) *FeedUpsertOne {
+// SetSummary sets the "summary" field.
+func (u *FeedUpsertOne) SetSummary(v types.ActivitiesSummary) *FeedUpsertOne {
 	return u.Update(func(s *FeedUpsert) {
-		s.SetSummaries(v)
+		s.SetSummary(v)
 	})
 }
 
-// UpdateSummaries sets the "summaries" field to the value that was provided on create.
-func (u *FeedUpsertOne) UpdateSummaries() *FeedUpsertOne {
+// UpdateSummary sets the "summary" field to the value that was provided on create.
+func (u *FeedUpsertOne) UpdateSummary() *FeedUpsertOne {
 	return u.Update(func(s *FeedUpsert) {
-		s.UpdateSummaries()
+		s.UpdateSummary()
 	})
 }
 
-// ClearSummaries clears the value of the "summaries" field.
-func (u *FeedUpsertOne) ClearSummaries() *FeedUpsertOne {
+// ClearSummary clears the value of the "summary" field.
+func (u *FeedUpsertOne) ClearSummary() *FeedUpsertOne {
 	return u.Update(func(s *FeedUpsert) {
-		s.ClearSummaries()
+		s.ClearSummary()
 	})
 }
 
@@ -792,6 +839,20 @@ func (u *FeedUpsertBulk) UpdateQuery() *FeedUpsertBulk {
 	})
 }
 
+// SetPublic sets the "public" field.
+func (u *FeedUpsertBulk) SetPublic(v bool) *FeedUpsertBulk {
+	return u.Update(func(s *FeedUpsert) {
+		s.SetPublic(v)
+	})
+}
+
+// UpdatePublic sets the "public" field to the value that was provided on create.
+func (u *FeedUpsertBulk) UpdatePublic() *FeedUpsertBulk {
+	return u.Update(func(s *FeedUpsert) {
+		s.UpdatePublic()
+	})
+}
+
 // SetSourceUids sets the "source_uids" field.
 func (u *FeedUpsertBulk) SetSourceUids(v []string) *FeedUpsertBulk {
 	return u.Update(func(s *FeedUpsert) {
@@ -834,24 +895,24 @@ func (u *FeedUpsertBulk) UpdateUpdatedAt() *FeedUpsertBulk {
 	})
 }
 
-// SetSummaries sets the "summaries" field.
-func (u *FeedUpsertBulk) SetSummaries(v []feeds.FeedSummary) *FeedUpsertBulk {
+// SetSummary sets the "summary" field.
+func (u *FeedUpsertBulk) SetSummary(v types.ActivitiesSummary) *FeedUpsertBulk {
 	return u.Update(func(s *FeedUpsert) {
-		s.SetSummaries(v)
+		s.SetSummary(v)
 	})
 }
 
-// UpdateSummaries sets the "summaries" field to the value that was provided on create.
-func (u *FeedUpsertBulk) UpdateSummaries() *FeedUpsertBulk {
+// UpdateSummary sets the "summary" field to the value that was provided on create.
+func (u *FeedUpsertBulk) UpdateSummary() *FeedUpsertBulk {
 	return u.Update(func(s *FeedUpsert) {
-		s.UpdateSummaries()
+		s.UpdateSummary()
 	})
 }
 
-// ClearSummaries clears the value of the "summaries" field.
-func (u *FeedUpsertBulk) ClearSummaries() *FeedUpsertBulk {
+// ClearSummary clears the value of the "summary" field.
+func (u *FeedUpsertBulk) ClearSummary() *FeedUpsertBulk {
 	return u.Update(func(s *FeedUpsert) {
-		s.ClearSummaries()
+		s.ClearSummary()
 	})
 }
 

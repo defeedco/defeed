@@ -186,6 +186,7 @@ For each highlight, you must also list the IDs of the source activities that con
 	return &types.ActivitiesSummary{
 		Overview:   response.Overview,
 		Highlights: highlights,
+		CreatedAt:  time.Now(),
 	}, nil
 }
 

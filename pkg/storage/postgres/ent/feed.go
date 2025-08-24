@@ -10,7 +10,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/glanceapp/glance/pkg/feeds"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 )
 
@@ -27,14 +27,16 @@ type Feed struct {
 	Icon string `json:"icon,omitempty"`
 	// Query holds the value of the "query" field.
 	Query string `json:"query,omitempty"`
+	// Public holds the value of the "public" field.
+	Public bool `json:"public,omitempty"`
 	// SourceUids holds the value of the "source_uids" field.
 	SourceUids []string `json:"source_uids,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Summaries holds the value of the "summaries" field.
-	Summaries    []feeds.FeedSummary `json:"summaries,omitempty"`
+	// Summary holds the value of the "summary" field.
+	Summary      types.ActivitiesSummary `json:"summary,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -43,8 +45,10 @@ func (*Feed) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case feed.FieldSourceUids, feed.FieldSummaries:
+		case feed.FieldSourceUids, feed.FieldSummary:
 			values[i] = new([]byte)
+		case feed.FieldPublic:
+			values[i] = new(sql.NullBool)
 		case feed.FieldID, feed.FieldUserID, feed.FieldName, feed.FieldIcon, feed.FieldQuery:
 			values[i] = new(sql.NullString)
 		case feed.FieldCreatedAt, feed.FieldUpdatedAt:
@@ -94,6 +98,12 @@ func (f *Feed) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				f.Query = value.String
 			}
+		case feed.FieldPublic:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field public", values[i])
+			} else if value.Valid {
+				f.Public = value.Bool
+			}
 		case feed.FieldSourceUids:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field source_uids", values[i])
@@ -114,12 +124,12 @@ func (f *Feed) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				f.UpdatedAt = value.Time
 			}
-		case feed.FieldSummaries:
+		case feed.FieldSummary:
 			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field summaries", values[i])
+				return fmt.Errorf("unexpected type %T for field summary", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &f.Summaries); err != nil {
-					return fmt.Errorf("unmarshal field summaries: %w", err)
+				if err := json.Unmarshal(*value, &f.Summary); err != nil {
+					return fmt.Errorf("unmarshal field summary: %w", err)
 				}
 			}
 		default:
@@ -170,6 +180,9 @@ func (f *Feed) String() string {
 	builder.WriteString("query=")
 	builder.WriteString(f.Query)
 	builder.WriteString(", ")
+	builder.WriteString("public=")
+	builder.WriteString(fmt.Sprintf("%v", f.Public))
+	builder.WriteString(", ")
 	builder.WriteString("source_uids=")
 	builder.WriteString(fmt.Sprintf("%v", f.SourceUids))
 	builder.WriteString(", ")
@@ -179,8 +192,8 @@ func (f *Feed) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(f.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("summaries=")
-	builder.WriteString(fmt.Sprintf("%v", f.Summaries))
+	builder.WriteString("summary=")
+	builder.WriteString(fmt.Sprintf("%v", f.Summary))
 	builder.WriteByte(')')
 	return builder.String()
 }

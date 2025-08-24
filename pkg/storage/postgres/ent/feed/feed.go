@@ -19,14 +19,16 @@ const (
 	FieldIcon = "icon"
 	// FieldQuery holds the string denoting the query field in the database.
 	FieldQuery = "query"
+	// FieldPublic holds the string denoting the public field in the database.
+	FieldPublic = "public"
 	// FieldSourceUids holds the string denoting the source_uids field in the database.
 	FieldSourceUids = "source_uids"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// FieldSummaries holds the string denoting the summaries field in the database.
-	FieldSummaries = "summaries"
+	// FieldSummary holds the string denoting the summary field in the database.
+	FieldSummary = "summary"
 	// Table holds the table name of the feed in the database.
 	Table = "feeds"
 )
@@ -38,10 +40,11 @@ var Columns = []string{
 	FieldName,
 	FieldIcon,
 	FieldQuery,
+	FieldPublic,
 	FieldSourceUids,
 	FieldCreatedAt,
 	FieldUpdatedAt,
-	FieldSummaries,
+	FieldSummary,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -80,6 +83,11 @@ func ByIcon(opts ...sql.OrderTermOption) OrderOption {
 // ByQuery orders the results by the query field.
 func ByQuery(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldQuery, opts...).ToFunc()
+}
+
+// ByPublic orders the results by the public field.
+func ByPublic(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublic, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

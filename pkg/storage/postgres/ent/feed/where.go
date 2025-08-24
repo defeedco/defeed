@@ -84,6 +84,11 @@ func Query(v string) predicate.Feed {
 	return predicate.Feed(sql.FieldEQ(FieldQuery, v))
 }
 
+// Public applies equality check predicate on the "public" field. It's identical to PublicEQ.
+func Public(v bool) predicate.Feed {
+	return predicate.Feed(sql.FieldEQ(FieldPublic, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Feed {
 	return predicate.Feed(sql.FieldEQ(FieldCreatedAt, v))
@@ -354,6 +359,16 @@ func QueryContainsFold(v string) predicate.Feed {
 	return predicate.Feed(sql.FieldContainsFold(FieldQuery, v))
 }
 
+// PublicEQ applies the EQ predicate on the "public" field.
+func PublicEQ(v bool) predicate.Feed {
+	return predicate.Feed(sql.FieldEQ(FieldPublic, v))
+}
+
+// PublicNEQ applies the NEQ predicate on the "public" field.
+func PublicNEQ(v bool) predicate.Feed {
+	return predicate.Feed(sql.FieldNEQ(FieldPublic, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Feed {
 	return predicate.Feed(sql.FieldEQ(FieldCreatedAt, v))
@@ -434,14 +449,14 @@ func UpdatedAtLTE(v time.Time) predicate.Feed {
 	return predicate.Feed(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
-// SummariesIsNil applies the IsNil predicate on the "summaries" field.
-func SummariesIsNil() predicate.Feed {
-	return predicate.Feed(sql.FieldIsNull(FieldSummaries))
+// SummaryIsNil applies the IsNil predicate on the "summary" field.
+func SummaryIsNil() predicate.Feed {
+	return predicate.Feed(sql.FieldIsNull(FieldSummary))
 }
 
-// SummariesNotNil applies the NotNil predicate on the "summaries" field.
-func SummariesNotNil() predicate.Feed {
-	return predicate.Feed(sql.FieldNotNull(FieldSummaries))
+// SummaryNotNil applies the NotNil predicate on the "summary" field.
+func SummaryNotNil() predicate.Feed {
+	return predicate.Feed(sql.FieldNotNull(FieldSummary))
 }
 
 // And groups predicates with the AND operator between them.

@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
-	"github.com/glanceapp/glance/pkg/feeds"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
 )
@@ -86,6 +86,20 @@ func (fu *FeedUpdate) SetNillableQuery(s *string) *FeedUpdate {
 	return fu
 }
 
+// SetPublic sets the "public" field.
+func (fu *FeedUpdate) SetPublic(b bool) *FeedUpdate {
+	fu.mutation.SetPublic(b)
+	return fu
+}
+
+// SetNillablePublic sets the "public" field if the given value is not nil.
+func (fu *FeedUpdate) SetNillablePublic(b *bool) *FeedUpdate {
+	if b != nil {
+		fu.SetPublic(*b)
+	}
+	return fu
+}
+
 // SetSourceUids sets the "source_uids" field.
 func (fu *FeedUpdate) SetSourceUids(s []string) *FeedUpdate {
 	fu.mutation.SetSourceUids(s)
@@ -126,21 +140,23 @@ func (fu *FeedUpdate) SetNillableUpdatedAt(t *time.Time) *FeedUpdate {
 	return fu
 }
 
-// SetSummaries sets the "summaries" field.
-func (fu *FeedUpdate) SetSummaries(fs []feeds.FeedSummary) *FeedUpdate {
-	fu.mutation.SetSummaries(fs)
+// SetSummary sets the "summary" field.
+func (fu *FeedUpdate) SetSummary(ts types.ActivitiesSummary) *FeedUpdate {
+	fu.mutation.SetSummary(ts)
 	return fu
 }
 
-// AppendSummaries appends fs to the "summaries" field.
-func (fu *FeedUpdate) AppendSummaries(fs []feeds.FeedSummary) *FeedUpdate {
-	fu.mutation.AppendSummaries(fs)
+// SetNillableSummary sets the "summary" field if the given value is not nil.
+func (fu *FeedUpdate) SetNillableSummary(ts *types.ActivitiesSummary) *FeedUpdate {
+	if ts != nil {
+		fu.SetSummary(*ts)
+	}
 	return fu
 }
 
-// ClearSummaries clears the value of the "summaries" field.
-func (fu *FeedUpdate) ClearSummaries() *FeedUpdate {
-	fu.mutation.ClearSummaries()
+// ClearSummary clears the value of the "summary" field.
+func (fu *FeedUpdate) ClearSummary() *FeedUpdate {
+	fu.mutation.ClearSummary()
 	return fu
 }
 
@@ -197,6 +213,9 @@ func (fu *FeedUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := fu.mutation.Query(); ok {
 		_spec.SetField(feed.FieldQuery, field.TypeString, value)
 	}
+	if value, ok := fu.mutation.Public(); ok {
+		_spec.SetField(feed.FieldPublic, field.TypeBool, value)
+	}
 	if value, ok := fu.mutation.SourceUids(); ok {
 		_spec.SetField(feed.FieldSourceUids, field.TypeJSON, value)
 	}
@@ -211,16 +230,11 @@ func (fu *FeedUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := fu.mutation.UpdatedAt(); ok {
 		_spec.SetField(feed.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := fu.mutation.Summaries(); ok {
-		_spec.SetField(feed.FieldSummaries, field.TypeJSON, value)
+	if value, ok := fu.mutation.Summary(); ok {
+		_spec.SetField(feed.FieldSummary, field.TypeJSON, value)
 	}
-	if value, ok := fu.mutation.AppendedSummaries(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, feed.FieldSummaries, value)
-		})
-	}
-	if fu.mutation.SummariesCleared() {
-		_spec.ClearField(feed.FieldSummaries, field.TypeJSON)
+	if fu.mutation.SummaryCleared() {
+		_spec.ClearField(feed.FieldSummary, field.TypeJSON)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, fu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -298,6 +312,20 @@ func (fuo *FeedUpdateOne) SetNillableQuery(s *string) *FeedUpdateOne {
 	return fuo
 }
 
+// SetPublic sets the "public" field.
+func (fuo *FeedUpdateOne) SetPublic(b bool) *FeedUpdateOne {
+	fuo.mutation.SetPublic(b)
+	return fuo
+}
+
+// SetNillablePublic sets the "public" field if the given value is not nil.
+func (fuo *FeedUpdateOne) SetNillablePublic(b *bool) *FeedUpdateOne {
+	if b != nil {
+		fuo.SetPublic(*b)
+	}
+	return fuo
+}
+
 // SetSourceUids sets the "source_uids" field.
 func (fuo *FeedUpdateOne) SetSourceUids(s []string) *FeedUpdateOne {
 	fuo.mutation.SetSourceUids(s)
@@ -338,21 +366,23 @@ func (fuo *FeedUpdateOne) SetNillableUpdatedAt(t *time.Time) *FeedUpdateOne {
 	return fuo
 }
 
-// SetSummaries sets the "summaries" field.
-func (fuo *FeedUpdateOne) SetSummaries(fs []feeds.FeedSummary) *FeedUpdateOne {
-	fuo.mutation.SetSummaries(fs)
+// SetSummary sets the "summary" field.
+func (fuo *FeedUpdateOne) SetSummary(ts types.ActivitiesSummary) *FeedUpdateOne {
+	fuo.mutation.SetSummary(ts)
 	return fuo
 }
 
-// AppendSummaries appends fs to the "summaries" field.
-func (fuo *FeedUpdateOne) AppendSummaries(fs []feeds.FeedSummary) *FeedUpdateOne {
-	fuo.mutation.AppendSummaries(fs)
+// SetNillableSummary sets the "summary" field if the given value is not nil.
+func (fuo *FeedUpdateOne) SetNillableSummary(ts *types.ActivitiesSummary) *FeedUpdateOne {
+	if ts != nil {
+		fuo.SetSummary(*ts)
+	}
 	return fuo
 }
 
-// ClearSummaries clears the value of the "summaries" field.
-func (fuo *FeedUpdateOne) ClearSummaries() *FeedUpdateOne {
-	fuo.mutation.ClearSummaries()
+// ClearSummary clears the value of the "summary" field.
+func (fuo *FeedUpdateOne) ClearSummary() *FeedUpdateOne {
+	fuo.mutation.ClearSummary()
 	return fuo
 }
 
@@ -439,6 +469,9 @@ func (fuo *FeedUpdateOne) sqlSave(ctx context.Context) (_node *Feed, err error) 
 	if value, ok := fuo.mutation.Query(); ok {
 		_spec.SetField(feed.FieldQuery, field.TypeString, value)
 	}
+	if value, ok := fuo.mutation.Public(); ok {
+		_spec.SetField(feed.FieldPublic, field.TypeBool, value)
+	}
 	if value, ok := fuo.mutation.SourceUids(); ok {
 		_spec.SetField(feed.FieldSourceUids, field.TypeJSON, value)
 	}
@@ -453,16 +486,11 @@ func (fuo *FeedUpdateOne) sqlSave(ctx context.Context) (_node *Feed, err error) 
 	if value, ok := fuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(feed.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := fuo.mutation.Summaries(); ok {
-		_spec.SetField(feed.FieldSummaries, field.TypeJSON, value)
+	if value, ok := fuo.mutation.Summary(); ok {
+		_spec.SetField(feed.FieldSummary, field.TypeJSON, value)
 	}
-	if value, ok := fuo.mutation.AppendedSummaries(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, feed.FieldSummaries, value)
-		})
-	}
-	if fuo.mutation.SummariesCleared() {
-		_spec.ClearField(feed.FieldSummaries, field.TypeJSON)
+	if fuo.mutation.SummaryCleared() {
+		_spec.ClearField(feed.FieldSummary, field.TypeJSON)
 	}
 	_node = &Feed{config: fuo.config}
 	_spec.Assign = _node.assignValues

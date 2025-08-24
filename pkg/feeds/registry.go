@@ -11,56 +11,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type Feed struct {
-	ID   string
-	Name string
-	// Icon is a string of emoji characters.
-	Icon string
-	// Query is a semantic search query.
-	Query string
-	// SourceUIDs is a list of sources where activities are pulled from.
-	SourceUIDs []activities.TypedUID
-	// UserID is the user who owns the feed.
-	UserID string
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-
-	// TODO: Treat as a separate resource in the future (with its own table/store)
-	// Summaries are cached activity summaries, for each unique FeedParameters combination.
-	Summaries []FeedSummary
-}
-
-type FeedSummary struct {
-	Parameters FeedParameters
-	Summary    *activities.ActivitiesSummary
-}
-
-type FeedHighlight struct {
-	// Content is a short text summarizing the highlight.
-	Content string
-	// QuoteActivityIDs source of information for the highlight.
-	QuoteActivityIDs []string
-}
-
-type FeedParameters struct {
-	FeedID     string
-	UserID     string
-	Query      string
-	SortBy     activities.SortBy
-	SourceUIDs []activities.TypedUID
-}
-
-func (p FeedParameters) Equal(p1 FeedParameters) bool {
-	sourcesEqual := len(p.SourceUIDs) == len(p1.SourceUIDs)
-	for i := range p.SourceUIDs {
-		if p.SourceUIDs[i].String() != p1.SourceUIDs[i].String() {
-			sourcesEqual = false
-			break
-		}
-	}
-	return sourcesEqual && p.Query == p1.Query && p.SortBy == p1.SortBy && p.UserID == p1.UserID
-}
+// ErrAuthUsersOnly is used when an action can't be performed without authentication.
+// TODO(subscription): Change to "ErrPayingUsersOnly" once we have subscription plans.
+var ErrAuthUsersOnly = errors.New("query override supported for authenticated users only")
 
 type Registry struct {
 	store          feedStore
@@ -72,7 +25,7 @@ type Registry struct {
 type feedStore interface {
 	Upsert(ctx context.Context, feed Feed) error
 	Remove(ctx context.Context, uid string) error
-	ListByUserID(ctx context.Context, userID string) ([]*Feed, error)
+	List(ctx context.Context) ([]*Feed, error)
 	GetByID(ctx context.Context, uid string) (*Feed, error)
 }
 
@@ -84,6 +37,33 @@ func NewRegistry(store feedStore, sourceExecutor *sources.Executor, summarizer s
 	return &Registry{store: store, sourceExecutor: sourceExecutor, summarizer: summarizer}
 }
 
+type Feed struct {
+	ID   string
+	Name string
+	// Icon is a string of emoji characters.
+	Icon string
+	// Query is a semantic search query.
+	Query string
+	// SourceUIDs is a list of sources where activities are pulled from.
+	SourceUIDs []activities.TypedUID
+	// UserID is the user who owns the feed.
+	UserID string
+	// Public is true if any user can access the feed.
+	Public bool
+	// Summary is a cached overview of the most relevant recent activity on the feed.
+	Summary activities.ActivitiesSummary
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type FeedHighlight struct {
+	// Content is a short text summarizing the highlight.
+	Content string
+	// QuoteActivityIDs source of information for the highlight.
+	QuoteActivityIDs []string
+}
+
 type CreateFeedRequest struct {
 	Name       string
 	Icon       string
@@ -92,14 +72,21 @@ type CreateFeedRequest struct {
 	UserID     string
 }
 
-func (r *Registry) Create(ctx context.Context, request CreateFeedRequest) (*Feed, error) {
+func (r *Registry) Create(ctx context.Context, req CreateFeedRequest) (*Feed, error) {
+	// TODO(validation): Add more comprehensive validation using "validate" go field tags
+	if req.UserID == "" {
+		return nil, errors.New("user ID is required")
+	}
+
 	feed := Feed{
 		ID:         uuid.New().String(),
-		Name:       request.Name,
-		Icon:       request.Icon,
-		Query:      request.Query,
-		SourceUIDs: request.SourceUIDs,
-		UserID:     request.UserID,
+		Name:       req.Name,
+		Icon:       req.Icon,
+		Query:      req.Query,
+		SourceUIDs: req.SourceUIDs,
+		UserID:     req.UserID,
+		Summary:    activities.ActivitiesSummary{},
+		Public:     false,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
@@ -117,6 +104,7 @@ func (r *Registry) Update(ctx context.Context, request Feed) error {
 	if err != nil || feed.UserID != request.UserID {
 		return errors.New("feed not found")
 	}
+
 	err = r.executeAndUpsert(ctx, request)
 	if err != nil {
 		return fmt.Errorf("execute and upsert feed: %w", err)
@@ -152,75 +140,102 @@ func (r *Registry) Remove(ctx context.Context, uid string, userID string) error 
 		return errors.New("feed not found")
 	}
 
-	// TODO: Remove the source from executor if no other feeds are using it
+	// TODO(optimisation): Remove the source from executor if no other feeds are using it
 	return r.store.Remove(ctx, uid)
 }
 
+// ListByUserID returns both the feeds that the user owns and public ones.
+// If userID is empty, only public feeds are returned.
 func (r *Registry) ListByUserID(ctx context.Context, userID string) ([]*Feed, error) {
-	return r.store.ListByUserID(ctx, userID)
+	feeds, err := r.store.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list feeds: %w", err)
+	}
+
+	authorizedFeeds := make([]*Feed, 0)
+	for _, feed := range feeds {
+		if feed.UserID == userID || feed.Public {
+			authorizedFeeds = append(authorizedFeeds, feed)
+		}
+	}
+
+	return authorizedFeeds, nil
 }
 
-func (r *Registry) Summary(ctx context.Context, req FeedParameters) (*FeedSummary, error) {
-	feed, err := r.store.GetByID(ctx, req.FeedID)
+// Summary returns the overview of the recent relevant activities
+// If the userID is provided, an optional queryOverride can be provided as a request-scoped override parameter.
+func (r *Registry) Summary(ctx context.Context, feedID, userID, queryOverride string) (*activities.ActivitiesSummary, error) {
+	feed, err := r.store.GetByID(ctx, feedID)
 	if err != nil {
 		return nil, errors.New("feed not found")
 	}
 
-	var summary *FeedSummary
-	for _, s := range feed.Summaries {
-		if s.Parameters.Equal(req) {
-			summary = &s
-			break
+	// TODO(config): Move to env config struct
+	refreshDuration := 1 * time.Hour
+	now := time.Now()
+	if now.Sub(feed.Summary.CreatedAt) >= refreshDuration {
+		summary, err := r.summarize(ctx, feed.Query, feed.SourceUIDs)
+		if err != nil {
+			return nil, fmt.Errorf("summarize: %w", err)
+		}
+
+		feed.Summary = *summary
+		err = r.store.Upsert(ctx, *feed)
+		if err != nil {
+			return nil, fmt.Errorf("upsert feed: %w", err)
 		}
 	}
 
-	// No summary exists for given parameters, compute and cache it
-	if summary == nil {
-		summary, err = r.summarize(ctx, req)
+	if userID == "" && queryOverride != "" {
+		return nil, ErrAuthUsersOnly
+	}
+
+	if queryOverride != "" {
+		summary, err := r.summarize(ctx, queryOverride, feed.SourceUIDs)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("summarize: %w", err)
 		}
 
-		// Store updated summary cache
-		feed.Summaries = append(feed.Summaries, *summary)
-		err = r.store.Upsert(ctx, *feed)
-		if err != nil {
-			return nil, fmt.Errorf("summarize activities: %w", err)
-		}
+		return summary, nil
+	}
+
+	return &feed.Summary, nil
+}
+
+func (r *Registry) summarize(ctx context.Context, query string, sourceUIDs []activities.TypedUID) (*activities.ActivitiesSummary, error) {
+	acts, err := r.sourceExecutor.Search(ctx, query, sourceUIDs, 0.3, 20, activities.SortBySimilarity)
+	if err != nil {
+		return nil, fmt.Errorf("search: %w", err)
+	}
+
+	summary, err := r.summarizer.SummarizeMany(ctx, acts, query)
+	if err != nil {
+		return nil, fmt.Errorf("summarize many: %w", err)
 	}
 
 	return summary, nil
 }
 
-func (r *Registry) summarize(ctx context.Context, req FeedParameters) (*FeedSummary, error) {
-	activities, err := r.sourceExecutor.Search(ctx, req.Query, req.SourceUIDs, 0.0, 20, req.SortBy)
-	if err != nil {
-		return nil, err
-	}
-	summary, err := r.summarizer.SummarizeMany(ctx, activities, req.Query)
-	if err != nil {
-		return nil, fmt.Errorf("summarize activities: %w", err)
-	}
-	return &FeedSummary{
-		Parameters: req,
-		Summary:    summary,
-	}, nil
-}
-
-func (r *Registry) Activities(ctx context.Context, req FeedParameters) ([]*activities.DecoratedActivity, error) {
-	feed, err := r.store.GetByID(ctx, req.FeedID)
+func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy activities.SortBy, queryOverride string) ([]*activities.DecoratedActivity, error) {
+	feed, err := r.store.GetByID(ctx, feedID)
 	if err != nil {
 		return nil, fmt.Errorf("get feed: %w", err)
 	}
 
-	if feed.UserID != req.UserID {
+	// Public feeds can be accessed by anyone (even non-authenticated user)
+	if feed.UserID != userID && !feed.Public {
 		return nil, errors.New("feed not found")
 	}
 
-	activities, err := r.sourceExecutor.Search(ctx, req.Query, req.SourceUIDs, 0.0, 20, req.SortBy)
+	if userID == "" && queryOverride != "" {
+		return nil, ErrAuthUsersOnly
+	}
+
+	// TODO(optimisation): Cache query embeddings
+	acts, err := r.sourceExecutor.Search(ctx, feed.Query, feed.SourceUIDs, 0.0, 20, sortBy)
 	if err != nil {
 		return nil, fmt.Errorf("search activities: %w", err)
 	}
 
-	return activities, nil
+	return acts, nil
 }

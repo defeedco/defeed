@@ -37,10 +37,11 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "icon", Type: field.TypeString},
 		{Name: "query", Type: field.TypeString},
+		{Name: "public", Type: field.TypeBool},
 		{Name: "source_uids", Type: field.TypeJSON},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "summaries", Type: field.TypeJSON, Nullable: true},
+		{Name: "summary", Type: field.TypeJSON, Nullable: true},
 	}
 	// FeedsTable holds the schema information for the "feeds" table.
 	FeedsTable = &schema.Table{

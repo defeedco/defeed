@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: DeFeed API
+  title: Defeed API
   version: 1.0.0
   description: Defeat your fragmented feeds 💪
 
@@ -59,7 +59,7 @@ paths:
         '404':
           description: Source not found
 
-  /users/me/feeds:
+  /feeds:
     post:
       summary: Create a feed belonging to the authenticated user
       operationId: createOwnFeed
@@ -69,7 +69,7 @@ paths:
         - bearerAuth: []
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
             schema:
               $ref: "#/components/schemas/CreateFeedRequest"
@@ -83,7 +83,7 @@ paths:
         '401':
           description: Unauthorized - Invalid or missing authentication token
     get:
-      summary: List feeds belonging to the authenticated user
+      summary: List public feeds and/or those belonging to the authenticated user
       operationId: listOwnFeeds
       tags:
         - feeds
@@ -101,7 +101,7 @@ paths:
         '401':
           description: Unauthorized - Invalid or missing authentication token
 
-  /users/me/feeds/{uid}:
+  /feeds/{uid}:
     put:
       summary: Update a feed belonging to the authenticated user
       operationId: updateOwnFeed
@@ -161,7 +161,7 @@ paths:
         '404':
           description: Feed not found
 
-  /users/me/feeds/{uid}/activities:
+  /feeds/{uid}/activities:
     get:
       summary: List activities for a feed
       operationId: listFeedActivities
@@ -182,7 +182,7 @@ paths:
             $ref: '#/components/schemas/ActivitySortBy'
         - name: query
           in: query
-          description: Filter query. Overrides the default feed query.
+          description: Filter query. Authenticated users can override the default feed query.
           schema:
             type: string
       responses:
@@ -199,7 +199,7 @@ paths:
         '404':
           description: Feed not found
 
-  /users/me/feeds/{uid}/summary:
+  /feeds/{uid}/summary:
     get:
       summary: Generate an executive summary of multiple activities
       operationId: getFeedSummary
@@ -213,14 +213,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: sortBy
-          in: query
-          description: Sort method.
-          schema:
-            $ref: '#/components/schemas/ActivitySortBy'
         - name: query
           in: query
-          description: Filter query. Overrides the default feed query.
+          description: Filter query. Authenticated users can override the default feed query.
           schema:
             type: string
       responses:
@@ -246,7 +241,7 @@ components:
       name: Authorization
       bearerFormat: JWT
       description: Bearer token authentication. Include the token in the Authorization header as 'Bearer {token}'.
-  
+
   schemas:
     UpdateFeedRequest:
       allOf:
@@ -270,7 +265,7 @@ components:
           type: array
           items:
             type: string
-  
+
     Feed:
       type: object
       required:
@@ -279,6 +274,7 @@ components:
         - icon
         - query
         - sourceUids
+        - isPublic
       properties:
         uid:
           type: string
@@ -292,6 +288,8 @@ components:
           type: array
           items:
             type: string
+        isPublic:
+          type: boolean
 
     Source:
       type: object
@@ -339,6 +337,7 @@ components:
       required:
         - overview
         - highlights
+        - createdAt
       properties:
         overview:
           type: string
@@ -348,6 +347,9 @@ components:
           items:
             $ref: '#/components/schemas/FeedHighlight'
           description: List of key highlights extracted from the activities
+        createdAt:
+          type: string
+          format: datetime
 
     FeedHighlight:
       type: object

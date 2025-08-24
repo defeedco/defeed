@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Pulse Feed Aggregation API
- * API for managing feed sources and retrieving aggregated content
+ * DeFeed API
+ * Defeat your fragmented feeds 💪
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -192,6 +192,12 @@ export interface Feed {
      * @memberof Feed
      */
     'sourceUids': Array<string>;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Feed
+     */
+    'isPublic': boolean;
 }
 /**
  * 
@@ -230,6 +236,12 @@ export interface FeedSummary {
      * @memberof FeedSummary
      */
     'highlights': Array<FeedHighlight>;
+    /**
+     * 
+     * @type {string}
+     * @memberof FeedSummary
+     */
+    'createdAt': string;
 }
 /**
  * 
@@ -340,7 +352,7 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
         createOwnFeed: async (createFeedRequest: CreateFeedRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'createFeedRequest' is not null or undefined
             assertParamExists('createOwnFeed', 'createFeedRequest', createFeedRequest)
-            const localVarPath = `/users/me/feeds`;
+            const localVarPath = `/feeds`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -380,7 +392,7 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
         deleteOwnFeed: async (uid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uid' is not null or undefined
             assertParamExists('deleteOwnFeed', 'uid', uid)
-            const localVarPath = `/users/me/feeds/{uid}`
+            const localVarPath = `/feeds/{uid}`
                 .replace(`{${"uid"}}`, encodeURIComponent(String(uid)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -420,7 +432,7 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
         getFeedSummary: async (uid: string, sortBy?: ActivitySortBy, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uid' is not null or undefined
             assertParamExists('getFeedSummary', 'uid', uid)
-            const localVarPath = `/users/me/feeds/{uid}/summary`
+            const localVarPath = `/feeds/{uid}/summary`
                 .replace(`{${"uid"}}`, encodeURIComponent(String(uid)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -468,7 +480,7 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
         listFeedActivities: async (uid: string, sortBy?: ActivitySortBy, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uid' is not null or undefined
             assertParamExists('listFeedActivities', 'uid', uid)
-            const localVarPath = `/users/me/feeds/{uid}/activities`
+            const localVarPath = `/feeds/{uid}/activities`
                 .replace(`{${"uid"}}`, encodeURIComponent(String(uid)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -511,7 +523,7 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
          * @throws {RequiredError}
          */
         listOwnFeeds: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/users/me/feeds`;
+            const localVarPath = `/feeds`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -551,7 +563,7 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
             assertParamExists('updateOwnFeed', 'uid', uid)
             // verify required parameter 'updateFeedRequest' is not null or undefined
             assertParamExists('updateOwnFeed', 'updateFeedRequest', updateFeedRequest)
-            const localVarPath = `/users/me/feeds/{uid}`
+            const localVarPath = `/feeds/{uid}`
                 .replace(`{${"uid"}}`, encodeURIComponent(String(uid)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -866,6 +878,10 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -896,6 +912,10 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
             if (query !== undefined) {
                 localVarQueryParameter['query'] = query;

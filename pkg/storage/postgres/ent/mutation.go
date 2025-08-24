@@ -11,7 +11,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/glanceapp/glance/pkg/feeds"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
@@ -991,12 +991,12 @@ type FeedMutation struct {
 	name              *string
 	icon              *string
 	query             *string
+	public            *bool
 	source_uids       *[]string
 	appendsource_uids []string
 	created_at        *time.Time
 	updated_at        *time.Time
-	summaries         *[]feeds.FeedSummary
-	appendsummaries   []feeds.FeedSummary
+	summary           *types.ActivitiesSummary
 	clearedFields     map[string]struct{}
 	done              bool
 	oldValue          func(context.Context) (*Feed, error)
@@ -1251,6 +1251,42 @@ func (m *FeedMutation) ResetQuery() {
 	m.query = nil
 }
 
+// SetPublic sets the "public" field.
+func (m *FeedMutation) SetPublic(b bool) {
+	m.public = &b
+}
+
+// Public returns the value of the "public" field in the mutation.
+func (m *FeedMutation) Public() (r bool, exists bool) {
+	v := m.public
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublic returns the old "public" field's value of the Feed entity.
+// If the Feed object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *FeedMutation) OldPublic(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublic is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublic requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublic: %w", err)
+	}
+	return oldValue.Public, nil
+}
+
+// ResetPublic resets all changes to the "public" field.
+func (m *FeedMutation) ResetPublic() {
+	m.public = nil
+}
+
 // SetSourceUids sets the "source_uids" field.
 func (m *FeedMutation) SetSourceUids(s []string) {
 	m.source_uids = &s
@@ -1374,69 +1410,53 @@ func (m *FeedMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetSummaries sets the "summaries" field.
-func (m *FeedMutation) SetSummaries(fs []feeds.FeedSummary) {
-	m.summaries = &fs
-	m.appendsummaries = nil
+// SetSummary sets the "summary" field.
+func (m *FeedMutation) SetSummary(ts types.ActivitiesSummary) {
+	m.summary = &ts
 }
 
-// Summaries returns the value of the "summaries" field in the mutation.
-func (m *FeedMutation) Summaries() (r []feeds.FeedSummary, exists bool) {
-	v := m.summaries
+// Summary returns the value of the "summary" field in the mutation.
+func (m *FeedMutation) Summary() (r types.ActivitiesSummary, exists bool) {
+	v := m.summary
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSummaries returns the old "summaries" field's value of the Feed entity.
+// OldSummary returns the old "summary" field's value of the Feed entity.
 // If the Feed object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FeedMutation) OldSummaries(ctx context.Context) (v []feeds.FeedSummary, err error) {
+func (m *FeedMutation) OldSummary(ctx context.Context) (v types.ActivitiesSummary, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSummaries is only allowed on UpdateOne operations")
+		return v, errors.New("OldSummary is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSummaries requires an ID field in the mutation")
+		return v, errors.New("OldSummary requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSummaries: %w", err)
+		return v, fmt.Errorf("querying old value for OldSummary: %w", err)
 	}
-	return oldValue.Summaries, nil
+	return oldValue.Summary, nil
 }
 
-// AppendSummaries adds fs to the "summaries" field.
-func (m *FeedMutation) AppendSummaries(fs []feeds.FeedSummary) {
-	m.appendsummaries = append(m.appendsummaries, fs...)
+// ClearSummary clears the value of the "summary" field.
+func (m *FeedMutation) ClearSummary() {
+	m.summary = nil
+	m.clearedFields[feed.FieldSummary] = struct{}{}
 }
 
-// AppendedSummaries returns the list of values that were appended to the "summaries" field in this mutation.
-func (m *FeedMutation) AppendedSummaries() ([]feeds.FeedSummary, bool) {
-	if len(m.appendsummaries) == 0 {
-		return nil, false
-	}
-	return m.appendsummaries, true
-}
-
-// ClearSummaries clears the value of the "summaries" field.
-func (m *FeedMutation) ClearSummaries() {
-	m.summaries = nil
-	m.appendsummaries = nil
-	m.clearedFields[feed.FieldSummaries] = struct{}{}
-}
-
-// SummariesCleared returns if the "summaries" field was cleared in this mutation.
-func (m *FeedMutation) SummariesCleared() bool {
-	_, ok := m.clearedFields[feed.FieldSummaries]
+// SummaryCleared returns if the "summary" field was cleared in this mutation.
+func (m *FeedMutation) SummaryCleared() bool {
+	_, ok := m.clearedFields[feed.FieldSummary]
 	return ok
 }
 
-// ResetSummaries resets all changes to the "summaries" field.
-func (m *FeedMutation) ResetSummaries() {
-	m.summaries = nil
-	m.appendsummaries = nil
-	delete(m.clearedFields, feed.FieldSummaries)
+// ResetSummary resets all changes to the "summary" field.
+func (m *FeedMutation) ResetSummary() {
+	m.summary = nil
+	delete(m.clearedFields, feed.FieldSummary)
 }
 
 // Where appends a list predicates to the FeedMutation builder.
@@ -1473,7 +1493,7 @@ func (m *FeedMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *FeedMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.user_id != nil {
 		fields = append(fields, feed.FieldUserID)
 	}
@@ -1486,6 +1506,9 @@ func (m *FeedMutation) Fields() []string {
 	if m.query != nil {
 		fields = append(fields, feed.FieldQuery)
 	}
+	if m.public != nil {
+		fields = append(fields, feed.FieldPublic)
+	}
 	if m.source_uids != nil {
 		fields = append(fields, feed.FieldSourceUids)
 	}
@@ -1495,8 +1518,8 @@ func (m *FeedMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, feed.FieldUpdatedAt)
 	}
-	if m.summaries != nil {
-		fields = append(fields, feed.FieldSummaries)
+	if m.summary != nil {
+		fields = append(fields, feed.FieldSummary)
 	}
 	return fields
 }
@@ -1514,14 +1537,16 @@ func (m *FeedMutation) Field(name string) (ent.Value, bool) {
 		return m.Icon()
 	case feed.FieldQuery:
 		return m.Query()
+	case feed.FieldPublic:
+		return m.Public()
 	case feed.FieldSourceUids:
 		return m.SourceUids()
 	case feed.FieldCreatedAt:
 		return m.CreatedAt()
 	case feed.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case feed.FieldSummaries:
-		return m.Summaries()
+	case feed.FieldSummary:
+		return m.Summary()
 	}
 	return nil, false
 }
@@ -1539,14 +1564,16 @@ func (m *FeedMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldIcon(ctx)
 	case feed.FieldQuery:
 		return m.OldQuery(ctx)
+	case feed.FieldPublic:
+		return m.OldPublic(ctx)
 	case feed.FieldSourceUids:
 		return m.OldSourceUids(ctx)
 	case feed.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case feed.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case feed.FieldSummaries:
-		return m.OldSummaries(ctx)
+	case feed.FieldSummary:
+		return m.OldSummary(ctx)
 	}
 	return nil, fmt.Errorf("unknown Feed field %s", name)
 }
@@ -1584,6 +1611,13 @@ func (m *FeedMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetQuery(v)
 		return nil
+	case feed.FieldPublic:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublic(v)
+		return nil
 	case feed.FieldSourceUids:
 		v, ok := value.([]string)
 		if !ok {
@@ -1605,12 +1639,12 @@ func (m *FeedMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
-	case feed.FieldSummaries:
-		v, ok := value.([]feeds.FeedSummary)
+	case feed.FieldSummary:
+		v, ok := value.(types.ActivitiesSummary)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSummaries(v)
+		m.SetSummary(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Feed field %s", name)
@@ -1642,8 +1676,8 @@ func (m *FeedMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *FeedMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(feed.FieldSummaries) {
-		fields = append(fields, feed.FieldSummaries)
+	if m.FieldCleared(feed.FieldSummary) {
+		fields = append(fields, feed.FieldSummary)
 	}
 	return fields
 }
@@ -1659,8 +1693,8 @@ func (m *FeedMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *FeedMutation) ClearField(name string) error {
 	switch name {
-	case feed.FieldSummaries:
-		m.ClearSummaries()
+	case feed.FieldSummary:
+		m.ClearSummary()
 		return nil
 	}
 	return fmt.Errorf("unknown Feed nullable field %s", name)
@@ -1682,6 +1716,9 @@ func (m *FeedMutation) ResetField(name string) error {
 	case feed.FieldQuery:
 		m.ResetQuery()
 		return nil
+	case feed.FieldPublic:
+		m.ResetPublic()
+		return nil
 	case feed.FieldSourceUids:
 		m.ResetSourceUids()
 		return nil
@@ -1691,8 +1728,8 @@ func (m *FeedMutation) ResetField(name string) error {
 	case feed.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
-	case feed.FieldSummaries:
-		m.ResetSummaries()
+	case feed.FieldSummary:
+		m.ResetSummary()
 		return nil
 	}
 	return fmt.Errorf("unknown Feed field %s", name)
