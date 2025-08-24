@@ -3,6 +3,7 @@ package reddit
 import (
 	"context"
 	"fmt"
+
 	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -108,12 +109,6 @@ var popularSubredditSources = []types.Source{
 	&SourceSubreddit{
 		Subreddit:        "artificial",
 		SubredditSummary: "Artificial intelligence discussions",
-		SortBy:           "hot",
-		TopPeriod:        "day",
-	},
-	&SourceSubreddit{
-		Subreddit:        "MachineLearning",
-		SubredditSummary: "Machine learning research and applications",
 		SortBy:           "hot",
 		TopPeriod:        "day",
 	},

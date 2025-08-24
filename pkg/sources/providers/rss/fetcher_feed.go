@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+
 	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -73,6 +74,7 @@ func loadOPMLSources(logger *zerolog.Logger) ([]types.Source, error) {
 func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 	var result []types.Source
 
+	seen := make(map[string]bool)
 	for _, category := range opml.Body.Outlines {
 		for _, outline := range category.Outlines {
 			if outline.Type != "rss" {
@@ -83,10 +85,17 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 				return nil, fmt.Errorf("outline missing url: %s", outline.Text)
 			}
 
-			result = append(result, &SourceFeed{
+			source := &SourceFeed{
 				Title:   outline.Title,
 				FeedURL: outline.XMLUrl,
-			})
+			}
+
+			if seen[source.UID().String()] {
+				continue
+			}
+			seen[source.UID().String()] = true
+
+			result = append(result, source)
 		}
 	}
 
