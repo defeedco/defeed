@@ -31,14 +31,13 @@ func NewLobstersClient(baseURL string) *LobstersClient {
 
 type Story struct {
 	ID           string    `json:"short_id"`
-	CreatedAt    string    `json:"created_at"`
+	CreatedAt    time.Time `json:"created_at"`
 	Title        string    `json:"title"`
 	URL          string    `json:"url"`
 	Score        int       `json:"score"`
 	CommentCount int       `json:"comment_count"`
 	CommentsURL  string    `json:"comments_url"`
 	Tags         []string  `json:"tags"`
-	ParsedTime   time.Time `json:"-"`
 }
 
 func (c *LobstersClient) GetStoriesByFeed(ctx context.Context, feed string) ([]*Story, error) {
@@ -61,15 +60,6 @@ func (c *LobstersClient) fetchStories(ctx context.Context, url string) ([]*Story
 	stories, err = lib.DecodeJSONFromRequest[[]*Story](c.httpClient, req)
 	if err != nil {
 		return nil, fmt.Errorf("fetching stories: %v", err)
-	}
-
-	// Parse timestamps
-	for _, story := range stories {
-		parsedTime, err := time.Parse(time.RFC3339, story.CreatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("parsing time for story %s: %v", story.ID, err)
-		}
-		story.ParsedTime = parsedTime
 	}
 
 	return stories, nil

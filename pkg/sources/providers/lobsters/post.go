@@ -77,5 +77,5 @@ func (p *Post) ImageURL() string {
 }
 
 func (p *Post) CreatedAt() time.Time {
-	return p.Post.ParsedTime
+	return p.Post.CreatedAt
 }

@@ -133,7 +133,7 @@ var tagSources = []types.Source{
 	&SourceTag{
 		InstanceURL:    defaultInstanceURL,
 		Tag:            "vibecoding",
-		TagDescription: "Using AI/LLM, coding tools. Don't also tag with `ai`",
+		TagDescription: "Using AI/LLM, coding tools.",
 	},
 	&SourceTag{
 		InstanceURL:    defaultInstanceURL,
