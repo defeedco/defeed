@@ -1,17 +1,87 @@
 package lib
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	neturl "net/url"
 	"strings"
 	"time"
 
 	"github.com/go-shiori/go-readability"
+	"github.com/ledongthuc/pdf"
+	"github.com/rs/zerolog"
 )
 
-func FetchTextFromURL(_ context.Context, url string) (string, error) {
-	// TODO: add support for fetching non-HTML content (e.g. PDFs)
+var ErrUnsupportedContentType = errors.New("unsupported content type")
+
+func FetchTextFromURL(ctx context.Context, logger *zerolog.Logger, url string) (string, error) {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return "", fmt.Errorf("create request: %w", err)
+	}
+
+	// TODO(config): Make this configurable
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; DefeedBot/1.0)")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("fetch url: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("http status: %d", resp.StatusCode)
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+
+	if strings.Contains(contentType, "application/pdf") || strings.HasSuffix(url, ".pdf") {
+		return extractTextFromPDF(resp.Body)
+	}
+
+	if strings.Contains(contentType, "text/html") || strings.Contains(contentType, "application/xhtml+xml") {
+		return extractTextFromHTML(url)
+	}
+
+	logger.Warn().
+		Str("url", url).
+		Str("content_type", contentType).
+		Msg("Unsupported content type")
+
+	return "", ErrUnsupportedContentType
+}
+
+func extractTextFromPDF(body io.ReadCloser) (string, error) {
+	data, err := io.ReadAll(body)
+	if err != nil {
+		return "", fmt.Errorf("read body: %w", err)
+	}
+
+	reader, err := pdf.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return "", fmt.Errorf("create pdf reader: %w", err)
+	}
+
+	plainText, err := reader.GetPlainText()
+	if err != nil {
+		return "", fmt.Errorf("get plain text: %w", err)
+	}
+
+	textBytes, err := io.ReadAll(plainText)
+	if err != nil {
+		return "", fmt.Errorf("read plain text: %w", err)
+	}
+
+	return string(textBytes), nil
+}
+
+func extractTextFromHTML(url string) (string, error) {
 	article, err := readability.FromURL(url, 5*time.Second)
 	if err != nil {
 		return "", fmt.Errorf("readability from url: %w", err)

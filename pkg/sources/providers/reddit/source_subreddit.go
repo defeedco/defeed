@@ -3,6 +3,7 @@ package reddit
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"time"
@@ -263,13 +264,19 @@ func (s *SourceSubreddit) fetchRecentPosts(ctx context.Context, feed chan<- type
 
 func (s *SourceSubreddit) buildPost(ctx context.Context, post *reddit.Post) (*Post, error) {
 	externalContent := ""
+
+	// Note: self post is a post that doesn't link outside of reddit.com
 	if post.URL != "" && !post.IsSelfPost {
-		content, err := lib.FetchTextFromURL(ctx, post.URL)
-		if err != nil {
+		content, err := lib.FetchTextFromURL(ctx, s.logger, post.URL)
+
+		// It's okay to skip unsupported content types (e.g. images)
+		if err != nil && !errors.Is(err, lib.ErrUnsupportedContentType) {
 			return nil, fmt.Errorf("fetch external content: %w", err)
 		}
+
 		externalContent = content
 	}
+
 	return &Post{
 		Post:            post,
 		ExternalContent: externalContent,

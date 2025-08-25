@@ -3,6 +3,7 @@ package hackernews
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -233,17 +234,12 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Acti
 		if story.Text != nil {
 			textContent = *story.Text
 		} else if story.URL != nil {
-			content, err := lib.FetchTextFromURL(ctx, *story.URL)
-			if err != nil {
-				storyLogger.Error().Err(err).Msg("Failed to fetch readable article")
+			content, err := lib.FetchTextFromURL(ctx, s.logger, *story.URL)
+			if err != nil && !errors.Is(err, lib.ErrUnsupportedContentType) {
+				storyLogger.Error().Err(err).Msg("Failed to fetch external article")
 				continue
 			}
-
 			textContent = content
-		}
-
-		if textContent == "" {
-			storyLogger.Debug().Msg("No text content found")
 		}
 
 		post := &Post{

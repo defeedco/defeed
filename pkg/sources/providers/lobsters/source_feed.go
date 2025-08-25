@@ -3,6 +3,7 @@ package lobsters
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -107,8 +108,8 @@ func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Act
 func (s *SourceFeed) buildPost(ctx context.Context, story *Story) (*Post, error) {
 	post := &Post{Post: story, SourceTyp: TypeLobstersFeed, SourceID: s.UID()}
 	if story.URL != "" {
-		externalContent, err := lib.FetchTextFromURL(ctx, story.URL)
-		if err != nil {
+		externalContent, err := lib.FetchTextFromURL(ctx, s.logger, story.URL)
+		if err != nil && !errors.Is(err, lib.ErrUnsupportedContentType) {
 			return nil, fmt.Errorf("fetch external content: %w", err)
 		}
 		post.ExternalContent = externalContent
