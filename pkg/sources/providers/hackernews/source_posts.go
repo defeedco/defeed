@@ -127,9 +127,7 @@ func (p *Post) Body() string {
 }
 
 func (p *Post) URL() string {
-	if p.Post.URL != nil {
-		return *p.Post.URL
-	}
+	// Note: Don't use the Post.URL, since that leads to the externally referenced page.
 	return fmt.Sprintf("https://news.ycombinator.com/item?id=%d", *p.Post.ID)
 }
 
