@@ -193,7 +193,7 @@ func (r *Registry) Summary(ctx context.Context, feedID, userID, queryOverride st
 		return nil, ErrAuthUsersOnly
 	}
 
-	if queryOverride != "" {
+	if queryOverride != "" && queryOverride != feed.Query {
 		summary, err := r.summarize(ctx, queryOverride, feed.SourceUIDs)
 		if err != nil {
 			return nil, fmt.Errorf("summarize: %w", err)
