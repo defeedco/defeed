@@ -119,7 +119,7 @@ type Release struct {
 	Owner    string                    `json:"owner"`
 	Repo     string                    `json:"repo"`
 	Release  *github.RepositoryRelease `json:"release"`
-	SourceID types.TypedUID            `json:"source_id"`
+	SourceID *TypedUID                 `json:"source_id"`
 }
 
 func NewRelease() *Release {
@@ -238,7 +238,7 @@ outer:
 				Release:  release,
 				Owner:    s.Owner,
 				Repo:     s.Repo,
-				SourceID: s.UID(),
+				SourceID: s.UID().(*TypedUID),
 			}
 
 			feed <- releaseActivity

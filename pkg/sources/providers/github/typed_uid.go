@@ -1,9 +1,11 @@
 package github
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"strings"
+
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 )
 
 // TypedUID is a custom TypedUID implementation for GitHub repository sources.
@@ -19,11 +21,15 @@ func (s TypedUID) Type() string {
 }
 
 func (s TypedUID) MarshalJSON() ([]byte, error) {
-	return []byte(s.String()), nil
+	return json.Marshal(s.String())
 }
 
 func (s *TypedUID) UnmarshalJSON(data []byte) error {
-	t, err := NewTypedUIDFromString(string(data))
+	var str string
+	if err := json.Unmarshal(data, &str); err != nil {
+		return err
+	}
+	t, err := NewTypedUIDFromString(str)
 	if err != nil {
 		return err
 	}

@@ -73,10 +73,10 @@ func (s *SourceIssues) UnmarshalJSON(data []byte) error {
 }
 
 type Issue struct {
-	Owner    string         `json:"owner"`
-	Repo     string         `json:"repo"`
-	Issue    *github.Issue  `json:"issue"`
-	SourceID types.TypedUID `json:"source_id"`
+	Owner    string        `json:"owner"`
+	Repo     string        `json:"repo"`
+	Issue    *github.Issue `json:"issue"`
+	SourceID *TypedUID     `json:"source_id"`
 }
 
 func NewIssue() *Issue {
@@ -214,7 +214,7 @@ func (s *SourceIssues) fetchIssueActivities(ctx context.Context, since types.Act
 	for _, issue := range issues {
 		activity := &Issue{
 			Issue:    issue,
-			SourceID: s.UID(),
+			SourceID: s.UID().(*TypedUID),
 			Owner:    s.Owner,
 			Repo:     s.Repo,
 		}

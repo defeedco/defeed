@@ -42,12 +42,27 @@ func (r *OpenAILimiter) Do(req *http.Request) (*http.Response, error) {
 		}
 
 		resp, err := r.client.Do(req)
+
+		errBody := ""
+		if resp != nil && resp.StatusCode != 200 {
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, fmt.Errorf("read response body: %w", err)
+			}
+			errBody = string(body)
+		}
+
 		if err != nil {
+			r.logger.Error().
+				Err(err).
+				Int("status_code", resp.StatusCode).
+				Str("body", errBody).
+				Msg("OpenAI returned error")
 			return nil, err
 		}
 
 		rateLimitHeaders := parseRateLimitHeaders(resp)
-		attemptEvent := r.attemptEvent(rateLimitHeaders, resp.StatusCode, attempt)
+		attemptEvent := r.attemptEvent(rateLimitHeaders, errBody, resp.StatusCode, attempt)
 
 		// See: https://platform.openai.com/docs/guides/error-codes#api-errors
 		if resp.StatusCode == 429 {
@@ -76,11 +91,12 @@ func (r *OpenAILimiter) Do(req *http.Request) (*http.Response, error) {
 		}
 
 		// See: https://platform.openai.com/docs/guides/error-codes#api-errors
-		if resp.StatusCode >= 500 {
+		if resp.StatusCode != 200 {
 			resp.Body.Close()
 
+			// API sometimes returns 400 response, log the body for debugging.
 			attemptEvent.
-				Msg("OpenAI internal error")
+				Msg("OpenAI returned non-ok response")
 
 			return resp, nil
 		}
@@ -139,13 +155,14 @@ func parseRateLimitHeaders(resp *http.Response) *rateLimitHeaders {
 	}
 }
 
-func (r *OpenAILimiter) attemptEvent(headers *rateLimitHeaders, statusCode int, attempt int) *zerolog.Event {
+func (r *OpenAILimiter) attemptEvent(headers *rateLimitHeaders, errBody string, statusCode int, attempt int) *zerolog.Event {
 	return r.logger.Debug().
 		Int("remaining_requests", headers.RemainingRequests).
 		Dur("reset_requests", headers.ResetRequests).
 		Int("remaining_tokens", headers.RemainingTokens).
 		Dur("reset_tokens", headers.ResetTokens).
 		Int("status_code", statusCode).
+		Str("body", errBody).
 		Int("attempt", attempt)
 }
 

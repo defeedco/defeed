@@ -127,11 +127,6 @@ var tagSources = []types.Source{
 	},
 	&SourceTag{
 		InstanceURL:    defaultInstanceURL,
-		Tag:            "machinelearning",
-		TagDescription: "Machine learning and AI algorithms",
-	},
-	&SourceTag{
-		InstanceURL:    defaultInstanceURL,
 		Tag:            "vibecoding",
 		TagDescription: "Using AI/LLM, coding tools.",
 	},
