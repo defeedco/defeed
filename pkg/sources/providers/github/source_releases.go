@@ -142,10 +142,20 @@ func (r *Release) UnmarshalJSON(data []byte) error {
 	type Alias Release
 	aux := &struct {
 		*Alias
+		SourceID *TypedUID `json:"source_id"`
 	}{
 		Alias: (*Alias)(r),
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.SourceID == nil {
+		return fmt.Errorf("source_id is required")
+	}
+
+	r.SourceID = aux.SourceID
+	return nil
 }
 
 func (r *Release) UID() types.TypedUID {

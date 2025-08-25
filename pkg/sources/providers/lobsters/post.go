@@ -3,8 +3,9 @@ package lobsters
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
 )
@@ -37,10 +38,18 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
+		SourceID *lib.TypedUID `json:"source_id"`
 	}{
 		Alias: (*Alias)(p),
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.SourceID != nil {
+		p.SourceID = aux.SourceID
+	}
+	return nil
 }
 
 func (p *Post) UID() types.TypedUID {

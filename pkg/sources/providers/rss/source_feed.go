@@ -166,10 +166,20 @@ func (e *FeedItem) UnmarshalJSON(data []byte) error {
 	type Alias FeedItem
 	aux := &struct {
 		*Alias
+		SourceID *lib.TypedUID `json:"source_id"`
 	}{
 		Alias: (*Alias)(e),
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.SourceID == nil {
+		return fmt.Errorf("source_id is required")
+	}
+
+	e.SourceID = aux.SourceID
+	return nil
 }
 
 func (e *FeedItem) UID() types.TypedUID {

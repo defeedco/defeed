@@ -102,10 +102,20 @@ func (i *Issue) UnmarshalJSON(data []byte) error {
 	type Alias Issue
 	aux := &struct {
 		*Alias
+		SourceID *TypedUID `json:"source_id"`
 	}{
 		Alias: (*Alias)(i),
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.SourceID == nil {
+		return fmt.Errorf("source_id is required")
+	}
+
+	i.SourceID = aux.SourceID
+	return nil
 }
 
 func (i *Issue) UID() types.TypedUID {
