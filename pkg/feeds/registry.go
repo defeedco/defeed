@@ -67,7 +67,7 @@ type FeedHighlight struct {
 	QuoteActivityIDs []string
 }
 
-type CreateFeedRequest struct {
+type CreateRequest struct {
 	Name       string
 	Icon       string
 	Query      string
@@ -75,7 +75,7 @@ type CreateFeedRequest struct {
 	UserID     string
 }
 
-func (r *Registry) Create(ctx context.Context, req CreateFeedRequest) (*Feed, error) {
+func (r *Registry) Create(ctx context.Context, req CreateRequest) (*Feed, error) {
 	// TODO(validation): Add more comprehensive validation using "validate" go field tags
 	if req.UserID == "" {
 		return nil, errors.New("user ID is required")
@@ -102,18 +102,35 @@ func (r *Registry) Create(ctx context.Context, req CreateFeedRequest) (*Feed, er
 	return &feed, nil
 }
 
-func (r *Registry) Update(ctx context.Context, request Feed) error {
-	feed, err := r.store.GetByID(ctx, request.ID)
-	if err != nil || feed.UserID != request.UserID {
-		return errors.New("feed not found")
+type UpdateRequest struct {
+	ID         string
+	UserID     string
+	Name       string
+	Icon       string
+	Query      string
+	SourceUIDs []activities.TypedUID
+}
+
+func (r *Registry) Update(ctx context.Context, req UpdateRequest) (*Feed, error) {
+	feed, err := r.store.GetByID(ctx, req.ID)
+	if err != nil || feed.UserID != req.UserID {
+		return nil, errors.New("feed not found")
 	}
 
-	err = r.executeAndUpsert(ctx, request)
+	// Update the customizable fields,
+	// but preserve the internal state (Public, Summary,...)
+	feed.Name = req.Name
+	feed.Icon = req.Icon
+	feed.Query = req.Query
+	feed.SourceUIDs = req.SourceUIDs
+	feed.UpdatedAt = time.Now()
+
+	err = r.executeAndUpsert(ctx, *feed)
 	if err != nil {
-		return fmt.Errorf("execute and upsert feed: %w", err)
+		return nil, fmt.Errorf("execute and upsert feed: %w", err)
 	}
 
-	return nil
+	return feed, nil
 }
 
 func (r *Registry) executeAndUpsert(ctx context.Context, feed Feed) error {
@@ -183,6 +200,7 @@ func (r *Registry) Summary(ctx context.Context, feedID, userID, queryOverride st
 		}
 
 		feed.Summary = *summary
+		feed.UpdatedAt = time.Now()
 		err = r.store.Upsert(ctx, *feed)
 		if err != nil {
 			return nil, fmt.Errorf("upsert feed: %w", err)

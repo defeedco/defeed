@@ -293,7 +293,7 @@ func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createReq := feeds.CreateFeedRequest{
+	createReq := feeds.CreateRequest{
 		Name:       req.Name,
 		Icon:       req.Icon,
 		Query:      req.Query,
@@ -337,17 +337,14 @@ func (s *Server) UpdateOwnFeed(w http.ResponseWriter, r *http.Request, uid strin
 		s.badRequest(w, err, "deserialize source UIDs")
 		return
 	}
-
-	updatedFeed := &feeds.Feed{
+	updatedFeed, err := s.feedRegistry.Update(r.Context(), feeds.UpdateRequest{
 		ID:         uid,
 		UserID:     userID,
 		Name:       req.Name,
 		Icon:       req.Icon,
 		Query:      req.Query,
 		SourceUIDs: sourceUIDs,
-	}
-
-	err = s.feedRegistry.Update(r.Context(), *updatedFeed)
+	})
 	if err != nil {
 		s.internalError(w, err, "update feed")
 		return
