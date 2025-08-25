@@ -3,7 +3,9 @@ package types
 import (
 	"context"
 	"encoding/json"
-	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
+	"strings"
+
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
 
@@ -11,10 +13,7 @@ type Source interface {
 	json.Marshaler
 	json.Unmarshaler
 	// UID is the unique identifier for the source.
-	// It should not contain any slashes.
-	UID() string
-	// Type is the non-parameterized ID (e.g. "reddit:subreddit" vs "reddit:subreddit:top:day")
-	Type() string
+	UID() activitytypes.TypedUID
 	// Name is a short human-readable descriptor.
 	// Example: "Programming Subreddit"
 	Name() string
@@ -33,5 +32,20 @@ type Source interface {
 	// Feed is a channel to send activities to. Already seen activities are permitted.
 	// Err is a channel to send errors to.
 	// The caller should close the channels when done.
-	Stream(ctx context.Context, since types2.Activity, feed chan<- types2.Activity, err chan<- error)
+	Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, err chan<- error)
+}
+
+func IsFuzzyMatch(source Source, query string) bool {
+	// Currently a very naive fuzzy match implementation.
+	query = strings.ToLower(query)
+
+	if strings.Contains(source.Name(), query) {
+		return true
+	}
+
+	if strings.Contains(source.Description(), query) {
+		return true
+	}
+
+	return false
 }

@@ -30,6 +30,25 @@ var (
 		Columns:    ActivitiesColumns,
 		PrimaryKey: []*schema.Column{ActivitiesColumns[0]},
 	}
+	// FeedsColumns holds the columns for the "feeds" table.
+	FeedsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "icon", Type: field.TypeString},
+		{Name: "query", Type: field.TypeString},
+		{Name: "public", Type: field.TypeBool},
+		{Name: "source_uids", Type: field.TypeJSON},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "summary", Type: field.TypeJSON, Nullable: true},
+	}
+	// FeedsTable holds the schema information for the "feeds" table.
+	FeedsTable = &schema.Table{
+		Name:       "feeds",
+		Columns:    FeedsColumns,
+		PrimaryKey: []*schema.Column{FeedsColumns[0]},
+	}
 	// SourcesColumns holds the columns for the "sources" table.
 	SourcesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
@@ -47,6 +66,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ActivitiesTable,
+		FeedsTable,
 		SourcesTable,
 	}
 )

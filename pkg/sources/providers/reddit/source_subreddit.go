@@ -13,15 +13,16 @@ import (
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
 
-const TypeRedditSubreddit = "reddit:subreddit"
+const TypeRedditSubreddit = "redditsubreddit"
 
 type SourceSubreddit struct {
-	Subreddit string `json:"subreddit" validate:"required"`
-	SortBy    string `json:"sortBy" validate:"required,oneof=hot new top rising"`
-	TopPeriod string `json:"topPeriod" validate:"required,oneof=hour day week month year all"`
-	Search    string `json:"search"`
-	client    *reddit.Client
-	AppAuth   struct {
+	Subreddit        string `json:"subreddit" validate:"required"`
+	SubredditSummary string `json:"subredditSummary"`
+	SortBy           string `json:"sortBy" validate:"required,oneof=hot new top rising"`
+	TopPeriod        string `json:"topPeriod" validate:"required,oneof=hour day week month year all"`
+	Search           string `json:"search"`
+	client           *reddit.Client
+	AppAuth          struct {
 		Name   string `json:"name"`
 		ID     string `json:"ID"`
 		Secret string `json:"secret" validate:"required_with=ID"`
@@ -33,8 +34,8 @@ func NewSourceSubreddit() *SourceSubreddit {
 	return &SourceSubreddit{}
 }
 
-func (s *SourceSubreddit) UID() string {
-	return fmt.Sprintf("%s:%s:%s:%s:%s", TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
+func (s *SourceSubreddit) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
 }
 
 func (s *SourceSubreddit) Name() string {
@@ -67,17 +68,13 @@ func (s *SourceSubreddit) URL() string {
 	return fmt.Sprintf("https://reddit.com/r/%s/%s", s.Subreddit, s.SortBy)
 }
 
-func (s *SourceSubreddit) Type() string {
-	return TypeRedditSubreddit
-}
-
 func (s *SourceSubreddit) Validate() []error { return lib.ValidateStruct(s) }
 
 type Post struct {
-	Post            *reddit.Post `json:"post"`
-	ExternalContent string       `json:"external_content"`
-	SourceID        string       `json:"source_id"`
-	SourceTyp       string       `json:"source_type"`
+	Post            *reddit.Post   `json:"post"`
+	ExternalContent string         `json:"external_content"`
+	SourceID        types.TypedUID `json:"source_id"`
+	SourceTyp       string         `json:"source_type"`
 }
 
 func NewPost() *Post {
@@ -101,17 +98,27 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
+		SourceID *lib.TypedUID `json:"source_id"`
 	}{
 		Alias: (*Alias)(p),
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.SourceID == nil {
+		return fmt.Errorf("source_id is required")
+	}
+
+	p.SourceID = aux.SourceID
+	return nil
 }
 
-func (p *Post) UID() string {
-	return fmt.Sprintf("%s:%s", p.SourceID, p.Post.ID)
+func (p *Post) UID() types.TypedUID {
+	return lib.NewTypedUID(p.SourceTyp, p.Post.ID)
 }
 
-func (p *Post) SourceUID() string {
+func (p *Post) SourceUID() types.TypedUID {
 	return p.SourceID
 }
 
@@ -268,7 +275,7 @@ func (s *SourceSubreddit) buildPost(ctx context.Context, post *reddit.Post) (*Po
 	return &Post{
 		Post:            post,
 		ExternalContent: externalContent,
-		SourceTyp:       s.Type(),
+		SourceTyp:       TypeRedditSubreddit,
 		SourceID:        s.UID(),
 	}, nil
 }
@@ -309,7 +316,7 @@ func (s *SourceSubreddit) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeRedditSubreddit,
 	})
 }
 

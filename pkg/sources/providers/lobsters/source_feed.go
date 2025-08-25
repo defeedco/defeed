@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -12,11 +11,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeLobstersFeed = "lobsters:feed"
+const TypeLobstersFeed = "lobstersfeed"
 
 type SourceFeed struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
-	CustomURL   string `json:"customUrl" validate:"omitempty,url"`
 	FeedName    string `json:"feed" validate:"required,oneof=hottest newest"`
 	client      *LobstersClient
 	logger      *zerolog.Logger
@@ -28,8 +26,8 @@ func NewSourceFeed() *SourceFeed {
 	}
 }
 
-func (s *SourceFeed) UID() string {
-	return fmt.Sprintf("%s:%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.InstanceURL), "/", ":"), s.FeedName)
+func (s *SourceFeed) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeLobstersFeed, lib.StripURL(s.InstanceURL), s.FeedName)
 }
 
 func (s *SourceFeed) Name() string {
@@ -54,10 +52,6 @@ func (s *SourceFeed) Description() string {
 
 func (s *SourceFeed) URL() string {
 	return fmt.Sprintf("https://lobste.rs/%s", s.FeedName)
-}
-
-func (s *SourceFeed) Type() string {
-	return TypeLobstersFeed
 }
 
 func (s *SourceFeed) Validate() []error { return lib.ValidateStruct(s) }
@@ -85,22 +79,7 @@ func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan
 }
 
 func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	feedLogger := s.logger.With().
-		Str("feed", s.FeedName).
-		Str("instance_url", s.InstanceURL).
-		Logger()
-
-	var stories []*Story
-	var err error
-
-	if s.CustomURL != "" {
-		stories, err = s.client.GetStoriesFromCustomURL(ctx, s.CustomURL)
-	} else {
-		stories, err = s.client.GetStoriesByFeed(ctx, s.FeedName)
-	}
-
-	feedLogger.Debug().Int("count", len(stories)).Msg("Fetched stories")
-
+	stories, err := s.client.GetStoriesByFeed(ctx, s.FeedName)
 	if err != nil {
 		errs <- err
 		return
@@ -124,7 +103,7 @@ func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Act
 }
 
 func (s *SourceFeed) buildPost(ctx context.Context, story *Story) (*Post, error) {
-	post := &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+	post := &Post{Post: story, SourceTyp: TypeLobstersFeed, SourceID: s.UID()}
 	if story.URL != "" {
 		externalContent, err := lib.FetchTextFromURL(ctx, story.URL)
 		if err != nil {
@@ -142,7 +121,7 @@ func (s *SourceFeed) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeLobstersFeed,
 	})
 }
 

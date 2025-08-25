@@ -21,6 +21,18 @@ func (f ActivityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ActivityMutation", m)
 }
 
+// The FeedFunc type is an adapter to allow the use of ordinary
+// function as Feed mutator.
+type FeedFunc func(context.Context, *ent.FeedMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f FeedFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.FeedMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FeedMutation", m)
+}
+
 // The SourceFunc type is an adapter to allow the use of ordinary
 // function as Source mutator.
 type SourceFunc func(context.Context, *ent.SourceMutation) (ent.Value, error)

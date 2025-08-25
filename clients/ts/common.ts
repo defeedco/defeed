@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Pulse Feed Aggregation API
- * API for managing feed sources and retrieving aggregated content
+ * Defeed API
+ * Defeat your fragmented feeds 💪
  *
  * The version of the OpenAPI document: 1.0.0
  * 

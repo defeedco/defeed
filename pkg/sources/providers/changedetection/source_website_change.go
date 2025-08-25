@@ -5,16 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
 
-const TypeChangedetectionWebsite = "changedetection:website"
+const TypeChangedetectionWebsite = "changedetectionwebsite"
 
 type SourceWebsiteChange struct {
 	WatchUUID   string `json:"watch" validate:"required"`
@@ -28,8 +26,8 @@ func NewSourceWebsiteChange() *SourceWebsiteChange {
 	return &SourceWebsiteChange{}
 }
 
-func (s *SourceWebsiteChange) UID() string {
-	return fmt.Sprintf("%s:%s:%s", s.Type(), s.InstanceURL, s.WatchUUID)
+func (s *SourceWebsiteChange) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeChangedetectionWebsite, lib.StripURL(s.InstanceURL), s.WatchUUID)
 }
 
 func (s *SourceWebsiteChange) Name() string {
@@ -49,10 +47,6 @@ func (s *SourceWebsiteChange) Description() string {
 
 func (s *SourceWebsiteChange) URL() string {
 	return s.InstanceURL
-}
-
-func (s *SourceWebsiteChange) Type() string {
-	return TypeChangedetectionWebsite
 }
 
 func (s *SourceWebsiteChange) Validate() []error { return lib.ValidateStruct(s) }
@@ -111,7 +105,7 @@ func (s *SourceWebsiteChange) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeChangedetectionWebsite,
 	})
 }
 
@@ -129,13 +123,14 @@ func (s *SourceWebsiteChange) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// TODO: This source hasn't been tested or fully implemented
 type WebsiteChange struct {
 	title        string
 	url          string
 	lastChanged  time.Time
 	diffURL      string
 	previousHash string
-	sourceUID    string
+	sourceUID    types.TypedUID
 }
 
 func NewWebsiteChange() *WebsiteChange {
@@ -172,19 +167,12 @@ func (c *WebsiteChange) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (c *WebsiteChange) SourceUID() string {
+func (c *WebsiteChange) SourceUID() types.TypedUID {
 	return c.sourceUID
 }
 
-func (c *WebsiteChange) UID() string {
-	urlID := c.url
-	// Normalize the URL for consistent UID format (cannot contain slashes)
-	urlID = strings.TrimPrefix(urlID, "https://")
-	urlID = strings.TrimPrefix(urlID, "http://")
-	urlID = strings.TrimPrefix(urlID, "www.")
-	urlID = strings.TrimSuffix(urlID, "/")
-	urlID = strings.ReplaceAll(urlID, "/", ":")
-	return fmt.Sprintf("%s:%s:%d", c.sourceUID, urlID, c.lastChanged.Unix())
+func (c *WebsiteChange) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeChangedetectionWebsite, lib.StripURL(c.url), fmt.Sprintf("%d", c.lastChanged.Unix()))
 }
 
 func (c *WebsiteChange) Title() string {

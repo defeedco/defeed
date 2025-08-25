@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Pulse Feed Aggregation API
- * API for managing feed sources and retrieving aggregated content
+ * Defeed API
+ * Defeat your fragmented feeds 💪
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -23,25 +23,6 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
-/**
- * 
- * @export
- * @interface ActivitiesSummary
- */
-export interface ActivitiesSummary {
-    /**
-     * A concise one-paragraph overview of the overall direction and themes
-     * @type {string}
-     * @memberof ActivitiesSummary
-     */
-    'overview': string;
-    /**
-     * List of key highlights extracted from the activities
-     * @type {Array<ActivityHighlight>}
-     * @memberof ActivitiesSummary
-     */
-    'highlights': Array<ActivityHighlight>;
-}
 /**
  * 
  * @export
@@ -120,25 +101,6 @@ export interface Activity {
 /**
  * 
  * @export
- * @interface ActivityHighlight
- */
-export interface ActivityHighlight {
-    /**
-     * A concise highlight summarizing a key point
-     * @type {string}
-     * @memberof ActivityHighlight
-     */
-    'content': string;
-    /**
-     * List of activity IDs that contributed to this highlight
-     * @type {Array<string>}
-     * @memberof ActivityHighlight
-     */
-    'sourceActivityIds': Array<string>;
-}
-/**
- * 
- * @export
  * @enum {string}
  */
 
@@ -153,512 +115,133 @@ export type ActivitySortBy = typeof ActivitySortBy[keyof typeof ActivitySortBy];
 /**
  * 
  * @export
- * @interface ChangedetectionWebsiteConfig
+ * @interface CreateFeedRequest
  */
-export interface ChangedetectionWebsiteConfig {
+export interface CreateFeedRequest {
     /**
      * 
      * @type {string}
-     * @memberof ChangedetectionWebsiteConfig
+     * @memberof CreateFeedRequest
      */
-    'watch': string;
+    'name': string;
     /**
      * 
      * @type {string}
-     * @memberof ChangedetectionWebsiteConfig
+     * @memberof CreateFeedRequest
      */
-    'instanceUrl'?: string;
+    'icon': string;
     /**
      * 
      * @type {string}
-     * @memberof ChangedetectionWebsiteConfig
+     * @memberof CreateFeedRequest
      */
-    'token'?: string;
+    'query': string;
     /**
      * 
-     * @type {number}
-     * @memberof ChangedetectionWebsiteConfig
+     * @type {Array<string>}
+     * @memberof CreateFeedRequest
      */
-    'limit'?: number;
+    'sourceUids': Array<string>;
 }
-/**
- * @type CreateSourceRequest
- * @export
- */
-export type CreateSourceRequest = { type: 'changedetectionWebsite' } & CreateSourceRequestChangedetectionWebsite | { type: 'githubIssues' } & CreateSourceRequestGithubIssues | { type: 'githubReleases' } & CreateSourceRequestGithubReleases | { type: 'hackernewsPosts' } & CreateSourceRequestHackernewsPosts | { type: 'lobstersFeed' } & CreateSourceRequestLobstersFeed | { type: 'lobstersTag' } & CreateSourceRequestLobstersTag | { type: 'mastodonAccount' } & CreateSourceRequestMastodonAccount | { type: 'mastodonTag' } & CreateSourceRequestMastodonTag | { type: 'redditSubreddit' } & CreateSourceRequestRedditSubreddit | { type: 'rssFeed' } & CreateSourceRequestRssFeed;
-
 /**
  * 
  * @export
- * @interface CreateSourceRequestChangedetectionWebsite
+ * @interface DeleteOwnFeed200Response
  */
-export interface CreateSourceRequestChangedetectionWebsite {
+export interface DeleteOwnFeed200Response {
     /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestChangedetectionWebsite
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {ChangedetectionWebsiteConfig}
-     * @memberof CreateSourceRequestChangedetectionWebsite
-     */
-    'changedetectionWebsite': ChangedetectionWebsiteConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface CreateSourceRequestGithubIssues
- */
-export interface CreateSourceRequestGithubIssues {
-    /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestGithubIssues
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {GithubIssuesConfig}
-     * @memberof CreateSourceRequestGithubIssues
-     */
-    'githubIssues': GithubIssuesConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface CreateSourceRequestGithubReleases
- */
-export interface CreateSourceRequestGithubReleases {
-    /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestGithubReleases
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {GithubReleasesConfig}
-     * @memberof CreateSourceRequestGithubReleases
-     */
-    'githubReleases': GithubReleasesConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface CreateSourceRequestHackernewsPosts
- */
-export interface CreateSourceRequestHackernewsPosts {
-    /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestHackernewsPosts
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {HackernewsPostsConfig}
-     * @memberof CreateSourceRequestHackernewsPosts
-     */
-    'hackernewsPosts': HackernewsPostsConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface CreateSourceRequestLobstersFeed
- */
-export interface CreateSourceRequestLobstersFeed {
-    /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestLobstersFeed
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {LobstersFeedConfig}
-     * @memberof CreateSourceRequestLobstersFeed
-     */
-    'lobstersFeed': LobstersFeedConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface CreateSourceRequestLobstersTag
- */
-export interface CreateSourceRequestLobstersTag {
-    /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestLobstersTag
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {LobstersTagConfig}
-     * @memberof CreateSourceRequestLobstersTag
-     */
-    'lobstersTag': LobstersTagConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface CreateSourceRequestMastodonAccount
- */
-export interface CreateSourceRequestMastodonAccount {
-    /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestMastodonAccount
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {MastodonAccountConfig}
-     * @memberof CreateSourceRequestMastodonAccount
-     */
-    'mastodonAccount': MastodonAccountConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface CreateSourceRequestMastodonTag
- */
-export interface CreateSourceRequestMastodonTag {
-    /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestMastodonTag
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {MastodonTagConfig}
-     * @memberof CreateSourceRequestMastodonTag
-     */
-    'mastodonTag': MastodonTagConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface CreateSourceRequestRedditSubreddit
- */
-export interface CreateSourceRequestRedditSubreddit {
-    /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestRedditSubreddit
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {RedditSubredditConfig}
-     * @memberof CreateSourceRequestRedditSubreddit
-     */
-    'redditSubreddit': RedditSubredditConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface CreateSourceRequestRssFeed
- */
-export interface CreateSourceRequestRssFeed {
-    /**
-     * 
-     * @type {SourceType}
-     * @memberof CreateSourceRequestRssFeed
-     */
-    'type': SourceType;
-    /**
-     * 
-     * @type {RssFeedConfig}
-     * @memberof CreateSourceRequestRssFeed
-     */
-    'rssFeed': RssFeedConfig;
-}
-
-
-/**
- * 
- * @export
- * @interface GithubIssuesConfig
- */
-export interface GithubIssuesConfig {
-    /**
-     * owner/repo
+     * Success message
      * @type {string}
-     * @memberof GithubIssuesConfig
+     * @memberof DeleteOwnFeed200Response
      */
-    'repository': string;
+    'message'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface Feed
+ */
+export interface Feed {
     /**
      * 
      * @type {string}
-     * @memberof GithubIssuesConfig
+     * @memberof Feed
      */
-    'token'?: string;
-}
-/**
- * 
- * @export
- * @interface GithubReleasesConfig
- */
-export interface GithubReleasesConfig {
-    /**
-     * owner/repo
-     * @type {string}
-     * @memberof GithubReleasesConfig
-     */
-    'repository': string;
+    'uid': string;
     /**
      * 
      * @type {string}
-     * @memberof GithubReleasesConfig
+     * @memberof Feed
      */
-    'token'?: string;
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Feed
+     */
+    'icon': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Feed
+     */
+    'query': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof Feed
+     */
+    'sourceUids': Array<string>;
     /**
      * 
      * @type {boolean}
-     * @memberof GithubReleasesConfig
+     * @memberof Feed
      */
-    'includePrereleases'?: boolean;
+    'isPublic': boolean;
 }
 /**
  * 
  * @export
- * @interface HackernewsPostsConfig
+ * @interface FeedHighlight
  */
-export interface HackernewsPostsConfig {
+export interface FeedHighlight {
     /**
-     * 
+     * A concise highlight summarizing a key point
      * @type {string}
-     * @memberof HackernewsPostsConfig
+     * @memberof FeedHighlight
      */
-    'feedName': HackernewsPostsConfigFeedNameEnum;
-}
-
-export const HackernewsPostsConfigFeedNameEnum = {
-    Top: 'top',
-    New: 'new',
-    Best: 'best'
-} as const;
-
-export type HackernewsPostsConfigFeedNameEnum = typeof HackernewsPostsConfigFeedNameEnum[keyof typeof HackernewsPostsConfigFeedNameEnum];
-
-/**
- * 
- * @export
- * @interface LobstersFeedConfig
- */
-export interface LobstersFeedConfig {
+    'content': string;
     /**
-     * 
-     * @type {string}
-     * @memberof LobstersFeedConfig
+     * List of activity IDs that contributed to this highlight
+     * @type {Array<string>}
+     * @memberof FeedHighlight
      */
-    'instanceUrl': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof LobstersFeedConfig
-     */
-    'customUrl'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof LobstersFeedConfig
-     */
-    'feed': LobstersFeedConfigFeedEnum;
-}
-
-export const LobstersFeedConfigFeedEnum = {
-    Hottest: 'hottest',
-    Newest: 'newest'
-} as const;
-
-export type LobstersFeedConfigFeedEnum = typeof LobstersFeedConfigFeedEnum[keyof typeof LobstersFeedConfigFeedEnum];
-
-/**
- * 
- * @export
- * @interface LobstersTagConfig
- */
-export interface LobstersTagConfig {
-    /**
-     * 
-     * @type {string}
-     * @memberof LobstersTagConfig
-     */
-    'instanceUrl': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof LobstersTagConfig
-     */
-    'customUrl'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof LobstersTagConfig
-     */
-    'tag': string;
+    'sourceActivityIds': Array<string>;
 }
 /**
  * 
  * @export
- * @interface MastodonAccountConfig
+ * @interface FeedSummary
  */
-export interface MastodonAccountConfig {
+export interface FeedSummary {
+    /**
+     * A concise one-paragraph overview of the overall direction and themes
+     * @type {string}
+     * @memberof FeedSummary
+     */
+    'overview': string;
+    /**
+     * List of key highlights extracted from the activities
+     * @type {Array<FeedHighlight>}
+     * @memberof FeedSummary
+     */
+    'highlights': Array<FeedHighlight>;
     /**
      * 
      * @type {string}
-     * @memberof MastodonAccountConfig
+     * @memberof FeedSummary
      */
-    'instanceUrl': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof MastodonAccountConfig
-     */
-    'account': string;
-}
-/**
- * 
- * @export
- * @interface MastodonTagConfig
- */
-export interface MastodonTagConfig {
-    /**
-     * 
-     * @type {string}
-     * @memberof MastodonTagConfig
-     */
-    'instanceUrl': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof MastodonTagConfig
-     */
-    'tag': string;
-}
-/**
- * 
- * @export
- * @interface RedditSubredditConfig
- */
-export interface RedditSubredditConfig {
-    /**
-     * 
-     * @type {string}
-     * @memberof RedditSubredditConfig
-     */
-    'subreddit': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof RedditSubredditConfig
-     */
-    'sortBy': RedditSubredditConfigSortByEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof RedditSubredditConfig
-     */
-    'topPeriod': RedditSubredditConfigTopPeriodEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof RedditSubredditConfig
-     */
-    'search'?: string;
-    /**
-     * 
-     * @type {RedditSubredditConfigAuth}
-     * @memberof RedditSubredditConfig
-     */
-    'auth'?: RedditSubredditConfigAuth;
-}
-
-export const RedditSubredditConfigSortByEnum = {
-    Hot: 'hot',
-    New: 'new',
-    Top: 'top',
-    Rising: 'rising'
-} as const;
-
-export type RedditSubredditConfigSortByEnum = typeof RedditSubredditConfigSortByEnum[keyof typeof RedditSubredditConfigSortByEnum];
-export const RedditSubredditConfigTopPeriodEnum = {
-    Hour: 'hour',
-    Day: 'day',
-    Week: 'week',
-    Month: 'month',
-    Year: 'year',
-    All: 'all'
-} as const;
-
-export type RedditSubredditConfigTopPeriodEnum = typeof RedditSubredditConfigTopPeriodEnum[keyof typeof RedditSubredditConfigTopPeriodEnum];
-
-/**
- * 
- * @export
- * @interface RedditSubredditConfigAuth
- */
-export interface RedditSubredditConfigAuth {
-    /**
-     * 
-     * @type {string}
-     * @memberof RedditSubredditConfigAuth
-     */
-    'name'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof RedditSubredditConfigAuth
-     */
-    'ID'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof RedditSubredditConfigAuth
-     */
-    'secret'?: string;
-}
-/**
- * 
- * @export
- * @interface RssFeedConfig
- */
-export interface RssFeedConfig {
-    /**
-     * 
-     * @type {string}
-     * @memberof RssFeedConfig
-     */
-    'url': string;
-    /**
-     * 
-     * @type {{ [key: string]: string; }}
-     * @memberof RssFeedConfig
-     */
-    'headers'?: { [key: string]: string; };
+    'createdAt': string;
 }
 /**
  * 
@@ -721,315 +304,55 @@ export const SourceType = {
 export type SourceType = typeof SourceType[keyof typeof SourceType];
 
 
-
 /**
- * ActivitiesApi - axios parameter creator
+ * 
  * @export
+ * @interface UpdateFeedRequest
  */
-export const ActivitiesApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @summary Generate an executive summary of multiple activities
-         * @param {string} sources Comma-separated list of source UIDs where the activities are from
-         * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
-         * @param {ActivitySortBy} [sortBy] Field to sort activities for the summary by
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getActivitiesSummary: async (sources: string, query?: string, sortBy?: ActivitySortBy, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'sources' is not null or undefined
-            assertParamExists('getActivitiesSummary', 'sources', sources)
-            const localVarPath = `/activities/summary`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (query !== undefined) {
-                localVarQueryParameter['query'] = query;
-            }
-
-            if (sources !== undefined) {
-                localVarQueryParameter['sources'] = sources;
-            }
-
-            if (sortBy !== undefined) {
-                localVarQueryParameter['sortBy'] = sortBy;
-            }
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary List all activities
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        listAllActivities: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/sources/activities`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Search activities
-         * @param {string} [query] Semantic search query text
-         * @param {string} [sources] Filter by source UIDs (comma-separated)
-         * @param {number} [minSimilarity] Minimum similarity score (0-1). Can only be used when &#x60;query&#x60; is provided.
-         * @param {number} [limit] Maximum number of results to return
-         * @param {ActivitySortBy} [sortBy] Field to sort results by
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        searchActivities: async (query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: ActivitySortBy, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/activities/search`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (query !== undefined) {
-                localVarQueryParameter['query'] = query;
-            }
-
-            if (sources !== undefined) {
-                localVarQueryParameter['sources'] = sources;
-            }
-
-            if (minSimilarity !== undefined) {
-                localVarQueryParameter['minSimilarity'] = minSimilarity;
-            }
-
-            if (limit !== undefined) {
-                localVarQueryParameter['limit'] = limit;
-            }
-
-            if (sortBy !== undefined) {
-                localVarQueryParameter['sortBy'] = sortBy;
-            }
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * ActivitiesApi - functional programming interface
- * @export
- */
-export const ActivitiesApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = ActivitiesApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @summary Generate an executive summary of multiple activities
-         * @param {string} sources Comma-separated list of source UIDs where the activities are from
-         * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
-         * @param {ActivitySortBy} [sortBy] Field to sort activities for the summary by
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async getActivitiesSummary(sources: string, query?: string, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ActivitiesSummary>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getActivitiesSummary(sources, query, sortBy, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ActivitiesApi.getActivitiesSummary']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary List all activities
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async listAllActivities(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listAllActivities(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ActivitiesApi.listAllActivities']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Search activities
-         * @param {string} [query] Semantic search query text
-         * @param {string} [sources] Filter by source UIDs (comma-separated)
-         * @param {number} [minSimilarity] Minimum similarity score (0-1). Can only be used when &#x60;query&#x60; is provided.
-         * @param {number} [limit] Maximum number of results to return
-         * @param {ActivitySortBy} [sortBy] Field to sort results by
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async searchActivities(query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.searchActivities(query, sources, minSimilarity, limit, sortBy, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ActivitiesApi.searchActivities']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-    }
-};
-
-/**
- * ActivitiesApi - factory interface
- * @export
- */
-export const ActivitiesApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = ActivitiesApiFp(configuration)
-    return {
-        /**
-         * 
-         * @summary Generate an executive summary of multiple activities
-         * @param {string} sources Comma-separated list of source UIDs where the activities are from
-         * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
-         * @param {ActivitySortBy} [sortBy] Field to sort activities for the summary by
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getActivitiesSummary(sources: string, query?: string, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig): AxiosPromise<ActivitiesSummary> {
-            return localVarFp.getActivitiesSummary(sources, query, sortBy, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary List all activities
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        listAllActivities(options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
-            return localVarFp.listAllActivities(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Search activities
-         * @param {string} [query] Semantic search query text
-         * @param {string} [sources] Filter by source UIDs (comma-separated)
-         * @param {number} [minSimilarity] Minimum similarity score (0-1). Can only be used when &#x60;query&#x60; is provided.
-         * @param {number} [limit] Maximum number of results to return
-         * @param {ActivitySortBy} [sortBy] Field to sort results by
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        searchActivities(query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
-            return localVarFp.searchActivities(query, sources, minSimilarity, limit, sortBy, options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * ActivitiesApi - object-oriented interface
- * @export
- * @class ActivitiesApi
- * @extends {BaseAPI}
- */
-export class ActivitiesApi extends BaseAPI {
+export interface UpdateFeedRequest {
     /**
      * 
-     * @summary Generate an executive summary of multiple activities
-     * @param {string} sources Comma-separated list of source UIDs where the activities are from
-     * @param {string} [query] Semantic search query text. If provided, the summary will be based on the query.
-     * @param {ActivitySortBy} [sortBy] Field to sort activities for the summary by
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ActivitiesApi
+     * @type {string}
+     * @memberof UpdateFeedRequest
      */
-    public getActivitiesSummary(sources: string, query?: string, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig) {
-        return ActivitiesApiFp(this.configuration).getActivitiesSummary(sources, query, sortBy, options).then((request) => request(this.axios, this.basePath));
-    }
-
+    'name': string;
     /**
      * 
-     * @summary List all activities
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ActivitiesApi
+     * @type {string}
+     * @memberof UpdateFeedRequest
      */
-    public listAllActivities(options?: RawAxiosRequestConfig) {
-        return ActivitiesApiFp(this.configuration).listAllActivities(options).then((request) => request(this.axios, this.basePath));
-    }
-
+    'icon': string;
     /**
      * 
-     * @summary Search activities
-     * @param {string} [query] Semantic search query text
-     * @param {string} [sources] Filter by source UIDs (comma-separated)
-     * @param {number} [minSimilarity] Minimum similarity score (0-1). Can only be used when &#x60;query&#x60; is provided.
-     * @param {number} [limit] Maximum number of results to return
-     * @param {ActivitySortBy} [sortBy] Field to sort results by
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ActivitiesApi
+     * @type {string}
+     * @memberof UpdateFeedRequest
      */
-    public searchActivities(query?: string, sources?: string, minSimilarity?: number, limit?: number, sortBy?: ActivitySortBy, options?: RawAxiosRequestConfig) {
-        return ActivitiesApiFp(this.configuration).searchActivities(query, sources, minSimilarity, limit, sortBy, options).then((request) => request(this.axios, this.basePath));
-    }
+    'query': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof UpdateFeedRequest
+     */
+    'sourceUids': Array<string>;
 }
 
-
-
 /**
- * SourcesApi - axios parameter creator
+ * FeedsApi - axios parameter creator
  * @export
  */
-export const SourcesApiAxiosParamCreator = function (configuration?: Configuration) {
+export const FeedsApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
          * 
-         * @summary Create a new source
-         * @param {CreateSourceRequest} createSourceRequest 
+         * @summary Create a feed belonging to the authenticated user
+         * @param {CreateFeedRequest} createFeedRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createSource: async (createSourceRequest: CreateSourceRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'createSourceRequest' is not null or undefined
-            assertParamExists('createSource', 'createSourceRequest', createSourceRequest)
-            const localVarPath = `/sources`;
+        createOwnFeed: async (createFeedRequest: CreateFeedRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createFeedRequest' is not null or undefined
+            assertParamExists('createOwnFeed', 'createFeedRequest', createFeedRequest)
+            const localVarPath = `/feeds`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -1041,6 +364,10 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -1048,7 +375,7 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(createSourceRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(createFeedRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1057,15 +384,15 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @summary Delete source
+         * @summary Delete a feed belonging to the authenticated user
          * @param {string} uid 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteSource: async (uid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        deleteOwnFeed: async (uid: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uid' is not null or undefined
-            assertParamExists('deleteSource', 'uid', uid)
-            const localVarPath = `/sources/{uid}`
+            assertParamExists('deleteOwnFeed', 'uid', uid)
+            const localVarPath = `/feeds/{uid}`
                 .replace(`{${"uid"}}`, encodeURIComponent(String(uid)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1078,6 +405,10 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -1089,6 +420,441 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @summary Generate an executive summary of multiple activities
+         * @param {string} uid 
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFeedSummary: async (uid: string, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'uid' is not null or undefined
+            assertParamExists('getFeedSummary', 'uid', uid)
+            const localVarPath = `/feeds/{uid}/summary`
+                .replace(`{${"uid"}}`, encodeURIComponent(String(uid)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (query !== undefined) {
+                localVarQueryParameter['query'] = query;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List activities for a feed
+         * @param {string} uid 
+         * @param {ActivitySortBy} [sortBy] Sort method.
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+         * @param {number} [limit] Maximum number of activities to return.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listFeedActivities: async (uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'uid' is not null or undefined
+            assertParamExists('listFeedActivities', 'uid', uid)
+            const localVarPath = `/feeds/{uid}/activities`
+                .replace(`{${"uid"}}`, encodeURIComponent(String(uid)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (sortBy !== undefined) {
+                localVarQueryParameter['sortBy'] = sortBy;
+            }
+
+            if (query !== undefined) {
+                localVarQueryParameter['query'] = query;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List public feeds and/or those belonging to the authenticated user
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listFeeds: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/feeds`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Update a feed belonging to the authenticated user
+         * @param {string} uid 
+         * @param {UpdateFeedRequest} updateFeedRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        updateOwnFeed: async (uid: string, updateFeedRequest: UpdateFeedRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'uid' is not null or undefined
+            assertParamExists('updateOwnFeed', 'uid', uid)
+            // verify required parameter 'updateFeedRequest' is not null or undefined
+            assertParamExists('updateOwnFeed', 'updateFeedRequest', updateFeedRequest)
+            const localVarPath = `/feeds/{uid}`
+                .replace(`{${"uid"}}`, encodeURIComponent(String(uid)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateFeedRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * FeedsApi - functional programming interface
+ * @export
+ */
+export const FeedsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = FeedsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Create a feed belonging to the authenticated user
+         * @param {CreateFeedRequest} createFeedRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async createOwnFeed(createFeedRequest: CreateFeedRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Feed>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createOwnFeed(createFeedRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['FeedsApi.createOwnFeed']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Delete a feed belonging to the authenticated user
+         * @param {string} uid 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async deleteOwnFeed(uid: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeleteOwnFeed200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteOwnFeed(uid, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['FeedsApi.deleteOwnFeed']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Generate an executive summary of multiple activities
+         * @param {string} uid 
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getFeedSummary(uid: string, query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FeedSummary>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFeedSummary(uid, query, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['FeedsApi.getFeedSummary']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List activities for a feed
+         * @param {string} uid 
+         * @param {ActivitySortBy} [sortBy] Sort method.
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+         * @param {number} [limit] Maximum number of activities to return.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listFeedActivities(uid, sortBy, query, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['FeedsApi.listFeedActivities']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List public feeds and/or those belonging to the authenticated user
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listFeeds(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Feed>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listFeeds(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['FeedsApi.listFeeds']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update a feed belonging to the authenticated user
+         * @param {string} uid 
+         * @param {UpdateFeedRequest} updateFeedRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async updateOwnFeed(uid: string, updateFeedRequest: UpdateFeedRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Feed>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateOwnFeed(uid, updateFeedRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['FeedsApi.updateOwnFeed']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * FeedsApi - factory interface
+ * @export
+ */
+export const FeedsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = FeedsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Create a feed belonging to the authenticated user
+         * @param {CreateFeedRequest} createFeedRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createOwnFeed(createFeedRequest: CreateFeedRequest, options?: RawAxiosRequestConfig): AxiosPromise<Feed> {
+            return localVarFp.createOwnFeed(createFeedRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Delete a feed belonging to the authenticated user
+         * @param {string} uid 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteOwnFeed(uid: string, options?: RawAxiosRequestConfig): AxiosPromise<DeleteOwnFeed200Response> {
+            return localVarFp.deleteOwnFeed(uid, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Generate an executive summary of multiple activities
+         * @param {string} uid 
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFeedSummary(uid: string, query?: string, options?: RawAxiosRequestConfig): AxiosPromise<FeedSummary> {
+            return localVarFp.getFeedSummary(uid, query, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List activities for a feed
+         * @param {string} uid 
+         * @param {ActivitySortBy} [sortBy] Sort method.
+         * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+         * @param {number} [limit] Maximum number of activities to return.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
+            return localVarFp.listFeedActivities(uid, sortBy, query, limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List public feeds and/or those belonging to the authenticated user
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listFeeds(options?: RawAxiosRequestConfig): AxiosPromise<Array<Feed>> {
+            return localVarFp.listFeeds(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update a feed belonging to the authenticated user
+         * @param {string} uid 
+         * @param {UpdateFeedRequest} updateFeedRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        updateOwnFeed(uid: string, updateFeedRequest: UpdateFeedRequest, options?: RawAxiosRequestConfig): AxiosPromise<Feed> {
+            return localVarFp.updateOwnFeed(uid, updateFeedRequest, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * FeedsApi - object-oriented interface
+ * @export
+ * @class FeedsApi
+ * @extends {BaseAPI}
+ */
+export class FeedsApi extends BaseAPI {
+    /**
+     * 
+     * @summary Create a feed belonging to the authenticated user
+     * @param {CreateFeedRequest} createFeedRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FeedsApi
+     */
+    public createOwnFeed(createFeedRequest: CreateFeedRequest, options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).createOwnFeed(createFeedRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Delete a feed belonging to the authenticated user
+     * @param {string} uid 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FeedsApi
+     */
+    public deleteOwnFeed(uid: string, options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).deleteOwnFeed(uid, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Generate an executive summary of multiple activities
+     * @param {string} uid 
+     * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FeedsApi
+     */
+    public getFeedSummary(uid: string, query?: string, options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).getFeedSummary(uid, query, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List activities for a feed
+     * @param {string} uid 
+     * @param {ActivitySortBy} [sortBy] Sort method.
+     * @param {string} [query] Filter query. Authenticated users can override the default feed query.
+     * @param {number} [limit] Maximum number of activities to return.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FeedsApi
+     */
+    public listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).listFeedActivities(uid, sortBy, query, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List public feeds and/or those belonging to the authenticated user
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FeedsApi
+     */
+    public listFeeds(options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).listFeeds(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update a feed belonging to the authenticated user
+     * @param {string} uid 
+     * @param {UpdateFeedRequest} updateFeedRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FeedsApi
+     */
+    public updateOwnFeed(uid: string, updateFeedRequest: UpdateFeedRequest, options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).updateOwnFeed(uid, updateFeedRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * SourcesApi - axios parameter creator
+ * @export
+ */
+export const SourcesApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
         /**
          * 
          * @summary Get source by UID
@@ -1112,6 +878,10 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -1125,7 +895,7 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @summary List all sources
+         * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1142,6 +912,10 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
             if (query !== undefined) {
                 localVarQueryParameter['query'] = query;
@@ -1170,32 +944,6 @@ export const SourcesApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @summary Create a new source
-         * @param {CreateSourceRequest} createSourceRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async createSource(createSourceRequest: CreateSourceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Source>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createSource(createSourceRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SourcesApi.createSource']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Delete source
-         * @param {string} uid 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async deleteSource(uid: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteSource(uid, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SourcesApi.deleteSource']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
          * @summary Get source by UID
          * @param {string} uid 
          * @param {*} [options] Override http request option.
@@ -1209,7 +957,7 @@ export const SourcesApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary List all sources
+         * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1232,26 +980,6 @@ export const SourcesApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * 
-         * @summary Create a new source
-         * @param {CreateSourceRequest} createSourceRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        createSource(createSourceRequest: CreateSourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<Source> {
-            return localVarFp.createSource(createSourceRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Delete source
-         * @param {string} uid 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        deleteSource(uid: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.deleteSource(uid, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
          * @summary Get source by UID
          * @param {string} uid 
          * @param {*} [options] Override http request option.
@@ -1262,7 +990,7 @@ export const SourcesApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @summary List all sources
+         * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1282,30 +1010,6 @@ export const SourcesApiFactory = function (configuration?: Configuration, basePa
 export class SourcesApi extends BaseAPI {
     /**
      * 
-     * @summary Create a new source
-     * @param {CreateSourceRequest} createSourceRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof SourcesApi
-     */
-    public createSource(createSourceRequest: CreateSourceRequest, options?: RawAxiosRequestConfig) {
-        return SourcesApiFp(this.configuration).createSource(createSourceRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Delete source
-     * @param {string} uid 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof SourcesApi
-     */
-    public deleteSource(uid: string, options?: RawAxiosRequestConfig) {
-        return SourcesApiFp(this.configuration).deleteSource(uid, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
      * @summary Get source by UID
      * @param {string} uid 
      * @param {*} [options] Override http request option.
@@ -1318,7 +1022,7 @@ export class SourcesApi extends BaseAPI {
 
     /**
      * 
-     * @summary List all sources
+     * @summary List available sources
      * @param {string} [query] Filter sources by name or description.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}

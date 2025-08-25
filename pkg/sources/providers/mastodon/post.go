@@ -8,13 +8,16 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
+
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/mattn/go-mastodon"
 	"golang.org/x/net/html"
 )
 
 type Post struct {
 	Status    *mastodon.Status `json:"status"`
-	SourceID  string           `json:"source_id"`
+	SourceID  types.TypedUID   `json:"source_id"`
 	SourceTyp string           `json:"source_type"`
 }
 
@@ -39,17 +42,27 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
+		SourceID *lib.TypedUID `json:"source_id"`
 	}{
 		Alias: (*Alias)(p),
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.SourceID == nil {
+		return fmt.Errorf("source_id is required")
+	}
+
+	p.SourceID = aux.SourceID
+	return nil
 }
 
-func (p *Post) UID() string {
-	return fmt.Sprintf("%s:%s", p.SourceID, p.Status.ID)
+func (p *Post) UID() types.TypedUID {
+	return lib.NewTypedUID(p.SourceTyp, string(p.Status.ID))
 }
 
-func (p *Post) SourceUID() string {
+func (p *Post) SourceUID() types.TypedUID {
 	return p.SourceID
 }
 

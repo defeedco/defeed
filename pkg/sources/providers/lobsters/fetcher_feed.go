@@ -2,8 +2,11 @@ package lobsters
 
 import (
 	"context"
+	"fmt"
+	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
+
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
-	"strings"
 
 	"github.com/rs/zerolog"
 )
@@ -19,35 +22,31 @@ func NewFeedFetcher(logger *zerolog.Logger) *FeedFetcher {
 	}
 }
 
-var lobstersFeeds = []struct {
-	feedName    string
-	description string
-}{
-	{"hottest", "Hottest posts from Lobsters"},
-	{"newest", "Newest posts from Lobsters"},
+func (f *FeedFetcher) SourceType() string {
+	return TypeLobstersFeed
 }
 
-func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	query = strings.ToLower(query)
-	var matchingSources []types.Source
+var feedSources = []types.Source{
+	&SourceFeed{
+		InstanceURL: defaultInstanceURL,
+		FeedName:    "hottest",
+	},
+	&SourceFeed{
+		InstanceURL: defaultInstanceURL,
+		FeedName:    "newest",
+	},
+}
 
-	for _, feed := range lobstersFeeds {
-		feedName := strings.ToLower(feed.feedName)
-		description := strings.ToLower(feed.description)
-
-		if query == "" || strings.Contains(feedName, query) || strings.Contains(description, query) {
-			source := &SourceFeed{
-				InstanceURL: "https://lobste.rs",
-				FeedName:    feed.feedName,
-			}
-			matchingSources = append(matchingSources, source)
+func (f *FeedFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
+	for _, source := range feedSources {
+		if lib.Equals(source.UID(), id) {
+			return source, nil
 		}
 	}
+	return nil, fmt.Errorf("source not found")
+}
 
-	f.Logger.Debug().
-		Str("query", query).
-		Int("matches", len(matchingSources)).
-		Msg("Lobsters fetcher found feeds")
-
-	return matchingSources, nil
+func (f *FeedFetcher) Search(_ context.Context, _ string) ([]types.Source, error) {
+	// Ignore the query, since the set of all available sources is small
+	return feedSources, nil
 }

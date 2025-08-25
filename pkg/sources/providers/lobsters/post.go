@@ -4,13 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
+
+	"github.com/glanceapp/glance/pkg/lib"
 )
 
 type Post struct {
-	Post            *Story `json:"post"`
-	SourceID        string `json:"source_id"`
-	SourceTyp       string `json:"source_type"`
-	ExternalContent string `json:"external_content"`
+	Post            *Story         `json:"post"`
+	SourceID        types.TypedUID `json:"source_id"`
+	SourceTyp       string         `json:"source_type"`
+	ExternalContent string         `json:"external_content"`
 }
 
 func NewPost() *Post {
@@ -34,17 +38,25 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
+		SourceID *lib.TypedUID `json:"source_id"`
 	}{
 		Alias: (*Alias)(p),
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.SourceID != nil {
+		p.SourceID = aux.SourceID
+	}
+	return nil
 }
 
-func (p *Post) UID() string {
-	return fmt.Sprintf("%s:%s", p.SourceID, p.Post.ID)
+func (p *Post) UID() types.TypedUID {
+	return lib.NewTypedUID(p.SourceTyp, p.Post.ID)
 }
 
-func (p *Post) SourceUID() string {
+func (p *Post) SourceUID() types.TypedUID {
 	return p.SourceID
 }
 

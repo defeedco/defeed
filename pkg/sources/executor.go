@@ -3,9 +3,9 @@ package sources
 import (
 	"context"
 	"fmt"
-	types2 "github.com/glanceapp/glance/pkg/sources/types"
-	"sort"
 	"sync"
+
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
@@ -21,8 +21,8 @@ import (
 // - Storing activities in the database
 // - Retrieving stored activities
 type Executor struct {
-	sourceRepo   sourceStore
-	activityRepo activityStore
+	activeSourceRepo sourceStore
+	activityRepo     activityStore
 
 	cancelBySourceID sync.Map
 	activityQueue    chan types.Activity
@@ -35,10 +35,10 @@ type Executor struct {
 }
 
 type sourceStore interface {
-	Add(source types2.Source) error
+	Add(source sourcetypes.Source) error
 	Remove(uid string) error
-	List() ([]types2.Source, error)
-	GetByID(uid string) (types2.Source, error)
+	List() ([]sourcetypes.Source, error)
+	GetByID(uid string) (sourcetypes.Source, error)
 }
 
 type activityStore interface {
@@ -65,14 +65,14 @@ func NewExecutor(
 	sourceRepo sourceStore,
 ) *Executor {
 	r := &Executor{
-		activityRepo:  activityRepo,
-		sourceRepo:    sourceRepo,
-		activityQueue: make(chan types.Activity),
-		errorQueue:    make(chan error),
-		done:          make(chan struct{}),
-		logger:        logger,
-		summarizer:    summarizer,
-		embedder:      embedder,
+		activityRepo:     activityRepo,
+		activeSourceRepo: sourceRepo,
+		activityQueue:    make(chan types.Activity),
+		errorQueue:       make(chan error),
+		done:             make(chan struct{}),
+		logger:           logger,
+		summarizer:       summarizer,
+		embedder:         embedder,
 	}
 
 	// Tweak the number of workers as needed.
@@ -82,7 +82,7 @@ func NewExecutor(
 }
 
 func (r *Executor) Initialize() error {
-	sources, err := r.sourceRepo.List()
+	sources, err := r.activeSourceRepo.List()
 	if err != nil {
 		return fmt.Errorf("list sources: %w", err)
 	}
@@ -99,7 +99,7 @@ func (r *Executor) Initialize() error {
 		}
 
 		activities, err := r.activityRepo.Search(types.SearchRequest{
-			SourceUIDs: []string{source.UID()},
+			SourceUIDs: []types.TypedUID{source.UID()},
 			Limit:      1,
 			SortBy:     types.SortByDate,
 		})
@@ -124,8 +124,9 @@ func (r *Executor) Initialize() error {
 	return nil
 }
 
-func (r *Executor) Add(source types2.Source) error {
-	existing, _ := r.sourceRepo.GetByID(source.UID())
+// Add starts processing activities from the source.
+func (r *Executor) Add(source sourcetypes.Source) error {
+	existing, _ := r.activeSourceRepo.GetByID(source.UID().String())
 
 	if existing != nil {
 		// source already exists, we don't need to do anything
@@ -136,7 +137,7 @@ func (r *Executor) Add(source types2.Source) error {
 		return fmt.Errorf("initialize source: %w", err)
 	}
 
-	err := r.sourceRepo.Add(source)
+	err := r.activeSourceRepo.Add(source)
 	if err != nil {
 		return fmt.Errorf("add source: %w", err)
 	}
@@ -152,8 +153,9 @@ func (r *Executor) Add(source types2.Source) error {
 	return nil
 }
 
+// Remove stops the source execution
 func (r *Executor) Remove(uid string) error {
-	existing, _ := r.sourceRepo.GetByID(uid)
+	existing, _ := r.activeSourceRepo.GetByID(uid)
 
 	if existing != nil {
 		return fmt.Errorf("source '%s' not found", uid)
@@ -166,49 +168,12 @@ func (r *Executor) Remove(uid string) error {
 	cancel.(context.CancelFunc)()
 	r.cancelBySourceID.Delete(uid)
 
-	err := r.sourceRepo.Remove(uid)
+	err := r.activeSourceRepo.Remove(uid)
 	if err != nil {
 		return fmt.Errorf("remove source: %w", err)
 	}
 
 	return nil
-}
-
-func (r *Executor) Sources() ([]types2.Source, error) {
-	return r.sourceRepo.List()
-}
-
-func (r *Executor) Source(uid string) (types2.Source, error) {
-	return r.sourceRepo.GetByID(uid)
-}
-
-func (r *Executor) Activities() ([]*types.DecoratedActivity, error) {
-	matches, err := r.activityRepo.List()
-	if err != nil {
-		return nil, fmt.Errorf("repo list: %w", err)
-	}
-
-	sort.Slice(matches, func(i, j int) bool {
-		return matches[i].Activity.CreatedAt().Before(matches[j].Activity.CreatedAt())
-	})
-
-	return matches, nil
-}
-
-func (r *Executor) ActivitiesBySource(sourceUID string) ([]*types.DecoratedActivity, error) {
-	activities, err := r.Activities()
-	if err != nil {
-		return nil, fmt.Errorf("list activities: %w", err)
-	}
-
-	matches := make([]*types.DecoratedActivity, 0)
-	for _, a := range activities {
-		if a.Activity.SourceUID() == sourceUID {
-			matches = append(matches, a)
-		}
-	}
-
-	return matches, nil
 }
 
 func (r *Executor) startWorkers(nWorkers int) {
@@ -284,7 +249,7 @@ func (r *Executor) Shutdown() {
 	r.cancelBySourceID.Clear()
 }
 
-func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []string, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
+func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []types.TypedUID, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
 	req := types.SearchRequest{
 		SourceUIDs:    sourceUIDs,
 		MinSimilarity: minSimilarity,
@@ -305,19 +270,10 @@ func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []string
 	return r.activityRepo.Search(req)
 }
 
-func (r *Executor) Summary(ctx context.Context, query string, sourceUIDs []string, sortBy types.SortBy) (*types.ActivitiesSummary, error) {
-	activities, err := r.Search(ctx, query, sourceUIDs, 0.0, 20, sortBy)
-	if err != nil {
-		return nil, fmt.Errorf("search activities: %w", err)
-	}
-
-	return r.summarizer.SummarizeMany(ctx, activities, query)
-}
-
-func sourceLogger(source types2.Source, logger *zerolog.Logger) *zerolog.Logger {
+func sourceLogger(source sourcetypes.Source, logger *zerolog.Logger) *zerolog.Logger {
 	out := logger.With().
-		Str("source_type", source.Type()).
-		Str("source_uid", source.UID()).
+		Str("source_type", source.UID().Type()).
+		Str("source_uid", source.UID().String()).
 		Logger()
 
 	return &out
@@ -325,9 +281,9 @@ func sourceLogger(source types2.Source, logger *zerolog.Logger) *zerolog.Logger 
 
 func activityLogger(activity types.Activity, logger *zerolog.Logger) *zerolog.Logger {
 	out := logger.With().
-		Str("activity_id", activity.UID()).
-		Str("source_type", activity.SourceType()).
-		Str("source_uid", activity.SourceUID()).
+		Str("activity_id", activity.UID().String()).
+		Str("source_type", activity.UID().Type()).
+		Str("source_uid", activity.SourceUID().String()).
 		Logger()
 
 	return &out

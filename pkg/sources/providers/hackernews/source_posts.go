@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeHackerNewsPosts = "hackernews:posts"
+const TypeHackerNewsPosts = "hackernewsposts"
 
 type SourcePosts struct {
 	FeedName     string        `json:"feedName" validate:"required,oneof=top new best"`
@@ -27,8 +27,8 @@ func NewSourcePosts() *SourcePosts {
 	}
 }
 
-func (s *SourcePosts) UID() string {
-	return fmt.Sprintf("%s:%s", s.Type(), s.FeedName)
+func (s *SourcePosts) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeHackerNewsPosts, s.FeedName)
 }
 
 func (s *SourcePosts) Name() string {
@@ -52,16 +52,12 @@ func (s *SourcePosts) URL() string {
 	return fmt.Sprintf("https://news.ycombinator.com/%s", s.FeedName)
 }
 
-func (s *SourcePosts) Type() string {
-	return TypeHackerNewsPosts
-}
-
 func (s *SourcePosts) Validate() []error { return lib.ValidateStruct(s) }
 
 type Post struct {
-	Post            *gohn.Item `json:"post"`
-	ArticleTextBody string     `json:"article_text_body"`
-	SourceID        string     `json:"source_id"`
+	Post            *gohn.Item     `json:"post"`
+	ArticleTextBody string         `json:"article_text_body"`
+	SourceID        types.TypedUID `json:"source_id"`
 }
 
 func NewPost() *Post {
@@ -85,17 +81,27 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
+		SourceID *lib.TypedUID `json:"source_id"`
 	}{
 		Alias: (*Alias)(p),
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.SourceID == nil {
+		return fmt.Errorf("source_id is required")
+	}
+
+	p.SourceID = aux.SourceID
+	return nil
 }
 
-func (p *Post) UID() string {
-	return fmt.Sprintf("%s:%d", p.SourceID, *p.Post.ID)
+func (p *Post) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeHackerNewsPosts, fmt.Sprintf("%d", *p.Post.ID))
 }
 
-func (p *Post) SourceUID() string {
+func (p *Post) SourceUID() types.TypedUID {
 	return p.SourceID
 }
 
@@ -277,7 +283,7 @@ func (s *SourcePosts) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeHackerNewsPosts,
 	})
 }
 

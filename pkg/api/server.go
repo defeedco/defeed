@@ -1,18 +1,18 @@
 package api
 
 import (
-	"bytes"
+	"context"
 	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
-	types2 "github.com/glanceapp/glance/pkg/sources/types"
-	"html/template"
 	"io"
 	"net/http"
 	"slices"
 	"strings"
 	"time"
+
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
 	"github.com/glanceapp/glance/pkg/sources/providers/github"
@@ -22,7 +22,8 @@ import (
 	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
 	"github.com/glanceapp/glance/pkg/sources/providers/rss"
 
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/feeds"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/sources/nlp"
 	httpswagger "github.com/swaggo/http-swagger"
 
@@ -36,11 +37,16 @@ import (
 //go:embed openapi.yaml
 var openapiSpecYaml string
 
+type UserIDContextKey string
+
+const userIDContextKey UserIDContextKey = "userID"
+
 type Server struct {
-	executor *sources.Executor
-	registry *sources.Registry
-	logger   *zerolog.Logger
-	http     http.Server
+	executor     *sources.Executor
+	registry     *sources.Registry
+	feedRegistry *feeds.Registry
+	logger       *zerolog.Logger
+	http         http.Server
 }
 
 var _ ServerInterface = (*Server)(nil)
@@ -60,10 +66,13 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		return nil, fmt.Errorf("create embedder model: %w", err)
 	}
 
+	summarizer := nlp.NewSummarizer(summarizerModel)
+	embedder := nlp.NewEmbedder(embedderModel)
+
 	executor := sources.NewExecutor(
 		logger,
-		nlp.NewSummarizer(summarizerModel),
-		nlp.NewEmbedder(embedderModel),
+		summarizer,
+		embedder,
 		postgres.NewActivityRepository(db),
 		postgres.NewSourceRepository(db),
 	)
@@ -76,15 +85,19 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		return nil, fmt.Errorf("initialize preset registry: %w", err)
 	}
 
+	feedStore := postgres.NewFeedRepository(db)
+	feedRegistry := feeds.NewRegistry(feedStore, executor, registry, summarizer)
+
 	mux := http.NewServeMux()
 
 	server := &Server{
-		logger:   logger,
-		registry: registry,
-		executor: executor,
+		logger:       logger,
+		registry:     registry,
+		executor:     executor,
+		feedRegistry: feedRegistry,
 		http: http.Server{
 			Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
-			Handler: corsMiddleware(mux, cfg.CORSOrigin),
+			Handler: authMiddleware(corsMiddleware(mux, cfg.CORSOrigin)),
 		},
 	}
 
@@ -92,6 +105,44 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 	server.registerApiDocsHandlers(mux)
 
 	return server, nil
+}
+
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Docs should be public
+		if strings.HasPrefix(r.URL.Path, "/docs") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		authHeader := r.Header.Get("Authorization")
+
+		if authHeader == "" {
+			// For the time being, we allow unauthenticated requests but with certain limitations.
+			emptyUserID := ""
+			ctx := context.WithValue(r.Context(), userIDContextKey, emptyUserID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			http.Error(w, "invalid authorization header", http.StatusUnauthorized)
+			return
+		}
+
+		authToken := strings.TrimPrefix(authHeader, "Bearer ")
+		if authToken == "" {
+			http.Error(w, "invalid auth token", http.StatusUnauthorized)
+			return
+		}
+
+		// TODO(auth): authorize when user resource/auth is implemented
+		userID := authToken
+
+		ctx := context.WithValue(r.Context(), userIDContextKey, userID)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func corsMiddleware(next http.Handler, originConfig string) http.Handler {
@@ -149,10 +200,28 @@ func (s *Server) Stop() error {
 	return s.http.Close()
 }
 
-func (s *Server) ListAllActivities(w http.ResponseWriter, r *http.Request) {
-	out, err := s.executor.Activities()
+func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid string, params ListFeedActivitiesParams) {
+	userID := r.Context().Value(userIDContextKey).(string)
+
+	var queryOverride string
+	if params.Query != nil {
+		queryOverride = *params.Query
+	}
+
+	limit := 20
+	if params.Limit != nil {
+		limit = *params.Limit
+	}
+
+	sortBy, err := deserializeSortBy(params.SortBy)
 	if err != nil {
-		s.internalError(w, err, "list activities")
+		s.badRequest(w, err, "deserialize sort by")
+		return
+	}
+
+	out, err := s.feedRegistry.Activities(r.Context(), uid, userID, sortBy, limit, queryOverride)
+	if err != nil {
+		s.internalError(w, err, "list feed activities")
 		return
 	}
 
@@ -186,139 +255,136 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params List
 	s.serializeRes(w, res)
 }
 
-func (s *Server) CreateSource(w http.ResponseWriter, r *http.Request) {
-	var req CreateSourceRequest
+func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
+	typedUID, err := sources.NewTypedUID(uid)
+	if err != nil {
+		s.badRequest(w, err, "deserialize source UID")
+		return
+	}
+
+	out, err := s.registry.FindByUID(r.Context(), typedUID)
+	if err != nil {
+		s.internalError(w, err, "find source by UID")
+		return
+	}
+
+	source, err := serializeSource(out)
+	if err != nil {
+		s.internalError(w, err, "serialize source")
+		return
+	}
+
+	s.serializeRes(w, source)
+}
+
+func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(userIDContextKey).(string)
+
+	var req CreateFeedRequest
 	err := deserializeReq(r, &req)
 	if err != nil {
 		s.badRequest(w, err, "deserialize request")
 		return
 	}
 
-	out, err := deserializeCreateSourceRequest(req)
+	sourceUIDs, err := deserializeSourceUIDs(req.SourceUids)
+	if err != nil {
+		s.badRequest(w, err, "deserialize source UIDs")
+		return
+	}
+
+	createReq := feeds.CreateRequest{
+		Name:       req.Name,
+		Icon:       req.Icon,
+		Query:      req.Query,
+		SourceUIDs: sourceUIDs,
+		UserID:     userID,
+	}
+
+	createdFeed, err := s.feedRegistry.Create(r.Context(), createReq)
+	if err != nil {
+		s.internalError(w, err, "create feed")
+		return
+	}
+
+	s.serializeRes(w, serializeFeed(createdFeed))
+}
+
+func (s *Server) ListFeeds(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(userIDContextKey).(string)
+
+	feedList, err := s.feedRegistry.ListByUserID(r.Context(), userID)
+	if err != nil {
+		s.internalError(w, err, "list feeds")
+		return
+	}
+
+	s.serializeRes(w, serializeFeeds(feedList))
+}
+
+func (s *Server) UpdateOwnFeed(w http.ResponseWriter, r *http.Request, uid string) {
+	var req UpdateFeedRequest
+	err := deserializeReq(r, &req)
 	if err != nil {
 		s.badRequest(w, err, "deserialize request")
 		return
 	}
 
-	err = s.executor.Add(out)
+	userID := r.Context().Value(userIDContextKey).(string)
+
+	sourceUIDs, err := deserializeSourceUIDs(req.SourceUids)
 	if err != nil {
-		s.internalError(w, err, "add source")
+		s.badRequest(w, err, "deserialize source UIDs")
 		return
 	}
-
-	source, err := serializeSource(out)
-	if err != nil {
-		s.internalError(w, err, "serialize source")
-		return
-	}
-
-	s.serializeRes(w, source)
-}
-
-func (s *Server) DeleteSource(w http.ResponseWriter, r *http.Request, uid string) {
-	err := s.executor.Remove(uid)
-	if err != nil {
-		s.internalError(w, err, "remove source")
-		return
-	}
-
-	s.serializeRes(w, nil)
-}
-
-func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
-	out, err := s.executor.Source(uid)
-	if err != nil {
-		s.internalError(w, err, "remove source")
-		return
-	}
-
-	source, err := serializeSource(out)
-	if err != nil {
-		s.internalError(w, err, "serialize source")
-		return
-	}
-
-	s.serializeRes(w, source)
-}
-
-func (s *Server) GetActivitiesSummary(w http.ResponseWriter, r *http.Request, params GetActivitiesSummaryParams) {
-	var query string
-	if params.Query != nil {
-		query = *params.Query
-	}
-
-	sortBy, err := deserializeSortBy(params.SortBy)
-	if err != nil {
-		s.badRequest(w, err, "deserialize sort by")
-		return
-	}
-
-	sourceIDs := strings.Split(params.Sources, ",")
-
-	summary, err := s.executor.Summary(r.Context(), query, sourceIDs, sortBy)
-	if err != nil {
-		s.internalError(w, err, "generate summary")
-		return
-	}
-
-	highlights := make([]ActivityHighlight, 0, len(summary.Highlights))
-	for _, h := range summary.Highlights {
-		highlights = append(highlights, ActivityHighlight{
-			Content:           h.Content,
-			SourceActivityIds: h.SourceActivityIDs,
-		})
-	}
-
-	s.serializeRes(w, ActivitiesSummary{
-		Overview:   summary.Overview,
-		Highlights: highlights,
+	updatedFeed, err := s.feedRegistry.Update(r.Context(), feeds.UpdateRequest{
+		ID:         uid,
+		UserID:     userID,
+		Name:       req.Name,
+		Icon:       req.Icon,
+		Query:      req.Query,
+		SourceUIDs: sourceUIDs,
 	})
+	if err != nil {
+		s.internalError(w, err, "update feed")
+		return
+	}
+
+	s.serializeRes(w, serializeFeed(updatedFeed))
 }
 
-func (s *Server) SearchActivities(w http.ResponseWriter, r *http.Request, params SearchActivitiesParams) {
-	var sourceUIDs []string
-	if params.Sources != nil {
-		sourceUIDs = strings.Split(*params.Sources, ",")
+func (s *Server) DeleteOwnFeed(w http.ResponseWriter, r *http.Request, uid string) {
+	userID := r.Context().Value(userIDContextKey).(string)
+
+	err := s.feedRegistry.Remove(r.Context(), uid, userID)
+	if err != nil {
+		s.internalError(w, err, "delete feed")
+		return
 	}
 
-	var minSimilarity float32
-	if params.MinSimilarity != nil {
-		minSimilarity = *params.MinSimilarity
-	}
+	s.serializeRes(w, map[string]string{"message": "Feed deleted successfully"})
+}
 
-	var query string
+func (s *Server) GetFeedSummary(w http.ResponseWriter, r *http.Request, feedID string, params GetFeedSummaryParams) {
+	userID := r.Context().Value(userIDContextKey).(string)
+
+	var queryOverride string
 	if params.Query != nil {
-		query = *params.Query
+		queryOverride = *params.Query
 	}
 
-	limit := 20
-	if params.Limit != nil {
-		if *params.Limit < 1 || *params.Limit > 100 {
-			s.badRequest(w, fmt.Errorf("limit must be between 1 and 100"), "validate limit")
+	feedSummary, err := s.feedRegistry.Summary(r.Context(), feedID, userID, queryOverride)
+	if err != nil {
+		if errors.Is(err, feeds.ErrInsufficientActivity) {
+			s.statusCode(w, http.StatusAccepted)
 			return
 		}
-		limit = *params.Limit
-	}
 
-	sortBy, err := deserializeSortBy(params.SortBy)
-	if err != nil {
-		s.badRequest(w, err, "deserialize sort by")
+		s.internalError(w, err, "generate feed summary")
 		return
 	}
 
-	results, err := s.executor.Search(r.Context(), query, sourceUIDs, minSimilarity, limit, sortBy)
-	if err != nil {
-		s.internalError(w, err, "search activities")
-		return
-	}
-
-	activities, err := serializeActivities(results)
-	if err != nil {
-		s.internalError(w, err, "serialize activities")
-		return
-	}
-
-	s.serializeRes(w, activities)
+	s.serializeRes(w, serializeFeedSummary(feedSummary))
 }
 
 func deserializeReq[Req any](r *http.Request, req *Req) error {
@@ -364,103 +430,54 @@ func (s *Server) badRequest(w http.ResponseWriter, err error, msg string) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
 }
 
-func deserializeCreateSourceRequest(req CreateSourceRequest) (types2.Source, error) {
-	disc, err := req.Discriminator()
-	if err != nil {
-		return nil, fmt.Errorf("read discriminator: %w", err)
-	}
-
-	sourceType, err := deserializeSourceType(SourceType(disc))
-	if err != nil {
-		return nil, fmt.Errorf("deserialize source type: %w", err)
-	}
-
-	source, err := sources.NewSource(sourceType)
-	if err != nil {
-		return nil, fmt.Errorf("create source: %w", err)
-	}
-
-	val, err := req.ValueByDiscriminator()
-	if err != nil {
-		return nil, fmt.Errorf("extract typed request by discriminator: %w", err)
-	}
-
-	var configBytes []byte
-	switch v := val.(type) {
-	case CreateSourceRequestMastodonAccount:
-		configBytes, err = json.Marshal(v.MastodonAccount)
-	case CreateSourceRequestMastodonTag:
-		configBytes, err = json.Marshal(v.MastodonTag)
-	case CreateSourceRequestHackernewsPosts:
-		configBytes, err = json.Marshal(v.HackernewsPosts)
-	case CreateSourceRequestRedditSubreddit:
-		configBytes, err = json.Marshal(v.RedditSubreddit)
-	case CreateSourceRequestLobstersTag:
-		configBytes, err = json.Marshal(v.LobstersTag)
-	case CreateSourceRequestLobstersFeed:
-		configBytes, err = json.Marshal(v.LobstersFeed)
-	case CreateSourceRequestRssFeed:
-		configBytes, err = json.Marshal(v.RssFeed)
-	case CreateSourceRequestGithubReleases:
-		configBytes, err = json.Marshal(v.GithubReleases)
-	case CreateSourceRequestGithubIssues:
-		configBytes, err = json.Marshal(v.GithubIssues)
-	case CreateSourceRequestChangedetectionWebsite:
-		configBytes, err = json.Marshal(v.ChangedetectionWebsite)
-	default:
-		return nil, fmt.Errorf("unsupported source type: %s", disc)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("marshal config: %w", err)
-	}
-
-	if err := json.Unmarshal(configBytes, source); err != nil {
-		return nil, fmt.Errorf("unmarshal config: %w", err)
-	}
-
-	if verrs := source.Validate(); len(verrs) > 0 {
-		// join all validation errors into one error
-		var sb strings.Builder
-		for i, e := range verrs {
-			if i > 0 {
-				sb.WriteString("; ")
-			}
-			sb.WriteString(e.Error())
-		}
-		return nil, fmt.Errorf("invalid source config: %s", sb.String())
-	}
-
-	return source, nil
+func (s *Server) statusCode(w http.ResponseWriter, code int) {
+	w.WriteHeader(code)
 }
 
-func deserializeSourceType(in SourceType) (string, error) {
-	switch in {
-	case MastodonAccount:
-		return mastodon.TypeMastodonAccount, nil
-	case MastodonTag:
-		return mastodon.TypeMastodonTag, nil
-	case HackernewsPosts:
-		return hackernews.TypeHackerNewsPosts, nil
-	case RedditSubreddit:
-		return reddit.TypeRedditSubreddit, nil
-	case LobstersTag:
-		return lobsters.TypeLobstersTag, nil
-	case LobstersFeed:
-		return lobsters.TypeLobstersFeed, nil
-	case RssFeed:
-		return rss.TypeRSSFeed, nil
-	case GithubReleases:
-		return github.TypeGithubReleases, nil
-	case GithubIssues:
-		return github.TypeGithubIssues, nil
-	case ChangedetectionWebsite:
-		return changedetection.TypeChangedetectionWebsite, nil
+func serializeFeedSummary(in *activitytypes.ActivitiesSummary) FeedSummary {
+	highlights := make([]FeedHighlight, 0, len(in.Highlights))
+	for _, h := range in.Highlights {
+		highlights = append(highlights, FeedHighlight{
+			Content:           h.Content,
+			SourceActivityIds: h.SourceActivityIDs,
+		})
 	}
 
-	return "", fmt.Errorf("unknown source type: %s", in)
+	return FeedSummary{
+		Overview:   in.Overview,
+		Highlights: highlights,
+		CreatedAt:  in.CreatedAt.Format(time.RFC3339),
+	}
 }
 
-func serializeActivities(in []*types.DecoratedActivity) ([]*Activity, error) {
+func serializeFeeds(in []*feeds.Feed) []Feed {
+	out := make([]Feed, len(in))
+	for i, f := range in {
+		out[i] = serializeFeed(f)
+	}
+	return out
+}
+
+func serializeFeed(in *feeds.Feed) Feed {
+	return Feed{
+		Uid:        in.ID,
+		Name:       in.Name,
+		Icon:       in.Icon,
+		Query:      in.Query,
+		IsPublic:   in.Public,
+		SourceUids: serializeSourceUIDs(in.SourceUIDs),
+	}
+}
+
+func serializeSourceUIDs(in []activitytypes.TypedUID) []string {
+	out := make([]string, len(in))
+	for i, uid := range in {
+		out[i] = uid.String()
+	}
+	return out
+}
+
+func serializeActivities(in []*activitytypes.DecoratedActivity) ([]*Activity, error) {
 	out := make([]*Activity, 0, len(in))
 
 	for _, e := range in {
@@ -474,8 +491,8 @@ func serializeActivities(in []*types.DecoratedActivity) ([]*Activity, error) {
 	return out, nil
 }
 
-func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
-	sourceType, err := serializeSourceType(in.Activity.SourceType())
+func serializeActivity(in *activitytypes.DecoratedActivity) (*Activity, error) {
+	sourceType, err := serializeSourceType(in.Activity.SourceUID().Type())
 	if err != nil {
 		return nil, fmt.Errorf("serialize source type: %w", err)
 	}
@@ -486,16 +503,16 @@ func serializeActivity(in *types.DecoratedActivity) (*Activity, error) {
 		ImageUrl:     in.Activity.ImageURL(),
 		FullSummary:  in.Summary.FullSummary,
 		ShortSummary: in.Summary.ShortSummary,
-		SourceUid:    in.Activity.SourceUID(),
+		SourceUid:    in.Activity.SourceUID().String(),
 		SourceType:   sourceType,
 		Title:        in.Activity.Title(),
-		Uid:          in.Activity.UID(),
+		Uid:          in.Activity.UID().String(),
 		Url:          in.Activity.URL(),
 		Similarity:   &in.Similarity,
 	}, nil
 }
 
-func serializeSources(in []types2.Source) ([]Source, error) {
+func serializeSources(in []sourcetypes.Source) ([]Source, error) {
 	out := make([]Source, 0, len(in))
 
 	for _, e := range in {
@@ -509,14 +526,14 @@ func serializeSources(in []types2.Source) ([]Source, error) {
 	return out, nil
 }
 
-func serializeSource(in types2.Source) (Source, error) {
-	sourceType, err := serializeSourceType(in.Type())
+func serializeSource(in sourcetypes.Source) (Source, error) {
+	sourceType, err := serializeSourceType(in.UID().Type())
 	if err != nil {
 		return Source{}, fmt.Errorf("serialize source type: %w", err)
 	}
 
 	return Source{
-		Uid:         in.UID(),
+		Uid:         in.UID().String(),
 		Type:        sourceType,
 		Url:         in.URL(),
 		Name:        in.Name(),
@@ -551,38 +568,29 @@ func serializeSourceType(in string) (SourceType, error) {
 	return "", fmt.Errorf("unknown source type: %s", in)
 }
 
-func deserializeSortBy(in *ActivitySortBy) (types.SortBy, error) {
+func deserializeSourceUIDs(in []string) ([]activitytypes.TypedUID, error) {
+	out := make([]activitytypes.TypedUID, len(in))
+	for i, uid := range in {
+		uid, err := sources.NewTypedUID(uid)
+		if err != nil {
+			return nil, fmt.Errorf("deserialize source UID: %w", err)
+		}
+		out[i] = uid
+	}
+	return out, nil
+}
+
+func deserializeSortBy(in *ActivitySortBy) (activitytypes.SortBy, error) {
 	if in == nil {
-		return types.SortByDate, nil
+		return activitytypes.SortByDate, nil
 	}
 
 	switch *in {
 	case CreationDate:
-		return types.SortByDate, nil
+		return activitytypes.SortByDate, nil
 	case Similarity:
-		return types.SortBySimilarity, nil
+		return activitytypes.SortBySimilarity, nil
 	}
 
 	return "", fmt.Errorf("unknown sort by: %s", *in)
-}
-
-func fileServerWithCache(fs http.FileSystem, cacheDuration time.Duration) http.Handler {
-	server := http.FileServer(fs)
-	cacheControlValue := fmt.Sprintf("public, max-age=%d", int(cacheDuration.Seconds()))
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: fix always setting cache control even if the file doesn't exist
-		w.Header().Set("Cache-Control", cacheControlValue)
-		server.ServeHTTP(w, r)
-	})
-}
-
-func renderTemplate(t *template.Template, data any) (string, error) {
-	var b bytes.Buffer
-	err := t.Execute(&b, data)
-	if err != nil {
-		return "", fmt.Errorf("executing template: %w", err)
-	}
-
-	return b.String(), nil
 }

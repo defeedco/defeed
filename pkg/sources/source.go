@@ -2,6 +2,10 @@ package sources
 
 import (
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"strings"
+
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
 	"github.com/glanceapp/glance/pkg/sources/providers/github"
 	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
@@ -9,11 +13,21 @@ import (
 	"github.com/glanceapp/glance/pkg/sources/providers/mastodon"
 	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
 	"github.com/glanceapp/glance/pkg/sources/providers/rss"
-	types2 "github.com/glanceapp/glance/pkg/sources/types"
+	sourcestypes "github.com/glanceapp/glance/pkg/sources/types"
 )
 
-func NewSource(sourceType string) (types2.Source, error) {
-	var s types2.Source
+func NewTypedUID(uid string) (types.TypedUID, error) {
+	parts := strings.SplitN(uid, ":", 2)
+	switch parts[0] {
+	case github.TypeGithubIssues, github.TypeGithubReleases:
+		return github.NewTypedUIDFromString(uid)
+	default:
+		return lib.NewTypedUIDFromString(uid)
+	}
+}
+
+func NewSource(sourceType string) (sourcestypes.Source, error) {
+	var s sourcestypes.Source
 
 	switch sourceType {
 	case mastodon.TypeMastodonAccount:

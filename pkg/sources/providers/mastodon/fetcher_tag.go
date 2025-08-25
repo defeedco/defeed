@@ -2,8 +2,12 @@ package mastodon
 
 import (
 	"context"
+	"fmt"
+
+	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
+
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
-	"strings"
 
 	"github.com/rs/zerolog"
 )
@@ -19,52 +23,74 @@ func NewTagFetcher(logger *zerolog.Logger) *TagFetcher {
 	}
 }
 
-var popularMastodonTags = []struct {
-	tag         string
-	description string
-}{
-	{"programming", "Programming discussions"},
-	{"technology", "Technology news and updates"},
-	{"opensource", "Open source projects and discussions"},
-	{"privacy", "Privacy-focused discussions"},
-	{"security", "Cybersecurity topics"},
-	{"linux", "Linux operating system"},
-	{"javascript", "JavaScript programming"},
-	{"python", "Python programming"},
-	{"golang", "Go programming language"},
-	{"rust", "Rust programming language"},
+func (f *TagFetcher) SourceType() string {
+	return TypeMastodonTag
+}
+
+var popularTagSources = []types.Source{
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "programming",
+		TagSummary:  "Programming discussions",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "technology",
+		TagSummary:  "Technology news and updates",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "opensource",
+		TagSummary:  "Open source projects and discussions",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "privacy",
+		TagSummary:  "Privacy-focused discussions",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "security",
+		TagSummary:  "Cybersecurity topics",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "linux",
+		TagSummary:  "Linux operating system",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "javascript",
+		TagSummary:  "JavaScript programming",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "python",
+		TagSummary:  "Python programming",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "golang",
+		TagSummary:  "Go programming language",
+	},
+	&SourceTag{
+		InstanceURL: defaultInstanceURL,
+		Tag:         "rust",
+		TagSummary:  "Rust programming language",
+	},
+}
+
+func (f *TagFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
+	for _, source := range popularTagSources {
+		if lib.Equals(source.UID(), id) {
+			return source, nil
+		}
+	}
+	return nil, fmt.Errorf("source not found")
 }
 
 func (f *TagFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	query = strings.ToLower(query)
-	var matchingSources []types.Source
-
-	for _, tag := range popularMastodonTags {
-		tagName := strings.ToLower(tag.tag)
-		description := strings.ToLower(tag.description)
-
-		if query == "" || strings.Contains(tagName, query) || strings.Contains(description, query) {
-			source := &SourceTag{
-				InstanceURL: "https://mastodon.social",
-				Tag:         tag.tag,
-			}
-			matchingSources = append(matchingSources, source)
-		}
-	}
-
-	// Also add empty template for user customization
-	if query == "" || len(matchingSources) == 0 {
-		source := &SourceTag{
-			InstanceURL: "https://mastodon.social",
-			Tag:         "",
-		}
-		matchingSources = append(matchingSources, source)
-	}
-
-	f.Logger.Debug().
-		Str("query", query).
-		Int("matches", len(matchingSources)).
-		Msg("Mastodon Tag fetcher found tags")
-
-	return matchingSources, nil
+	// TODO(sources): Support searching custom tags
+	// Ignore the query, since the set of all available sources is small
+	return popularTagSources, nil
 }

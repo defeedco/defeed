@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
+	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
 )
 
@@ -25,6 +26,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Activity is the client for interacting with the Activity builders.
 	Activity *ActivityClient
+	// Feed is the client for interacting with the Feed builders.
+	Feed *FeedClient
 	// Source is the client for interacting with the Source builders.
 	Source *SourceClient
 }
@@ -39,6 +42,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Activity = NewActivityClient(c.config)
+	c.Feed = NewFeedClient(c.config)
 	c.Source = NewSourceClient(c.config)
 }
 
@@ -133,6 +137,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:      ctx,
 		config:   cfg,
 		Activity: NewActivityClient(cfg),
+		Feed:     NewFeedClient(cfg),
 		Source:   NewSourceClient(cfg),
 	}, nil
 }
@@ -154,6 +159,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:      ctx,
 		config:   cfg,
 		Activity: NewActivityClient(cfg),
+		Feed:     NewFeedClient(cfg),
 		Source:   NewSourceClient(cfg),
 	}, nil
 }
@@ -184,6 +190,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.Activity.Use(hooks...)
+	c.Feed.Use(hooks...)
 	c.Source.Use(hooks...)
 }
 
@@ -191,6 +198,7 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Activity.Intercept(interceptors...)
+	c.Feed.Intercept(interceptors...)
 	c.Source.Intercept(interceptors...)
 }
 
@@ -199,6 +207,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *ActivityMutation:
 		return c.Activity.mutate(ctx, m)
+	case *FeedMutation:
+		return c.Feed.mutate(ctx, m)
 	case *SourceMutation:
 		return c.Source.mutate(ctx, m)
 	default:
@@ -339,6 +349,139 @@ func (c *ActivityClient) mutate(ctx context.Context, m *ActivityMutation) (Value
 	}
 }
 
+// FeedClient is a client for the Feed schema.
+type FeedClient struct {
+	config
+}
+
+// NewFeedClient returns a client for the Feed from the given config.
+func NewFeedClient(c config) *FeedClient {
+	return &FeedClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `feed.Hooks(f(g(h())))`.
+func (c *FeedClient) Use(hooks ...Hook) {
+	c.hooks.Feed = append(c.hooks.Feed, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `feed.Intercept(f(g(h())))`.
+func (c *FeedClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Feed = append(c.inters.Feed, interceptors...)
+}
+
+// Create returns a builder for creating a Feed entity.
+func (c *FeedClient) Create() *FeedCreate {
+	mutation := newFeedMutation(c.config, OpCreate)
+	return &FeedCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Feed entities.
+func (c *FeedClient) CreateBulk(builders ...*FeedCreate) *FeedCreateBulk {
+	return &FeedCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *FeedClient) MapCreateBulk(slice any, setFunc func(*FeedCreate, int)) *FeedCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &FeedCreateBulk{err: fmt.Errorf("calling to FeedClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*FeedCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &FeedCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Feed.
+func (c *FeedClient) Update() *FeedUpdate {
+	mutation := newFeedMutation(c.config, OpUpdate)
+	return &FeedUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *FeedClient) UpdateOne(f *Feed) *FeedUpdateOne {
+	mutation := newFeedMutation(c.config, OpUpdateOne, withFeed(f))
+	return &FeedUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *FeedClient) UpdateOneID(id string) *FeedUpdateOne {
+	mutation := newFeedMutation(c.config, OpUpdateOne, withFeedID(id))
+	return &FeedUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Feed.
+func (c *FeedClient) Delete() *FeedDelete {
+	mutation := newFeedMutation(c.config, OpDelete)
+	return &FeedDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *FeedClient) DeleteOne(f *Feed) *FeedDeleteOne {
+	return c.DeleteOneID(f.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *FeedClient) DeleteOneID(id string) *FeedDeleteOne {
+	builder := c.Delete().Where(feed.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &FeedDeleteOne{builder}
+}
+
+// Query returns a query builder for Feed.
+func (c *FeedClient) Query() *FeedQuery {
+	return &FeedQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeFeed},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Feed entity by its id.
+func (c *FeedClient) Get(ctx context.Context, id string) (*Feed, error) {
+	return c.Query().Where(feed.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *FeedClient) GetX(ctx context.Context, id string) *Feed {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *FeedClient) Hooks() []Hook {
+	return c.hooks.Feed
+}
+
+// Interceptors returns the client interceptors.
+func (c *FeedClient) Interceptors() []Interceptor {
+	return c.inters.Feed
+}
+
+func (c *FeedClient) mutate(ctx context.Context, m *FeedMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&FeedCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&FeedUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&FeedUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&FeedDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Feed mutation op: %q", m.Op())
+	}
+}
+
 // SourceClient is a client for the Source schema.
 type SourceClient struct {
 	config
@@ -475,9 +618,9 @@ func (c *SourceClient) mutate(ctx context.Context, m *SourceMutation) (Value, er
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Activity, Source []ent.Hook
+		Activity, Feed, Source []ent.Hook
 	}
 	inters struct {
-		Activity, Source []ent.Interceptor
+		Activity, Feed, Source []ent.Interceptor
 	}
 )

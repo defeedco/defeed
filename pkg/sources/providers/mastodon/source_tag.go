@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -13,11 +12,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeMastodonTag = "mastodon:tag"
+const TypeMastodonTag = "mastodontag"
 
 type SourceTag struct {
 	InstanceURL string `json:"instanceUrl" validate:"required,url"`
 	Tag         string `json:"tag" validate:"required"`
+	TagSummary  string `json:"tagSummary"`
 	client      *mastodon.Client
 	logger      *zerolog.Logger
 }
@@ -28,8 +28,8 @@ func NewSourceTag() *SourceTag {
 	}
 }
 
-func (s *SourceTag) UID() string {
-	return fmt.Sprintf("%s:%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.InstanceURL), "/", ":"), s.Tag)
+func (s *SourceTag) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeMastodonTag, lib.StripURL(s.InstanceURL), s.Tag)
 }
 
 func (s *SourceTag) Name() string {
@@ -37,6 +37,11 @@ func (s *SourceTag) Name() string {
 }
 
 func (s *SourceTag) Description() string {
+	description := s.TagSummary
+	if description != "" {
+		return description
+	}
+
 	instanceName, err := lib.StripURLHost(s.InstanceURL)
 	if err != nil {
 		return fmt.Sprintf("Posts with #%s hashtag from %s", s.Tag, instanceName)
@@ -46,10 +51,6 @@ func (s *SourceTag) Description() string {
 
 func (s *SourceTag) URL() string {
 	return fmt.Sprintf("%s/tags/%s", s.InstanceURL, s.Tag)
-}
-
-func (s *SourceTag) Type() string {
-	return TypeMastodonTag
 }
 
 func (s *SourceTag) Validate() []error { return lib.ValidateStruct(s) }
@@ -120,7 +121,7 @@ outer:
 		for _, status := range statuses {
 			post := &Post{
 				Status:    status,
-				SourceTyp: s.Type(),
+				SourceTyp: TypeMastodonTag,
 				SourceID:  s.UID(),
 			}
 			feed <- post
@@ -153,7 +154,7 @@ func (s *SourceTag) fetchLatestPosts(ctx context.Context, feed chan<- types.Acti
 	for _, status := range statuses {
 		post := &Post{
 			Status:    status,
-			SourceTyp: s.Type(),
+			SourceTyp: TypeMastodonTag,
 			SourceID:  s.UID(),
 		}
 		feed <- post
@@ -169,7 +170,7 @@ func (s *SourceTag) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeMastodonTag,
 	})
 }
 

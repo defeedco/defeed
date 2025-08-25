@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -14,37 +13,38 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const TypeGithubIssues = "github:issues"
+const TypeGithubIssues = "githubissues"
 
 type SourceIssues struct {
-	Repository string `json:"repository" validate:"required,contains=/"`
-	Token      string `json:"token"`
-	client     *github.Client
-	logger     *zerolog.Logger
+	Owner  string `json:"owner" validate:"required"`
+	Repo   string `json:"repo" validate:"required"`
+	Token  string `json:"token"`
+	client *github.Client
+	logger *zerolog.Logger
 }
 
 func NewIssuesSource() *SourceIssues {
 	return &SourceIssues{}
 }
 
-func (s *SourceIssues) UID() string {
-	return fmt.Sprintf("%s:%s", s.Type(), s.Repository)
+func (s *SourceIssues) UID() types.TypedUID {
+	return &TypedUID{
+		Typ:   TypeGithubIssues,
+		Owner: s.Owner,
+		Repo:  s.Repo,
+	}
 }
 
 func (s *SourceIssues) Name() string {
-	return fmt.Sprintf("Issues on %s", s.Repository)
+	return fmt.Sprintf("Issues on %s/%s", s.Owner, s.Repo)
 }
 
 func (s *SourceIssues) Description() string {
-	return fmt.Sprintf("Recent issue activity from %s", s.Repository)
+	return fmt.Sprintf("Recent issue activity from %s/%s", s.Owner, s.Repo)
 }
 
 func (s *SourceIssues) URL() string {
-	return fmt.Sprintf("https://github.com/%s", s.Repository)
-}
-
-func (s *SourceIssues) Type() string {
-	return TypeGithubIssues
+	return fmt.Sprintf("https://github.com/%s/%s/issues", s.Owner, s.Repo)
 }
 
 func (s *SourceIssues) Validate() []error { return lib.ValidateStruct(s) }
@@ -56,7 +56,7 @@ func (s *SourceIssues) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeGithubIssues,
 	})
 }
 
@@ -75,9 +75,10 @@ func (s *SourceIssues) UnmarshalJSON(data []byte) error {
 }
 
 type Issue struct {
-	Repository string        `json:"repository"`
-	Issue      *github.Issue `json:"issue"`
-	SourceID   string        `json:"source_id"`
+	Owner    string         `json:"owner"`
+	Repo     string         `json:"repo"`
+	Issue    *github.Issue  `json:"issue"`
+	SourceID types.TypedUID `json:"source_id"`
 }
 
 func NewIssue() *Issue {
@@ -101,17 +102,27 @@ func (i *Issue) UnmarshalJSON(data []byte) error {
 	type Alias Issue
 	aux := &struct {
 		*Alias
+		SourceID *TypedUID `json:"source_id"`
 	}{
 		Alias: (*Alias)(i),
 	}
-	return json.Unmarshal(data, &aux)
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if aux.SourceID == nil {
+		return fmt.Errorf("source_id is required")
+	}
+
+	i.SourceID = aux.SourceID
+	return nil
 }
 
-func (i *Issue) UID() string {
-	return fmt.Sprintf("%s:%d", i.SourceID, i.Issue.GetNumber())
+func (i *Issue) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeGithubIssues, fmt.Sprintf("%d", i.Issue.GetNumber()))
 }
 
-func (i *Issue) SourceUID() string {
+func (i *Issue) SourceUID() types.TypedUID {
 	return i.SourceID
 }
 
@@ -131,7 +142,8 @@ func (i *Issue) ImageURL() string {
 	return fmt.Sprintf(
 		"https://opengraph.githubassets.com/%d/%s/issues/%d",
 		i.Issue.UpdatedAt.Unix(),
-		i.Repository,
+		i.Owner,
+		i.Repo,
 		*i.Issue.Number,
 	)
 }
@@ -161,33 +173,26 @@ func (s *SourceIssues) Stream(ctx context.Context, since types.Activity, feed ch
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	s.fetchIssueActivities(ctx, s.client, s.Repository, since, feed, errs)
+	s.fetchIssueActivities(ctx, since, feed, errs)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			s.fetchIssueActivities(ctx, s.client, s.Repository, since, feed, errs)
+			s.fetchIssueActivities(ctx, since, feed, errs)
 		}
 	}
 }
 
-func (s *SourceIssues) fetchIssueActivities(ctx context.Context, client *github.Client, repository string, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	parts := strings.Split(repository, "/")
-	if len(parts) != 2 {
-		errs <- fmt.Errorf("invalid Repository format: %s", repository)
-		return
-	}
-	owner, repo := parts[0], parts[1]
-
+func (s *SourceIssues) fetchIssueActivities(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	var sinceTime time.Time
 	if since != nil {
 		sinceTime = since.CreatedAt()
 	}
 
 	// TODO: When since is non-empty, it always fetches the one last issue we've already seen
-	issues, _, err := client.Issues.ListByRepo(ctx, owner, repo, &github.IssueListByRepoOptions{
+	issues, _, err := s.client.Issues.ListByRepo(ctx, s.Owner, s.Repo, &github.IssueListByRepoOptions{
 		State:     "all",
 		Sort:      "updated",
 		Direction: "desc",
@@ -199,16 +204,17 @@ func (s *SourceIssues) fetchIssueActivities(ctx context.Context, client *github.
 	}
 
 	s.logger.Debug().
-		Str("repository", repository).
+		Str("repository", fmt.Sprintf("%s/%s", s.Owner, s.Repo)).
 		Time("since", sinceTime).
 		Int("count", len(issues)).
 		Msg("Fetched issues")
 
 	for _, issue := range issues {
 		activity := &Issue{
-			Issue:      issue,
-			SourceID:   s.UID(),
-			Repository: s.Repository,
+			Issue:    issue,
+			SourceID: s.UID(),
+			Owner:    s.Owner,
+			Repo:     s.Repo,
 		}
 		feed <- activity
 	}

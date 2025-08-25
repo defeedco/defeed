@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: Pulse Feed Aggregation API
+  title: Defeed API
   version: 1.0.0
-  description: API for managing feed sources and retrieving aggregated content
+  description: Defeat your fragmented feeds 💪
 
 servers:
   - url: http://localhost:8080
@@ -12,30 +12,8 @@ servers:
 
 paths:
   /sources:
-    post:
-      summary: Create a new source
-      operationId: createSource
-      tags:
-        - sources
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateSourceRequest'
-      responses:
-        '201':
-          description: Source created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Source'
-        '400':
-          description: Invalid request
-        '409':
-          description: Source already exists
     get:
-      summary: List all sources
+      summary: List available sources
       operationId: listSources
       tags:
         - sources
@@ -45,6 +23,8 @@ paths:
           description: Filter sources by name or description.
           schema:
             type: string
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: List of sources
@@ -67,20 +47,98 @@ paths:
           required: true
           schema:
             type: string
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Source details
+          description: Source info
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Source'
         '404':
           description: Source not found
-    delete:
-      summary: Delete source
-      operationId: deleteSource
+
+  /feeds:
+    post:
+      summary: Create a feed belonging to the authenticated user
+      operationId: createOwnFeed
       tags:
-        - sources
+        - feeds
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFeedRequest"
+      responses:
+        '200':
+          description: Feed created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feed"
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+    get:
+      summary: List public feeds and/or those belonging to the authenticated user
+      operationId: listFeeds
+      tags:
+        - feeds
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of feeds
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Feed"
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+
+  /feeds/{uid}:
+    put:
+      summary: Update a feed belonging to the authenticated user
+      operationId: updateOwnFeed
+      tags:
+        - feeds
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFeedRequest"
+      responses:
+        '200':
+          description: Feed updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feed"
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+        '404':
+          description: Feed not found
+    delete:
+      summary: Delete a feed belonging to the authenticated user
+      operationId: deleteOwnFeed
+      tags:
+        - feeds
+      security:
+        - bearerAuth: []
       parameters:
         - name: uid
           in: path
@@ -88,17 +146,51 @@ paths:
           schema:
             type: string
       responses:
-        '204':
-          description: Source deleted successfully
+        '200':
+          description: Feed deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
         '404':
-          description: Source not found
+          description: Feed not found
 
-  /sources/activities:
+  /feeds/{uid}/activities:
     get:
-      summary: List all activities
-      operationId: listAllActivities
+      summary: List activities for a feed
+      operationId: listFeedActivities
       tags:
-        - activities
+        - feeds
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          description: Sort method.
+          schema:
+            $ref: '#/components/schemas/ActivitySortBy'
+        - name: query
+          in: query
+          description: Filter query. Authenticated users can override the default feed query.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of activities to return.
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
           description: Activities list
@@ -108,327 +200,104 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Activity'
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+        '404':
+          description: Feed not found
 
-  /activities/summary:
+  /feeds/{uid}/summary:
     get:
       summary: Generate an executive summary of multiple activities
-      operationId: getActivitiesSummary
+      operationId: getFeedSummary
       tags:
-        - activities
+        - feeds
+      security:
+        - bearerAuth: []
       parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
         - name: query
           in: query
-          description: Semantic search query text. If provided, the summary will be based on the query.
+          description: Filter query. Authenticated users can override the default feed query.
           schema:
             type: string
-        - name: sources
-          in: query
-          required: true
-          description: Comma-separated list of source UIDs where the activities are from
-          schema:
-            type: string
-            pattern: '^[a-zA-Z0-9-_]+(,[a-zA-Z0-9-_]+)*$'
-            example: "source1,source2,source3"
-        - name: sortBy
-          in: query
-          description: Field to sort activities for the summary by
-          schema:
-            $ref: '#/components/schemas/ActivitySortBy'
       responses:
         '200':
-          description: Executive summary of activities
+          description: Summary of feed activities
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActivitiesSummary'
+                $ref: '#/components/schemas/FeedSummary'
+        '202':
+          description: Insufficient activity to summarize. Retry later.
         '400':
           description: Invalid request
-
-  /activities/search:
-    get:
-      summary: Search activities
-      operationId: searchActivities
-      tags:
-        - activities
-      parameters:
-        - name: query
-          in: query
-          description: Semantic search query text
-          schema:
-            type: string
-        - name: sources
-          in: query
-          description: Filter by source UIDs (comma-separated)
-          schema:
-            type: string
-        - name: minSimilarity
-          in: query
-          description: Minimum similarity score (0-1). Can only be used when `query` is provided.
-          schema:
-            type: number
-            format: float
-            minimum: 0
-            maximum: 1
-        - name: limit
-          in: query
-          description: Maximum number of results to return
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-        - name: sortBy
-          in: query
-          description: Field to sort results by
-          schema:
-            $ref: '#/components/schemas/ActivitySortBy'
-      responses:
-        '200':
-          description: Search results
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Activity'
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+        '404':
+          description: Feed not found
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      in: header
+      name: Authorization
+      bearerFormat: JWT
+      description: Bearer token authentication. Include the token in the Authorization header as 'Bearer {token}'.
+
   schemas:
-    CreateSourceRequest:
-      oneOf:
-        - $ref: '#/components/schemas/CreateSourceRequestMastodonAccount'
-        - $ref: '#/components/schemas/CreateSourceRequestMastodonTag'
-        - $ref: '#/components/schemas/CreateSourceRequestHackernewsPosts'
-        - $ref: '#/components/schemas/CreateSourceRequestRedditSubreddit'
-        - $ref: '#/components/schemas/CreateSourceRequestLobstersTag'
-        - $ref: '#/components/schemas/CreateSourceRequestLobstersFeed'
-        - $ref: '#/components/schemas/CreateSourceRequestRssFeed'
-        - $ref: '#/components/schemas/CreateSourceRequestGithubReleases'
-        - $ref: '#/components/schemas/CreateSourceRequestGithubIssues'
-        - $ref: '#/components/schemas/CreateSourceRequestChangedetectionWebsite'
-      discriminator:
-        propertyName: type
-        mapping:
-          mastodonAccount: '#/components/schemas/CreateSourceRequestMastodonAccount'
-          mastodonTag: '#/components/schemas/CreateSourceRequestMastodonTag'
-          hackernewsPosts: '#/components/schemas/CreateSourceRequestHackernewsPosts'
-          redditSubreddit: '#/components/schemas/CreateSourceRequestRedditSubreddit'
-          lobstersTag: '#/components/schemas/CreateSourceRequestLobstersTag'
-          lobstersFeed: '#/components/schemas/CreateSourceRequestLobstersFeed'
-          rssFeed: '#/components/schemas/CreateSourceRequestRssFeed'
-          githubReleases: '#/components/schemas/CreateSourceRequestGithubReleases'
-          githubIssues: '#/components/schemas/CreateSourceRequestGithubIssues'
-          changedetectionWebsite: '#/components/schemas/CreateSourceRequestChangedetectionWebsite'
+    UpdateFeedRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateFeedRequest'
 
-    CreateSourceRequestMastodonAccount:
+    CreateFeedRequest:
       type: object
-      required: [type, mastodonAccount]
+      required:
+        - name
+        - icon
+        - query
+        - sourceUids
       properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        mastodonAccount:
-          $ref: '#/components/schemas/MastodonAccountConfig'
-
-    CreateSourceRequestMastodonTag:
-      type: object
-      required: [type, mastodonTag]
-      properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        mastodonTag:
-          $ref: '#/components/schemas/MastodonTagConfig'
-
-    CreateSourceRequestHackernewsPosts:
-      type: object
-      required: [type, hackernewsPosts]
-      properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        hackernewsPosts:
-          $ref: '#/components/schemas/HackernewsPostsConfig'
-
-    CreateSourceRequestRedditSubreddit:
-      type: object
-      required: [type, redditSubreddit]
-      properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        redditSubreddit:
-          $ref: '#/components/schemas/RedditSubredditConfig'
-
-    CreateSourceRequestLobstersTag:
-      type: object
-      required: [type, lobstersTag]
-      properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        lobstersTag:
-          $ref: '#/components/schemas/LobstersTagConfig'
-
-    CreateSourceRequestLobstersFeed:
-      type: object
-      required: [type, lobstersFeed]
-      properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        lobstersFeed:
-          $ref: '#/components/schemas/LobstersFeedConfig'
-
-    CreateSourceRequestRssFeed:
-      type: object
-      required: [type, rssFeed]
-      properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        rssFeed:
-          $ref: '#/components/schemas/RssFeedConfig'
-
-    CreateSourceRequestGithubReleases:
-      type: object
-      required: [type, githubReleases]
-      properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        githubReleases:
-          $ref: '#/components/schemas/GithubReleasesConfig'
-
-    CreateSourceRequestGithubIssues:
-      type: object
-      required: [type, githubIssues]
-      properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        githubIssues:
-          $ref: '#/components/schemas/GithubIssuesConfig'
-
-    CreateSourceRequestChangedetectionWebsite:
-      type: object
-      required: [type, changedetectionWebsite]
-      properties:
-        type:
-          $ref: '#/components/schemas/SourceType'
-        changedetectionWebsite:
-          $ref: '#/components/schemas/ChangedetectionWebsiteConfig'
-
-    MastodonAccountConfig:
-      type: object
-      required: [instanceUrl, account]
-      properties:
-        instanceUrl:
+        name:
           type: string
-        account:
+        icon:
           type: string
-
-    MastodonTagConfig:
-      type: object
-      required: [instanceUrl, tag]
-      properties:
-        instanceUrl:
+        query:
           type: string
-        tag:
-          type: string
-
-    HackernewsPostsConfig:
-      type: object
-      required: [feedName]
-      properties:
-        feedName:
-          type: string
-          enum: [top, new, best]
-
-    RedditSubredditConfig:
-      type: object
-      required: [subreddit, sortBy, topPeriod]
-      properties:
-        subreddit:
-          type: string
-        sortBy:
-          type: string
-          enum: [hot, new, top, rising]
-        topPeriod:
-          type: string
-          enum: [hour, day, week, month, year, all]
-        search:
-          type: string
-        auth:
-          type: object
-          properties:
-            name:
-              type: string
-            ID:
-              type: string
-            secret:
-              type: string
-
-    LobstersTagConfig:
-      type: object
-      required: [instanceUrl, tag]
-      properties:
-        instanceUrl:
-          type: string
-        customUrl:
-          type: string
-        tag:
-          type: string
-
-    LobstersFeedConfig:
-      type: object
-      required: [instanceUrl, feed]
-      properties:
-        instanceUrl:
-          type: string
-        customUrl:
-          type: string
-        feed:
-          type: string
-          enum: [hottest, newest]
-
-    RssFeedConfig:
-      type: object
-      required: [url]
-      properties:
-        url:
-          type: string
-          format: uri
-        headers:
-          type: object
-          additionalProperties:
+        sourceUids:
+          type: array
+          items:
             type: string
 
-    GithubReleasesConfig:
+    Feed:
       type: object
-      required: [repository]
+      required:
+        - uid
+        - name
+        - icon
+        - query
+        - sourceUids
+        - isPublic
       properties:
-        repository:
+        uid:
           type: string
-          description: owner/repo
-        token:
+        name:
           type: string
-        includePrereleases:
+        icon:
+          type: string
+        query:
+          type: string
+        sourceUids:
+          type: array
+          items:
+            type: string
+        isPublic:
           type: boolean
-
-    GithubIssuesConfig:
-      type: object
-      required: [repository]
-      properties:
-        repository:
-          type: string
-          description: owner/repo
-        token:
-          type: string
-
-    ChangedetectionWebsiteConfig:
-      type: object
-      required: [watch]
-      properties:
-        watch:
-          type: string
-        instanceUrl:
-          type: string
-        token:
-          type: string
-        limit:
-          type: integer
 
     Source:
       type: object
@@ -466,14 +335,17 @@ components:
 
     ActivitySortBy:
       type: string
-      enum: [similarity, creationDate]
+      enum:
+        - similarity
+        - creationDate
       default: similarity
 
-    ActivitiesSummary:
+    FeedSummary:
       type: object
       required:
         - overview
         - highlights
+        - createdAt
       properties:
         overview:
           type: string
@@ -481,10 +353,13 @@ components:
         highlights:
           type: array
           items:
-            $ref: '#/components/schemas/ActivityHighlight'
+            $ref: '#/components/schemas/FeedHighlight'
           description: List of key highlights extracted from the activities
+        createdAt:
+          type: string
+          format: datetime
 
-    ActivityHighlight:
+    FeedHighlight:
       type: object
       required:
         - content

@@ -28,10 +28,10 @@ func (r *SourceRepository) Add(s types.Source) error {
 	}
 
 	_, err = r.db.Client().Source.Create().
-		SetID(s.UID()).
+		SetID(s.UID().String()).
 		SetName(s.Name()).
 		SetURL(s.URL()).
-		SetType(s.Type()).
+		SetType(s.UID().Type()).
 		SetRawJSON(string(rawJson)).
 		Save(ctx)
 

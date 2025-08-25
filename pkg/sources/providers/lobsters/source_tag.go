@@ -4,23 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
 
-const TypeLobstersTag = "lobsters:tag"
+const TypeLobstersTag = "lobsterstag"
 
 type SourceTag struct {
-	InstanceURL string `json:"instanceUrl" validate:"required,url"`
-	CustomURL   string `json:"customUrl" validate:"omitempty,url"`
-	Tag         string `json:"tag" validate:"required"`
-	client      *LobstersClient
-	logger      *zerolog.Logger
+	InstanceURL    string `json:"instanceUrl" validate:"required,url"`
+	Tag            string `json:"tag" validate:"required"`
+	TagDescription string `json:"tagDescription"`
+	client         *LobstersClient
+	logger         *zerolog.Logger
 }
 
 func NewSourceTag() *SourceTag {
@@ -29,8 +27,8 @@ func NewSourceTag() *SourceTag {
 	}
 }
 
-func (s *SourceTag) UID() string {
-	return fmt.Sprintf("%s:%s:%s", s.Type(), strings.ReplaceAll(lib.StripURL(s.InstanceURL), "/", ":"), s.Tag)
+func (s *SourceTag) UID() types.TypedUID {
+	return lib.NewTypedUID(TypeLobstersTag, lib.StripURL(s.InstanceURL), s.Tag)
 }
 
 func (s *SourceTag) Name() string {
@@ -38,6 +36,10 @@ func (s *SourceTag) Name() string {
 }
 
 func (s *SourceTag) Description() string {
+	if s.TagDescription != "" {
+		return s.TagDescription
+	}
+
 	instanceName, err := lib.StripURLHost(s.InstanceURL)
 	if err != nil {
 		return fmt.Sprintf("Stories tagged with #%s from %s", s.Tag, instanceName)
@@ -47,10 +49,6 @@ func (s *SourceTag) Description() string {
 
 func (s *SourceTag) URL() string {
 	return fmt.Sprintf("https://lobste.rs/t/%s", s.Tag)
-}
-
-func (s *SourceTag) Type() string {
-	return TypeLobstersTag
 }
 
 func (s *SourceTag) Validate() []error {
@@ -74,14 +72,7 @@ func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<
 }
 
 func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	var stories []*Story
-	var err error
-
-	if s.CustomURL != "" {
-		stories, err = s.client.GetStoriesFromCustomURL(ctx, s.CustomURL)
-	} else {
-		stories, err = s.client.GetStoriesByTag(ctx, s.Tag)
-	}
+	stories, err := s.client.GetStoriesByTag(ctx, s.Tag)
 
 	if err != nil {
 		errs <- err
@@ -94,7 +85,7 @@ func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Acti
 	}
 
 	for _, story := range stories {
-		post := &Post{Post: story, SourceTyp: s.Type(), SourceID: s.UID()}
+		post := &Post{Post: story, SourceTyp: TypeLobstersTag, SourceID: s.UID()}
 		if since == nil || post.CreatedAt().After(sinceTime) {
 			feed <- post
 		}
@@ -114,7 +105,7 @@ func (s *SourceTag) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 	}{
 		Alias: (*Alias)(s),
-		Type:  s.Type(),
+		Type:  TypeLobstersTag,
 	})
 }
 

@@ -3,7 +3,10 @@ package sources
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
+	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
+
 	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"strings"
@@ -55,13 +58,31 @@ func (r *Registry) Initialize() error {
 	return nil
 }
 
+func (r *Registry) FindByUID(ctx context.Context, uid types2.TypedUID) (types.Source, error) {
+	var fetcher types.Fetcher
+	for _, f := range r.fetchers {
+		if f.SourceType() == uid.Type() {
+			fetcher = f
+			break
+		}
+	}
+	if fetcher == nil {
+		return nil, errors.New("source not found")
+	}
+	source, err := fetcher.FindByID(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+	return source, nil
+}
+
 // Search searches for sources from available fetchers
 func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.SetLimit(len(r.fetchers))
 
-	results := make([]types.Source, len(r.fetchers))
+	results := make([]types.Source, 0)
 	for _, f := range r.fetchers {
 		g.Go(func() error {
 			res, err := f.Search(gctx, query)
@@ -82,19 +103,7 @@ func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, er
 		Int("count", len(results)).
 		Msg("searched sources")
 
-	adaptedSources := adaptSources(results)
-	return fuzzyReRank(adaptedSources, query), nil
-}
-
-// Adapter function to convert fetcher.Source to sources.Source
-func adaptSources(fetcherSources []types.Source) []types.Source {
-	var result []types.Source
-	for _, fs := range fetcherSources {
-		if s, ok := fs.(types.Source); ok {
-			result = append(result, s)
-		}
-	}
-	return result
+	return fuzzyReRank(results, query), nil
 }
 
 // sourceWithSearchText holds a source and its searchable text for fuzzy matching
