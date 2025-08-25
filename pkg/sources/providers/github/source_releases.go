@@ -54,7 +54,7 @@ func (s *SourceRelease) URL() string {
 }
 
 func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := time.NewTicker(10 * time.Minute)
+	ticker := lib.DefaultSourceTicker(45 * time.Minute)
 	defer ticker.Stop()
 
 	s.fetchGithubReleases(ctx, since, feed, errs)

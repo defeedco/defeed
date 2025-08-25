@@ -70,7 +70,7 @@ func (s *SourceAccount) Initialize(logger *zerolog.Logger) error {
 }
 
 func (s *SourceAccount) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := lib.DefaultSourceTicker(30 * time.Minute)
 	defer ticker.Stop()
 
 	account, err := s.fetchAccount(ctx)

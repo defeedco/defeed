@@ -66,7 +66,7 @@ func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 }
 
 func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := lib.DefaultSourceTicker(30 * time.Minute)
 	defer ticker.Stop()
 
 	s.fetchAndSendNewStories(ctx, since, feed, errs)

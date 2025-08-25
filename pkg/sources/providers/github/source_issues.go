@@ -172,7 +172,7 @@ func (s *SourceIssues) Initialize(logger *zerolog.Logger) error {
 }
 
 func (s *SourceIssues) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := lib.DefaultSourceTicker(45 * time.Minute)
 	defer ticker.Stop()
 
 	s.fetchIssueActivities(ctx, since, feed, errs)

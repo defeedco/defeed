@@ -50,7 +50,7 @@ func (s *SourceWebsiteChange) URL() string {
 }
 
 func (s *SourceWebsiteChange) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := time.NewTicker(15 * time.Minute)
+	ticker := lib.DefaultSourceTicker(45 * time.Minute)
 	defer ticker.Stop()
 
 	s.fetchAndSendNewChanges(ctx, since, feed, errs)

@@ -24,7 +24,7 @@ type SourcePosts struct {
 
 func NewSourcePosts() *SourcePosts {
 	return &SourcePosts{
-		PollInterval: 5 * time.Minute,
+		PollInterval: 45 * time.Minute,
 	}
 }
 
@@ -152,7 +152,7 @@ func (s *SourcePosts) Initialize(logger *zerolog.Logger) error {
 	}
 
 	if s.PollInterval == 0 {
-		s.PollInterval = time.Hour
+		s.PollInterval = 45 * time.Minute
 	}
 
 	s.logger = logger
@@ -161,7 +161,7 @@ func (s *SourcePosts) Initialize(logger *zerolog.Logger) error {
 }
 
 func (s *SourcePosts) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := time.NewTicker(s.PollInterval)
+	ticker := lib.DefaultSourceTicker(s.PollInterval)
 	defer ticker.Stop()
 
 	s.fetchHackerNewsPosts(ctx, since, feed, errs)
