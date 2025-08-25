@@ -5,6 +5,8 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"sort"
+
 	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/sources/types"
@@ -103,6 +105,10 @@ func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, er
 		Int("count", len(results)).
 		Msg("searched sources")
 
+	if query == "" {
+		return alphabeticalSort(results), nil
+	}
+
 	return fuzzyReRank(results, query), nil
 }
 
@@ -140,6 +146,16 @@ func fuzzyReRank(input []types.Source, query string) []types.Source {
 	}
 
 	return result
+}
+
+// alphabeticalSort sorts sources alphabetically by name (case-insensitive)
+func alphabeticalSort(input []types.Source) []types.Source {
+	sorted := make([]types.Source, len(input))
+	copy(sorted, input)
+	sort.Slice(sorted, func(i, j int) bool {
+		return strings.ToLower(sorted[i].Name()) < strings.ToLower(sorted[j].Name())
+	})
+	return sorted
 }
 
 // buildSearchText creates a searchable text string from a source's key fields
