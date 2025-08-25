@@ -22,9 +22,6 @@ type Source interface {
 	Description() string
 	// URL is a web resource representation of UID.
 	URL() string
-	// Validate returns a list of configuration validation errors.
-	// When non-empty, the caller should not proceed to Initialize.
-	Validate() []error
 	// Initialize initializes the internal state and prepares the logger.
 	Initialize(logger *zerolog.Logger) error
 	// Stream starts streaming new activities from the source.

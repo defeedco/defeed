@@ -68,8 +68,6 @@ func (s *SourceSubreddit) URL() string {
 	return fmt.Sprintf("https://reddit.com/r/%s/%s", s.Subreddit, s.SortBy)
 }
 
-func (s *SourceSubreddit) Validate() []error { return lib.ValidateStruct(s) }
-
 type Post struct {
 	Post            *reddit.Post   `json:"post"`
 	ExternalContent string         `json:"external_content"`

@@ -53,9 +53,11 @@ func (s *SourceAccount) URL() string {
 	return fmt.Sprintf("%s/tags/%s", s.InstanceURL, s.Account)
 }
 
-func (s *SourceAccount) Validate() []error { return lib.ValidateStruct(s) }
-
 func (s *SourceAccount) Initialize(logger *zerolog.Logger) error {
+	if err := lib.ValidateStruct(s); err != nil {
+		return err
+	}
+
 	s.client = mastodon.NewClient(&mastodon.Config{
 		Server:       s.InstanceURL,
 		ClientID:     "pulse-feed-aggregation",

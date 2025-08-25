@@ -16,3 +16,8 @@ rest-api:
 ent-generate:
 	@echo ">>> Generating Ent schema implementation files..."
 	@go generate ./pkg/storage/postgres/ent
+
+.PHONY: test
+test:
+	@echo ">>> Running tests..."
+	@go test ./pkg/...

@@ -54,9 +54,11 @@ func (s *SourceFeed) URL() string {
 	return fmt.Sprintf("https://lobste.rs/%s", s.FeedName)
 }
 
-func (s *SourceFeed) Validate() []error { return lib.ValidateStruct(s) }
-
 func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
+	if err := lib.ValidateStruct(s); err != nil {
+		return err
+	}
+
 	s.client = NewLobstersClient(s.InstanceURL)
 	s.logger = logger
 	return nil

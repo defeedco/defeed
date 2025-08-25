@@ -51,10 +51,6 @@ func (s *SourceTag) URL() string {
 	return fmt.Sprintf("https://lobste.rs/t/%s", s.Tag)
 }
 
-func (s *SourceTag) Validate() []error {
-	return lib.ValidateStruct(s)
-}
-
 func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
@@ -93,6 +89,10 @@ func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Acti
 }
 
 func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
+	if err := lib.ValidateStruct(s); err != nil {
+		return err
+	}
+
 	s.client = NewLobstersClient(s.InstanceURL)
 	s.logger = logger
 	return nil

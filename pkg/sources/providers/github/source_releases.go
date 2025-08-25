@@ -53,8 +53,6 @@ func (s *SourceRelease) URL() string {
 	return fmt.Sprintf("https://github.com/%s/%s/releases", s.Owner, s.Repo)
 }
 
-func (s *SourceRelease) Validate() []error { return lib.ValidateStruct(s) }
-
 func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
@@ -72,6 +70,9 @@ func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed c
 }
 
 func (s *SourceRelease) Initialize(logger *zerolog.Logger) error {
+	if err := lib.ValidateStruct(s); err != nil {
+		return err
+	}
 
 	token := s.Token
 	if token == "" {

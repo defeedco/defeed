@@ -52,7 +52,7 @@ func (s *SourcePosts) URL() string {
 	return fmt.Sprintf("https://news.ycombinator.com/%s", s.FeedName)
 }
 
-func (s *SourcePosts) Validate() []error { return lib.ValidateStruct(s) }
+func (s *SourcePosts) Validate() error { return lib.ValidateStruct(s) }
 
 type Post struct {
 	Post            *gohn.Item     `json:"post"`

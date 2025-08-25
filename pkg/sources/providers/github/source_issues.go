@@ -47,8 +47,6 @@ func (s *SourceIssues) URL() string {
 	return fmt.Sprintf("https://github.com/%s/%s/issues", s.Owner, s.Repo)
 }
 
-func (s *SourceIssues) Validate() []error { return lib.ValidateStruct(s) }
-
 func (s *SourceIssues) MarshalJSON() ([]byte, error) {
 	type Alias SourceIssues
 	return json.Marshal(&struct {
@@ -140,11 +138,11 @@ func (i *Issue) URL() string {
 
 func (i *Issue) ImageURL() string {
 	return fmt.Sprintf(
-		"https://opengraph.githubassets.com/%d/%s/issues/%d",
+		"https://opengraph.githubassets.com/%d/%s/%s/issues/%d",
 		i.Issue.UpdatedAt.Unix(),
 		i.Owner,
 		i.Repo,
-		*i.Issue.Number,
+		i.Issue.GetNumber(),
 	)
 }
 
@@ -153,6 +151,10 @@ func (i *Issue) CreatedAt() time.Time {
 }
 
 func (s *SourceIssues) Initialize(logger *zerolog.Logger) error {
+	if err := lib.ValidateStruct(s); err != nil {
+		return err
+	}
+
 	token := s.Token
 	if token == "" {
 		token = os.Getenv("GITHUB_TOKEN")

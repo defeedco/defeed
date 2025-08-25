@@ -49,8 +49,6 @@ func (s *SourceWebsiteChange) URL() string {
 	return s.InstanceURL
 }
 
-func (s *SourceWebsiteChange) Validate() []error { return lib.ValidateStruct(s) }
-
 func (s *SourceWebsiteChange) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	ticker := time.NewTicker(15 * time.Minute)
 	defer ticker.Stop()
@@ -85,6 +83,10 @@ func (s *SourceWebsiteChange) fetchAndSendNewChanges(ctx context.Context, since 
 }
 
 func (s *SourceWebsiteChange) Initialize(logger *zerolog.Logger) error {
+	if err := lib.ValidateStruct(s); err != nil {
+		return err
+	}
+
 	if s.Limit <= 0 {
 		s.Limit = 10
 	}

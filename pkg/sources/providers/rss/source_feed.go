@@ -69,9 +69,11 @@ func (s *SourceFeed) URL() string {
 	return s.FeedURL
 }
 
-func (s *SourceFeed) Validate() []error { return lib.ValidateStruct(s) }
-
 func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
+	if err := lib.ValidateStruct(s); err != nil {
+		return err
+	}
+
 	s.logger = logger
 	return nil
 }
