@@ -113,6 +113,14 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 }
 
 func authMiddleware(next http.Handler) http.Handler {
+	// Very hacky / low-effort auth for now.
+	authorizedUsers := []string{
+		"bart",
+		"yon",
+		"greg",
+		"teo",
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Docs should be public
 		if strings.HasPrefix(r.URL.Path, "/docs") {
@@ -120,29 +128,32 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		authHeader := r.Header.Get("Authorization")
-
-		if authHeader == "" {
-			// For the time being, we allow unauthenticated requests but with certain limitations.
-			emptyUserID := ""
-			ctx := context.WithValue(r.Context(), userIDContextKey, emptyUserID)
-			next.ServeHTTP(w, r.WithContext(ctx))
+		// Skip auth for OPTIONS (CORS preflight) requests
+		if r.Method == "OPTIONS" {
+			next.ServeHTTP(w, r)
 			return
 		}
 
+		authHeader := r.Header.Get("Authorization")
+		// TODO(auth): For now we protect all requests, but in the future we make auth optional (but add rate limiting) for certain endpoints
+
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "invalid authorization header", http.StatusUnauthorized)
+			http.Error(w, "invalid authorization header", http.StatusBadRequest)
 			return
 		}
 
 		authToken := strings.TrimPrefix(authHeader, "Bearer ")
 		if authToken == "" {
-			http.Error(w, "invalid auth token", http.StatusUnauthorized)
+			http.Error(w, "invalid auth token format", http.StatusBadRequest)
 			return
 		}
 
-		// TODO(auth): authorize when user resource/auth is implemented
+		// TODO(auth): Update authorization logic when user resource/auth is implemented
 		userID := authToken
+		if !slices.Contains(authorizedUsers, userID) {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
 
 		ctx := context.WithValue(r.Context(), userIDContextKey, userID)
 
