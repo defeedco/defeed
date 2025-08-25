@@ -75,8 +75,9 @@ func NewExecutor(
 		embedder:         embedder,
 	}
 
+	// TODO(config): Move to config struct
 	// Tweak the number of workers as needed.
-	r.startWorkers(10)
+	r.startWorkers(30)
 
 	return r
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
@@ -52,8 +53,11 @@ type Server struct {
 var _ ServerInterface = (*Server)(nil)
 
 func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, error) {
+	limiter := lib.NewOpenAILimiter(logger)
+
 	summarizerModel, err := openai.New(
 		openai.WithModel("gpt-5-nano-2025-08-07"),
+		openai.WithHTTPClient(limiter),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create summarizer model: %w", err)
@@ -61,6 +65,7 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 
 	embedderModel, err := openai.New(
 		openai.WithEmbeddingModel("text-embedding-3-large"),
+		openai.WithHTTPClient(limiter),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create embedder model: %w", err)
@@ -264,7 +269,7 @@ func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
 
 	out, err := s.registry.FindByUID(r.Context(), typedUID)
 	if err != nil {
-		s.internalError(w, err, "find source by UID")
+		s.internalError(w, err, fmt.Sprintf("find source by UID: %s", typedUID.String()))
 		return
 	}
 
