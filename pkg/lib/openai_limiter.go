@@ -44,18 +44,20 @@ func (r *OpenAILimiter) Do(req *http.Request) (*http.Response, error) {
 		resp, err := r.client.Do(req)
 
 		errBody := ""
+		errStatusCode := 0
 		if resp != nil && resp.StatusCode != 200 {
 			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return nil, fmt.Errorf("read response body: %w", err)
 			}
 			errBody = string(body)
+			errStatusCode = resp.StatusCode
 		}
 
 		if err != nil {
 			r.logger.Error().
 				Err(err).
-				Int("status_code", resp.StatusCode).
+				Int("status_code", errStatusCode).
 				Str("body", errBody).
 				Msg("OpenAI returned error")
 			return nil, err
