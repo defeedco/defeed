@@ -33,11 +33,12 @@ func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type SourceFeed struct {
-	Title   string
-	Tags    []string
-	FeedURL string            `json:"url" validate:"required,url"`
-	Headers map[string]string `json:"headers"`
-	logger  *zerolog.Logger
+	Title     string
+	AboutFeed string
+	Tags      []string
+	FeedURL   string            `json:"url" validate:"required,url"`
+	Headers   map[string]string `json:"headers"`
+	logger    *zerolog.Logger
 }
 
 func NewSourceFeed() *SourceFeed {
@@ -62,6 +63,9 @@ func (s *SourceFeed) Name() string {
 }
 
 func (s *SourceFeed) Description() string {
+	if s.AboutFeed != "" {
+		return s.AboutFeed
+	}
 	return fmt.Sprintf("Updates from %s", lib.StripURL(s.FeedURL))
 }
 
