@@ -125,7 +125,7 @@ func (r *Registry) executeAndUpsert(ctx context.Context, feed Feed) error {
 	for _, sourceUID := range feed.SourceUIDs {
 		source, err := r.sourceRegistry.FindByUID(ctx, sourceUID)
 		if err != nil {
-			return fmt.Errorf("find source: %w", err)
+			return fmt.Errorf("find source %s: %w", sourceUID, err)
 		}
 
 		err = r.sourceExecutor.Add(source)

@@ -3,6 +3,7 @@ package mastodon
 import (
 	"context"
 	"fmt"
+
 	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -89,26 +90,7 @@ func (f *TagFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.So
 }
 
 func (f *TagFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	if query == "" {
-		return popularTagSources, nil
-	}
-
-	var matchingSources []types.Source
-	for _, tag := range popularTagSources {
-		if types.IsFuzzyMatch(tag, query) {
-			matchingSources = append(matchingSources, tag)
-		}
-	}
-
-	// TODO: Handle this better
-	// Also add empty template for user customization
-	if query != "" && len(matchingSources) == 0 {
-		source := &SourceTag{
-			InstanceURL: defaultInstanceURL,
-			Tag:         "",
-		}
-		matchingSources = append(matchingSources, source)
-	}
-
-	return matchingSources, nil
+	// TODO(sources): Support searching custom tags
+	// Ignore the query, since the set of all available sources is small
+	return popularTagSources, nil
 }

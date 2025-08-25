@@ -80,26 +80,7 @@ func (f *AccountFetcher) FindByID(ctx context.Context, id types2.TypedUID) (type
 }
 
 func (f *AccountFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	if query == "" {
-		return popularTechAccountSources, nil
-	}
-
-	var matchingSources []types.Source
-	for _, account := range popularTechAccountSources {
-		if types.IsFuzzyMatch(account, query) {
-			matchingSources = append(matchingSources, account)
-		}
-	}
-
-	// TODO: Handle this better
-	// Custom account (that's not necessarily valid) if no existing ones are found
-	if query != "" && len(matchingSources) == 0 {
-		source := &SourceAccount{
-			InstanceURL: defaultInstanceURL,
-			Account:     query,
-		}
-		matchingSources = append(matchingSources, source)
-	}
-
-	return matchingSources, nil
+	// TODO(sources): Support searching custom accounts
+	// Ignore the query, since the set of all available sources is small
+	return popularTechAccountSources, nil
 }

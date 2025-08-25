@@ -14,10 +14,11 @@ import (
 const TypeLobstersTag = "lobsterstag"
 
 type SourceTag struct {
-	InstanceURL string `json:"instanceUrl" validate:"required,url"`
-	Tag         string `json:"tag" validate:"required"`
-	client      *LobstersClient
-	logger      *zerolog.Logger
+	InstanceURL    string `json:"instanceUrl" validate:"required,url"`
+	Tag            string `json:"tag" validate:"required"`
+	TagDescription string `json:"tagDescription"`
+	client         *LobstersClient
+	logger         *zerolog.Logger
 }
 
 func NewSourceTag() *SourceTag {
@@ -35,6 +36,10 @@ func (s *SourceTag) Name() string {
 }
 
 func (s *SourceTag) Description() string {
+	if s.TagDescription != "" {
+		return s.TagDescription
+	}
+
 	instanceName, err := lib.StripURLHost(s.InstanceURL)
 	if err != nil {
 		return fmt.Sprintf("Stories tagged with #%s from %s", s.Tag, instanceName)

@@ -49,6 +49,7 @@ func (f *FeedFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.S
 }
 
 func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
+	// TODO(sources): Support adding custom feed URL?
 	// Ignore the query, since the set of all available sources is small
 	return f.OpmlSources, nil
 }
