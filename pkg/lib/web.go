@@ -16,7 +16,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var ErrUnsupportedContentType = errors.New("unsupported content type")
+var (
+	ErrUnsupportedContentType = errors.New("unsupported content type")
+	ErrHTMLParsingFailed      = errors.New("html parsing failed")
+)
 
 func FetchTextFromURL(ctx context.Context, logger *zerolog.Logger, url string) (string, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -46,7 +49,7 @@ func FetchTextFromURL(ctx context.Context, logger *zerolog.Logger, url string) (
 	}
 
 	if strings.Contains(contentType, "text/html") || strings.Contains(contentType, "application/xhtml+xml") {
-		return extractTextFromHTML(url)
+		return extractTextFromHTML(logger, url)
 	}
 
 	logger.Warn().
@@ -81,12 +84,29 @@ func extractTextFromPDF(body io.ReadCloser) (string, error) {
 	return string(textBytes), nil
 }
 
-func extractTextFromHTML(url string) (string, error) {
+func extractTextFromHTML(logger *zerolog.Logger, url string) (string, error) {
+	var result string
+	var resultErr error
+
+	defer func() {
+		if r := recover(); r != nil {
+			// We seem to be getting an occasional panic here.
+			// Log to investigate further.
+			logger.Error().
+				Str("url", url).
+				Interface("panic", r).
+				Msg("html parsing panic")
+		}
+	}()
+
 	article, err := readability.FromURL(url, 5*time.Second)
 	if err != nil {
-		return "", fmt.Errorf("readability from url: %w", err)
+		resultErr = fmt.Errorf("readability from url: %w", err)
+		return result, resultErr
 	}
-	return article.TextContent, nil
+
+	result = article.TextContent
+	return result, resultErr
 }
 
 // StripURL removes the protocol, www., and trailing slash from a URL.
