@@ -143,14 +143,19 @@ func (r *Executor) scheduleSource(source sourcetypes.Source) {
 					SortBy:     types.SortByDate,
 				})
 				if err != nil {
-					r.logger.Error().Err(err).Str("source_id", source.UID().String()).Msg("Failed to search activities for scheduling")
+					r.logger.Error().
+						Str("source_id", source.UID().String()).
+						Err(err).Msg("Failed to search activities for scheduling")
 					continue
 				}
 
+				logEvent := r.logger.Debug()
 				var since types.Activity = nil
 				if len(activities) > 0 {
 					since = activities[0].Activity
+					logEvent.Str("last_activity_uid", since.UID().String())
 				}
+				logEvent.Msg("Polling source")
 
 				r.executeSourceOnce(source, since)
 			}

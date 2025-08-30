@@ -10,6 +10,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/pgvector-init.sql
+      - ./logs:/var/log/postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
@@ -18,6 +19,11 @@ services:
       start_period: 5s
     ports:
       - "${DB_PORT}:${DB_PORT}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
 
   app:
     container_name: defeed-engine
@@ -26,6 +32,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - "./.env:/app/.env:ro"
+      - ./logs:/var/log/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,6 +46,11 @@ services:
       SERVER_PORT: ${SERVER_PORT}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
 
 volumes:
   db_data:
