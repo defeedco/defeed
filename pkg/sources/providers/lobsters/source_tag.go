@@ -52,19 +52,7 @@ func (s *SourceTag) URL() string {
 }
 
 func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := lib.DefaultSourceTicker(30 * time.Minute)
-	defer ticker.Stop()
-
 	s.fetchAndSendNewStories(ctx, since, feed, errs)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			s.fetchAndSendNewStories(ctx, since, feed, errs)
-		}
-	}
 }
 
 func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {

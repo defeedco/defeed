@@ -161,19 +161,7 @@ func (s *SourcePosts) Initialize(logger *zerolog.Logger) error {
 }
 
 func (s *SourcePosts) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := lib.DefaultSourceTicker(s.PollInterval)
-	defer ticker.Stop()
-
 	s.fetchHackerNewsPosts(ctx, since, feed, errs)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			s.fetchHackerNewsPosts(ctx, since, feed, errs)
-		}
-	}
 }
 
 func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {

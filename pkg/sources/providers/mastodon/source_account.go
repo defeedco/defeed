@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
@@ -70,9 +69,6 @@ func (s *SourceAccount) Initialize(logger *zerolog.Logger) error {
 }
 
 func (s *SourceAccount) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := lib.DefaultSourceTicker(30 * time.Minute)
-	defer ticker.Stop()
-
 	account, err := s.fetchAccount(ctx)
 	if err != nil {
 		errs <- fmt.Errorf("fetch account: %w", err)
@@ -80,15 +76,6 @@ func (s *SourceAccount) Stream(ctx context.Context, since types.Activity, feed c
 	}
 
 	s.fetchAccountPosts(ctx, account.ID, since, feed, errs)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			s.fetchAccountPosts(ctx, account.ID, since, feed, errs)
-		}
-	}
 }
 
 func (s *SourceAccount) fetchAccount(ctx context.Context) (*mastodon.Account, error) {

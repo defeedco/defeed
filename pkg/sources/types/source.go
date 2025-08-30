@@ -24,11 +24,11 @@ type Source interface {
 	URL() string
 	// Initialize initializes the internal state and prepares the logger.
 	Initialize(logger *zerolog.Logger) error
-	// Stream starts streaming new activities from the source.
+	// Stream performs a one-time fetch of new activities from the source.
 	// Since is the last activity emitted by the source.
 	// Feed is a channel to send activities to. Already seen activities are permitted.
 	// Err is a channel to send errors to.
-	// The caller should close the channels when done.
+	// The method should send data to the channels and return when done. The caller is responsible for closing the channels.
 	Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, err chan<- error)
 }
 

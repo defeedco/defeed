@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
@@ -113,16 +114,85 @@ func (r *Executor) Initialize() error {
 			since = activities[0].Activity
 		}
 
-		ctx, cancel := context.WithCancel(context.Background())
-		go source.Stream(ctx, since, r.activityQueue, r.errorQueue)
-
-		r.cancelBySourceID.Store(source.UID(), cancel)
+		r.executeSourceOnce(source, since)
+		r.scheduleSource(source)
 
 		sLogger.Info().Msg("Source initialized")
 	}
 
 	r.logger.Info().Msg("Source initialization complete")
 	return nil
+}
+
+func (r *Executor) scheduleSource(source sourcetypes.Source) {
+	ctx, cancel := context.WithCancel(context.Background())
+	r.cancelBySourceID.Store(source.UID(), cancel)
+
+	go func() {
+		ticker := r.getSourceTicker(source)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				activities, err := r.activityRepo.Search(types.SearchRequest{
+					SourceUIDs: []types.TypedUID{source.UID()},
+					Limit:      1,
+					SortBy:     types.SortByDate,
+				})
+				if err != nil {
+					r.logger.Error().Err(err).Str("source_id", source.UID().String()).Msg("Failed to search activities for scheduling")
+					continue
+				}
+
+				var since types.Activity = nil
+				if len(activities) > 0 {
+					since = activities[0].Activity
+				}
+
+				r.executeSourceOnce(source, since)
+			}
+		}
+	}()
+}
+
+func (r *Executor) executeSourceOnce(source sourcetypes.Source, since types.Activity) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	activityChan := make(chan types.Activity, 100)
+	errorChan := make(chan error, 100)
+
+	go func() {
+		defer close(activityChan)
+		defer close(errorChan)
+		source.Stream(ctx, since, activityChan, errorChan)
+	}()
+
+	for {
+		select {
+		case activity, ok := <-activityChan:
+			if !ok {
+				return
+			}
+			r.activityQueue <- activity
+		case err, ok := <-errorChan:
+			if !ok {
+				return
+			}
+			r.errorQueue <- err
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func (r *Executor) getSourceTicker(source sourcetypes.Source) *time.Ticker {
+	// Default to 30 minutes for all sources
+	// TODO: Make this configurable per source type?
+	return time.NewTicker(30 * time.Minute)
 }
 
 // Add starts processing activities from the source.
@@ -143,13 +213,10 @@ func (r *Executor) Add(source sourcetypes.Source) error {
 		return fmt.Errorf("add source: %w", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-
 	// Set to nil since there are no previous activities for this source yet.
 	var since types.Activity = nil
-	go source.Stream(ctx, since, r.activityQueue, r.errorQueue)
-
-	r.cancelBySourceID.Store(source.UID(), cancel)
+	r.executeSourceOnce(source, since)
+	r.scheduleSource(source)
 
 	return nil
 }

@@ -54,19 +54,7 @@ func (s *SourceRelease) URL() string {
 }
 
 func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
-	ticker := lib.DefaultSourceTicker(45 * time.Minute)
-	defer ticker.Stop()
-
 	s.fetchGithubReleases(ctx, since, feed, errs)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			s.fetchGithubReleases(ctx, since, feed, errs)
-		}
-	}
 }
 
 func (s *SourceRelease) Initialize(logger *zerolog.Logger) error {
