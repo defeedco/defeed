@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/feeds"
@@ -26,6 +27,12 @@ func (r *FeedRepository) Upsert(ctx context.Context, f feeds.Feed) error {
 		sourceUIDs[i] = uid.String()
 	}
 
+	// Convert map[Period]ActivitiesSummary to map[string]ActivitiesSummary for database storage
+	summaries := make(map[string]types.ActivitiesSummary)
+	for period, summary := range f.Summaries {
+		summaries[string(period)] = summary
+	}
+
 	err := r.db.Client().Feed.Create().
 		SetID(f.ID).
 		SetUserID(f.UserID).
@@ -33,7 +40,7 @@ func (r *FeedRepository) Upsert(ctx context.Context, f feeds.Feed) error {
 		SetIcon(f.Icon).
 		SetQuery(f.Query).
 		SetSourceUids(sourceUIDs).
-		SetSummary(f.Summary).
+		SetSummaries(summaries).
 		SetPublic(f.Public).
 		SetUpdatedAt(f.UpdatedAt).
 		SetCreatedAt(f.CreatedAt).
@@ -88,6 +95,13 @@ func feedFromEnt(in *ent.Feed) (*feeds.Feed, error) {
 		sourceUIDs[i] = typedUID
 	}
 
+	// Convert map[string]ActivitiesSummary to map[Period]ActivitiesSummary
+	summaries := make(map[types.Period]types.ActivitiesSummary)
+	for periodStr, summary := range in.Summaries {
+
+		summaries[types.Period(periodStr)] = summary
+	}
+
 	return &feeds.Feed{
 		ID:         in.ID,
 		UserID:     in.UserID,
@@ -98,6 +112,6 @@ func feedFromEnt(in *ent.Feed) (*feeds.Feed, error) {
 		CreatedAt:  in.CreatedAt,
 		UpdatedAt:  in.UpdatedAt,
 		Public:     in.Public,
-		Summary:    in.Summary,
+		Summaries:  summaries,
 	}, nil
 }

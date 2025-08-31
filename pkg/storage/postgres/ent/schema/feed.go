@@ -21,7 +21,7 @@ func (Feed) Fields() []ent.Field {
 		field.JSON("source_uids", []string{}),
 		field.Time("created_at"),
 		field.Time("updated_at"),
-		field.JSON("summary", activities.ActivitiesSummary{}).Optional(),
+		field.JSON("summaries", map[string]activities.ActivitiesSummary{}).Optional(),
 	}
 }
 

@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/glanceapp/glance/pkg/sources/activities"
@@ -94,6 +95,30 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 			sourceUIDs[i] = uid.String()
 		}
 		query = query.Where(entactivity.SourceUIDIn(sourceUIDs...))
+	}
+
+	// Add time-based filtering based on period
+	if req.Period != types.PeriodAll {
+		var since time.Time
+		now := time.Now()
+
+		switch req.Period {
+		case types.PeriodMonth:
+			// Start of last month
+			since = time.Date(now.Year(), now.Month()-1, 1, 0, 0, 0, 0, now.Location())
+		case types.PeriodWeek:
+			// Start of last week (Monday)
+			daysSinceMonday := int(now.Weekday()) - 1
+			if daysSinceMonday < 0 {
+				daysSinceMonday = 6
+			}
+			since = now.AddDate(0, 0, -daysSinceMonday-7).Truncate(24 * time.Hour)
+		case types.PeriodDay:
+			// Start of yesterday
+			since = now.AddDate(0, 0, -1).Truncate(24 * time.Hour)
+		}
+
+		query = query.Where(entactivity.CreatedAtGTE(since))
 	}
 
 	query = query.Order(func(s *sql.Selector) {

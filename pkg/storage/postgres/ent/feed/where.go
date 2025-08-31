@@ -449,14 +449,14 @@ func UpdatedAtLTE(v time.Time) predicate.Feed {
 	return predicate.Feed(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
-// SummaryIsNil applies the IsNil predicate on the "summary" field.
-func SummaryIsNil() predicate.Feed {
-	return predicate.Feed(sql.FieldIsNull(FieldSummary))
+// SummariesIsNil applies the IsNil predicate on the "summaries" field.
+func SummariesIsNil() predicate.Feed {
+	return predicate.Feed(sql.FieldIsNull(FieldSummaries))
 }
 
-// SummaryNotNil applies the NotNil predicate on the "summary" field.
-func SummaryNotNil() predicate.Feed {
-	return predicate.Feed(sql.FieldNotNull(FieldSummary))
+// SummariesNotNil applies the NotNil predicate on the "summaries" field.
+func SummariesNotNil() predicate.Feed {
+	return predicate.Feed(sql.FieldNotNull(FieldSummaries))
 }
 
 // And groups predicates with the AND operator between them.

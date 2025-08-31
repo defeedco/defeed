@@ -72,17 +72,9 @@ func (fc *FeedCreate) SetUpdatedAt(t time.Time) *FeedCreate {
 	return fc
 }
 
-// SetSummary sets the "summary" field.
-func (fc *FeedCreate) SetSummary(ts types.ActivitiesSummary) *FeedCreate {
-	fc.mutation.SetSummary(ts)
-	return fc
-}
-
-// SetNillableSummary sets the "summary" field if the given value is not nil.
-func (fc *FeedCreate) SetNillableSummary(ts *types.ActivitiesSummary) *FeedCreate {
-	if ts != nil {
-		fc.SetSummary(*ts)
-	}
+// SetSummaries sets the "summaries" field.
+func (fc *FeedCreate) SetSummaries(ms map[string]types.ActivitiesSummary) *FeedCreate {
+	fc.mutation.SetSummaries(ms)
 	return fc
 }
 
@@ -218,9 +210,9 @@ func (fc *FeedCreate) createSpec() (*Feed, *sqlgraph.CreateSpec) {
 		_spec.SetField(feed.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := fc.mutation.Summary(); ok {
-		_spec.SetField(feed.FieldSummary, field.TypeJSON, value)
-		_node.Summary = value
+	if value, ok := fc.mutation.Summaries(); ok {
+		_spec.SetField(feed.FieldSummaries, field.TypeJSON, value)
+		_node.Summaries = value
 	}
 	return _node, _spec
 }
@@ -370,21 +362,21 @@ func (u *FeedUpsert) UpdateUpdatedAt() *FeedUpsert {
 	return u
 }
 
-// SetSummary sets the "summary" field.
-func (u *FeedUpsert) SetSummary(v types.ActivitiesSummary) *FeedUpsert {
-	u.Set(feed.FieldSummary, v)
+// SetSummaries sets the "summaries" field.
+func (u *FeedUpsert) SetSummaries(v map[string]types.ActivitiesSummary) *FeedUpsert {
+	u.Set(feed.FieldSummaries, v)
 	return u
 }
 
-// UpdateSummary sets the "summary" field to the value that was provided on create.
-func (u *FeedUpsert) UpdateSummary() *FeedUpsert {
-	u.SetExcluded(feed.FieldSummary)
+// UpdateSummaries sets the "summaries" field to the value that was provided on create.
+func (u *FeedUpsert) UpdateSummaries() *FeedUpsert {
+	u.SetExcluded(feed.FieldSummaries)
 	return u
 }
 
-// ClearSummary clears the value of the "summary" field.
-func (u *FeedUpsert) ClearSummary() *FeedUpsert {
-	u.SetNull(feed.FieldSummary)
+// ClearSummaries clears the value of the "summaries" field.
+func (u *FeedUpsert) ClearSummaries() *FeedUpsert {
+	u.SetNull(feed.FieldSummaries)
 	return u
 }
 
@@ -548,24 +540,24 @@ func (u *FeedUpsertOne) UpdateUpdatedAt() *FeedUpsertOne {
 	})
 }
 
-// SetSummary sets the "summary" field.
-func (u *FeedUpsertOne) SetSummary(v types.ActivitiesSummary) *FeedUpsertOne {
+// SetSummaries sets the "summaries" field.
+func (u *FeedUpsertOne) SetSummaries(v map[string]types.ActivitiesSummary) *FeedUpsertOne {
 	return u.Update(func(s *FeedUpsert) {
-		s.SetSummary(v)
+		s.SetSummaries(v)
 	})
 }
 
-// UpdateSummary sets the "summary" field to the value that was provided on create.
-func (u *FeedUpsertOne) UpdateSummary() *FeedUpsertOne {
+// UpdateSummaries sets the "summaries" field to the value that was provided on create.
+func (u *FeedUpsertOne) UpdateSummaries() *FeedUpsertOne {
 	return u.Update(func(s *FeedUpsert) {
-		s.UpdateSummary()
+		s.UpdateSummaries()
 	})
 }
 
-// ClearSummary clears the value of the "summary" field.
-func (u *FeedUpsertOne) ClearSummary() *FeedUpsertOne {
+// ClearSummaries clears the value of the "summaries" field.
+func (u *FeedUpsertOne) ClearSummaries() *FeedUpsertOne {
 	return u.Update(func(s *FeedUpsert) {
-		s.ClearSummary()
+		s.ClearSummaries()
 	})
 }
 
@@ -895,24 +887,24 @@ func (u *FeedUpsertBulk) UpdateUpdatedAt() *FeedUpsertBulk {
 	})
 }
 
-// SetSummary sets the "summary" field.
-func (u *FeedUpsertBulk) SetSummary(v types.ActivitiesSummary) *FeedUpsertBulk {
+// SetSummaries sets the "summaries" field.
+func (u *FeedUpsertBulk) SetSummaries(v map[string]types.ActivitiesSummary) *FeedUpsertBulk {
 	return u.Update(func(s *FeedUpsert) {
-		s.SetSummary(v)
+		s.SetSummaries(v)
 	})
 }
 
-// UpdateSummary sets the "summary" field to the value that was provided on create.
-func (u *FeedUpsertBulk) UpdateSummary() *FeedUpsertBulk {
+// UpdateSummaries sets the "summaries" field to the value that was provided on create.
+func (u *FeedUpsertBulk) UpdateSummaries() *FeedUpsertBulk {
 	return u.Update(func(s *FeedUpsert) {
-		s.UpdateSummary()
+		s.UpdateSummaries()
 	})
 }
 
-// ClearSummary clears the value of the "summary" field.
-func (u *FeedUpsertBulk) ClearSummary() *FeedUpsertBulk {
+// ClearSummaries clears the value of the "summaries" field.
+func (u *FeedUpsertBulk) ClearSummaries() *FeedUpsertBulk {
 	return u.Update(func(s *FeedUpsert) {
-		s.ClearSummary()
+		s.ClearSummaries()
 	})
 }
 

@@ -35,8 +35,8 @@ type Feed struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Summary holds the value of the "summary" field.
-	Summary      types.ActivitiesSummary `json:"summary,omitempty"`
+	// Summaries holds the value of the "summaries" field.
+	Summaries    map[string]types.ActivitiesSummary `json:"summaries,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -45,7 +45,7 @@ func (*Feed) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case feed.FieldSourceUids, feed.FieldSummary:
+		case feed.FieldSourceUids, feed.FieldSummaries:
 			values[i] = new([]byte)
 		case feed.FieldPublic:
 			values[i] = new(sql.NullBool)
@@ -124,12 +124,12 @@ func (f *Feed) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				f.UpdatedAt = value.Time
 			}
-		case feed.FieldSummary:
+		case feed.FieldSummaries:
 			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field summary", values[i])
+				return fmt.Errorf("unexpected type %T for field summaries", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &f.Summary); err != nil {
-					return fmt.Errorf("unmarshal field summary: %w", err)
+				if err := json.Unmarshal(*value, &f.Summaries); err != nil {
+					return fmt.Errorf("unmarshal field summaries: %w", err)
 				}
 			}
 		default:
@@ -192,8 +192,8 @@ func (f *Feed) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(f.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("summary=")
-	builder.WriteString(fmt.Sprintf("%v", f.Summary))
+	builder.WriteString("summaries=")
+	builder.WriteString(fmt.Sprintf("%v", f.Summaries))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -18,6 +18,14 @@ const (
 	BearerAuthScopes = "bearerAuth.Scopes"
 )
 
+// Defines values for ActivityPeriod.
+const (
+	All   ActivityPeriod = "all"
+	Day   ActivityPeriod = "day"
+	Month ActivityPeriod = "month"
+	Week  ActivityPeriod = "week"
+)
+
 // Defines values for ActivitySortBy.
 const (
 	CreationDate ActivitySortBy = "creationDate"
@@ -58,6 +66,9 @@ type Activity struct {
 	Uid        string     `json:"uid"`
 	Url        string     `json:"url"`
 }
+
+// ActivityPeriod Time period to filter activities from. 'month' means last month, 'week' means last week, 'day' means last day.
+type ActivityPeriod string
 
 // ActivitySortBy defines model for ActivitySortBy.
 type ActivitySortBy string
@@ -117,6 +128,9 @@ type UpdateFeedRequest = CreateFeedRequest
 
 // ListFeedActivitiesParams defines parameters for ListFeedActivities.
 type ListFeedActivitiesParams struct {
+	// Period Time period to filter activities from. Defaults to 'all' for all time.
+	Period *ActivityPeriod `form:"period,omitempty" json:"period,omitempty"`
+
 	// SortBy Sort method.
 	SortBy *ActivitySortBy `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 
@@ -129,6 +143,9 @@ type ListFeedActivitiesParams struct {
 
 // GetFeedSummaryParams defines parameters for GetFeedSummary.
 type GetFeedSummaryParams struct {
+	// Period Time period to filter activities from. Defaults to 'all' for all time.
+	Period *ActivityPeriod `form:"period,omitempty" json:"period,omitempty"`
+
 	// Query Filter query. Authenticated users can override the default feed query.
 	Query *string `form:"query,omitempty" json:"query,omitempty"`
 }
@@ -307,6 +324,14 @@ func (siw *ServerInterfaceWrapper) ListFeedActivities(w http.ResponseWriter, r *
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListFeedActivitiesParams
 
+	// ------------- Optional query parameter "period" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "period", r.URL.Query(), &params.Period)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "period", Err: err})
+		return
+	}
+
 	// ------------- Optional query parameter "sortBy" -------------
 
 	err = runtime.BindQueryParameter("form", true, false, "sortBy", r.URL.Query(), &params.SortBy)
@@ -364,6 +389,14 @@ func (siw *ServerInterfaceWrapper) GetFeedSummary(w http.ResponseWriter, r *http
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetFeedSummaryParams
+
+	// ------------- Optional query parameter "period" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "period", r.URL.Query(), &params.Period)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "period", Err: err})
+		return
+	}
 
 	// ------------- Optional query parameter "query" -------------
 

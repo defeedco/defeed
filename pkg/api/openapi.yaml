@@ -175,6 +175,11 @@ paths:
           required: true
           schema:
             type: string
+        - name: period
+          in: query
+          description: Time period to filter activities from. Defaults to 'all' for all time.
+          schema:
+            $ref: '#/components/schemas/ActivityPeriod'
         - name: sortBy
           in: query
           description: Sort method.
@@ -219,6 +224,11 @@ paths:
           required: true
           schema:
             type: string
+        - name: period
+          in: query
+          description: Time period to filter activities from. Defaults to 'all' for all time.
+          schema:
+            $ref: '#/components/schemas/ActivityPeriod'
         - name: query
           in: query
           description: Filter query. Authenticated users can override the default feed query.
@@ -339,6 +349,21 @@ components:
         - similarity
         - creationDate
       default: similarity
+
+    ActivityPeriod:
+      type: string
+      enum:
+        - all
+        - month
+        - week
+        - day
+      default: all
+      description: Time period to filter activities from. 'month' means last month, 'week' means last week, 'day' means last day.
+      x-go-enum:
+        - all
+        - month
+        - week
+        - day
 
     FeedSummary:
       type: object

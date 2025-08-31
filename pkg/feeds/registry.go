@@ -53,8 +53,8 @@ type Feed struct {
 	UserID string
 	// Public is true if any user can access the feed.
 	Public bool
-	// Summary is a cached overview of the most relevant recent activity on the feed.
-	Summary activities.ActivitiesSummary
+	// Summaries is a map of cached overviews by period
+	Summaries map[activities.Period]activities.ActivitiesSummary
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -88,7 +88,7 @@ func (r *Registry) Create(ctx context.Context, req CreateRequest) (*Feed, error)
 		Query:      req.Query,
 		SourceUIDs: req.SourceUIDs,
 		UserID:     req.UserID,
-		Summary:    activities.ActivitiesSummary{},
+		Summaries:  make(map[activities.Period]activities.ActivitiesSummary),
 		Public:     false,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
@@ -184,7 +184,7 @@ func (r *Registry) ListByUserID(ctx context.Context, userID string) ([]*Feed, er
 
 // Summary returns the overview of the recent relevant activities
 // If the userID is provided, an optional queryOverride can be provided as a request-scoped override parameter.
-func (r *Registry) Summary(ctx context.Context, feedID, userID, queryOverride string) (*activities.ActivitiesSummary, error) {
+func (r *Registry) Summary(ctx context.Context, feedID, userID, queryOverride string, period activities.Period) (*activities.ActivitiesSummary, error) {
 	feed, err := r.store.GetByID(ctx, feedID)
 	if err != nil {
 		return nil, errors.New("feed not found")
@@ -193,18 +193,40 @@ func (r *Registry) Summary(ctx context.Context, feedID, userID, queryOverride st
 	// TODO(config): Move to env config struct
 	refreshDuration := 1 * time.Hour
 	now := time.Now()
-	if now.Sub(feed.Summary.CreatedAt) >= refreshDuration {
-		summary, err := r.summarize(ctx, feed.Query, feed.SourceUIDs)
-		if err != nil {
-			return nil, fmt.Errorf("summarize: %w", err)
+
+	// Check if we have a cached summary for this period and if it's still fresh
+	if cachedSummary, exists := feed.Summaries[period]; exists && now.Sub(cachedSummary.CreatedAt) < refreshDuration {
+		if userID == "" && queryOverride != "" {
+			return nil, ErrAuthUsersOnly
 		}
 
-		feed.Summary = *summary
-		feed.UpdatedAt = time.Now()
-		err = r.store.Upsert(ctx, *feed)
-		if err != nil {
-			return nil, fmt.Errorf("upsert feed: %w", err)
+		if queryOverride != "" && queryOverride != feed.Query {
+			summary, err := r.summarize(ctx, queryOverride, feed.SourceUIDs, period)
+			if err != nil {
+				return nil, fmt.Errorf("summarize: %w", err)
+			}
+			return summary, nil
 		}
+
+		return &cachedSummary, nil
+	}
+
+	// Generate new summary for this period
+	summary, err := r.summarize(ctx, feed.Query, feed.SourceUIDs, period)
+	if err != nil {
+		return nil, fmt.Errorf("summarize: %w", err)
+	}
+
+	// Cache the summary for this period
+	if feed.Summaries == nil {
+		feed.Summaries = make(map[activities.Period]activities.ActivitiesSummary)
+	}
+	feed.Summaries[period] = *summary
+	feed.UpdatedAt = time.Now()
+
+	err = r.store.Upsert(ctx, *feed)
+	if err != nil {
+		return nil, fmt.Errorf("upsert feed: %w", err)
 	}
 
 	if userID == "" && queryOverride != "" {
@@ -212,20 +234,19 @@ func (r *Registry) Summary(ctx context.Context, feedID, userID, queryOverride st
 	}
 
 	if queryOverride != "" && queryOverride != feed.Query {
-		summary, err := r.summarize(ctx, queryOverride, feed.SourceUIDs)
+		summary, err := r.summarize(ctx, queryOverride, feed.SourceUIDs, period)
 		if err != nil {
 			return nil, fmt.Errorf("summarize: %w", err)
 		}
-
 		return summary, nil
 	}
 
-	return &feed.Summary, nil
+	return summary, nil
 }
 
-func (r *Registry) summarize(ctx context.Context, query string, sourceUIDs []activities.TypedUID) (*activities.ActivitiesSummary, error) {
+func (r *Registry) summarize(ctx context.Context, query string, sourceUIDs []activities.TypedUID, period activities.Period) (*activities.ActivitiesSummary, error) {
 	limit := 20
-	acts, err := r.sourceExecutor.Search(ctx, query, sourceUIDs, 0.0, limit, activities.SortBySimilarity)
+	acts, err := r.sourceExecutor.Search(ctx, query, sourceUIDs, 0.0, limit, activities.SortBySimilarity, period)
 	if err != nil {
 		return nil, fmt.Errorf("search: %w", err)
 	}
@@ -243,7 +264,7 @@ func (r *Registry) summarize(ctx context.Context, query string, sourceUIDs []act
 	return summary, nil
 }
 
-func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy activities.SortBy, limit int, queryOverride string) ([]*activities.DecoratedActivity, error) {
+func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy activities.SortBy, limit int, queryOverride string, period activities.Period) ([]*activities.DecoratedActivity, error) {
 	feed, err := r.store.GetByID(ctx, feedID)
 	if err != nil {
 		return nil, fmt.Errorf("get feed: %w", err)
@@ -259,7 +280,7 @@ func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy
 	}
 
 	// TODO(optimisation): Cache query embeddings
-	acts, err := r.sourceExecutor.Search(ctx, feed.Query, feed.SourceUIDs, 0.0, limit, sortBy)
+	acts, err := r.sourceExecutor.Search(ctx, feed.Query, feed.SourceUIDs, 0.0, limit, sortBy, period)
 	if err != nil {
 		return nil, fmt.Errorf("search activities: %w", err)
 	}

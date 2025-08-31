@@ -67,4 +67,15 @@ type SearchRequest struct {
 	Limit int
 	// SortBy specifies the field to sort results by (similarity or date)
 	SortBy SortBy
+	// Period specifies the time period to filter activities from
+	Period Period
 }
+
+type Period string
+
+const (
+	PeriodAll   Period = "all"
+	PeriodMonth Period = "month"
+	PeriodWeek  Period = "week"
+	PeriodDay   Period = "day"
+)

@@ -322,12 +322,13 @@ func (r *Executor) Shutdown() {
 	r.cancelBySourceID.Clear()
 }
 
-func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []types.TypedUID, minSimilarity float32, limit int, sortBy types.SortBy) ([]*types.DecoratedActivity, error) {
+func (r *Executor) Search(ctx context.Context, query string, sourceUIDs []types.TypedUID, minSimilarity float32, limit int, sortBy types.SortBy, period types.Period) ([]*types.DecoratedActivity, error) {
 	req := types.SearchRequest{
 		SourceUIDs:    sourceUIDs,
 		MinSimilarity: minSimilarity,
 		Limit:         limit,
 		SortBy:        sortBy,
+		Period:        period,
 	}
 
 	if query != "" {

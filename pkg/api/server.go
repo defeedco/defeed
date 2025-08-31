@@ -235,7 +235,9 @@ func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid 
 		return
 	}
 
-	out, err := s.feedRegistry.Activities(r.Context(), uid, userID, sortBy, limit, queryOverride)
+	period := deserializePeriod(params.Period)
+
+	out, err := s.feedRegistry.Activities(r.Context(), uid, userID, sortBy, limit, queryOverride, period)
 	if err != nil {
 		s.internalError(w, err, "list feed activities")
 		return
@@ -389,7 +391,9 @@ func (s *Server) GetFeedSummary(w http.ResponseWriter, r *http.Request, feedID s
 		queryOverride = *params.Query
 	}
 
-	feedSummary, err := s.feedRegistry.Summary(r.Context(), feedID, userID, queryOverride)
+	period := deserializePeriod(params.Period)
+
+	feedSummary, err := s.feedRegistry.Summary(r.Context(), feedID, userID, queryOverride, period)
 	if err != nil {
 		if errors.Is(err, feeds.ErrInsufficientActivity) {
 			s.statusCode(w, http.StatusAccepted)
@@ -609,4 +613,23 @@ func deserializeSortBy(in *ActivitySortBy) (activitytypes.SortBy, error) {
 	}
 
 	return "", fmt.Errorf("unknown sort by: %s", *in)
+}
+
+func deserializePeriod(in *ActivityPeriod) activitytypes.Period {
+	if in == nil {
+		return activitytypes.PeriodAll
+	}
+
+	switch *in {
+	case "all":
+		return activitytypes.PeriodAll
+	case "month":
+		return activitytypes.PeriodMonth
+	case "week":
+		return activitytypes.PeriodWeek
+	case "day":
+		return activitytypes.PeriodDay
+	default:
+		return activitytypes.PeriodAll
+	}
 }

@@ -99,6 +99,22 @@ export interface Activity {
 
 
 /**
+ * Time period to filter activities from. \'month\' means last month, \'week\' means last week, \'day\' means last day.
+ * @export
+ * @enum {string}
+ */
+
+export const ActivityPeriod = {
+    All: 'all',
+    Month: 'month',
+    Week: 'week',
+    Day: 'day'
+} as const;
+
+export type ActivityPeriod = typeof ActivityPeriod[keyof typeof ActivityPeriod];
+
+
+/**
  * 
  * @export
  * @enum {string}
@@ -424,11 +440,12 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
          * 
          * @summary Generate an executive summary of multiple activities
          * @param {string} uid 
+         * @param {ActivityPeriod} [period] Time period to filter activities from. Defaults to \&#39;all\&#39; for all time.
          * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getFeedSummary: async (uid: string, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getFeedSummary: async (uid: string, period?: ActivityPeriod, query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uid' is not null or undefined
             assertParamExists('getFeedSummary', 'uid', uid)
             const localVarPath = `/feeds/{uid}/summary`
@@ -447,6 +464,10 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
             // authentication bearerAuth required
             // http bearer authentication required
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (period !== undefined) {
+                localVarQueryParameter['period'] = period;
+            }
 
             if (query !== undefined) {
                 localVarQueryParameter['query'] = query;
@@ -467,13 +488,14 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
          * 
          * @summary List activities for a feed
          * @param {string} uid 
+         * @param {ActivityPeriod} [period] Time period to filter activities from. Defaults to \&#39;all\&#39; for all time.
          * @param {ActivitySortBy} [sortBy] Sort method.
          * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {number} [limit] Maximum number of activities to return.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listFeedActivities: async (uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        listFeedActivities: async (uid: string, period?: ActivityPeriod, sortBy?: ActivitySortBy, query?: string, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'uid' is not null or undefined
             assertParamExists('listFeedActivities', 'uid', uid)
             const localVarPath = `/feeds/{uid}/activities`
@@ -492,6 +514,10 @@ export const FeedsApiAxiosParamCreator = function (configuration?: Configuration
             // authentication bearerAuth required
             // http bearer authentication required
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (period !== undefined) {
+                localVarQueryParameter['period'] = period;
+            }
 
             if (sortBy !== undefined) {
                 localVarQueryParameter['sortBy'] = sortBy;
@@ -634,12 +660,13 @@ export const FeedsApiFp = function(configuration?: Configuration) {
          * 
          * @summary Generate an executive summary of multiple activities
          * @param {string} uid 
+         * @param {ActivityPeriod} [period] Time period to filter activities from. Defaults to \&#39;all\&#39; for all time.
          * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getFeedSummary(uid: string, query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FeedSummary>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getFeedSummary(uid, query, options);
+        async getFeedSummary(uid: string, period?: ActivityPeriod, query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FeedSummary>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFeedSummary(uid, period, query, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FeedsApi.getFeedSummary']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -648,14 +675,15 @@ export const FeedsApiFp = function(configuration?: Configuration) {
          * 
          * @summary List activities for a feed
          * @param {string} uid 
+         * @param {ActivityPeriod} [period] Time period to filter activities from. Defaults to \&#39;all\&#39; for all time.
          * @param {ActivitySortBy} [sortBy] Sort method.
          * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {number} [limit] Maximum number of activities to return.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listFeedActivities(uid, sortBy, query, limit, options);
+        async listFeedActivities(uid: string, period?: ActivityPeriod, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listFeedActivities(uid, period, sortBy, query, limit, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FeedsApi.listFeedActivities']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -720,25 +748,27 @@ export const FeedsApiFactory = function (configuration?: Configuration, basePath
          * 
          * @summary Generate an executive summary of multiple activities
          * @param {string} uid 
+         * @param {ActivityPeriod} [period] Time period to filter activities from. Defaults to \&#39;all\&#39; for all time.
          * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getFeedSummary(uid: string, query?: string, options?: RawAxiosRequestConfig): AxiosPromise<FeedSummary> {
-            return localVarFp.getFeedSummary(uid, query, options).then((request) => request(axios, basePath));
+        getFeedSummary(uid: string, period?: ActivityPeriod, query?: string, options?: RawAxiosRequestConfig): AxiosPromise<FeedSummary> {
+            return localVarFp.getFeedSummary(uid, period, query, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @summary List activities for a feed
          * @param {string} uid 
+         * @param {ActivityPeriod} [period] Time period to filter activities from. Defaults to \&#39;all\&#39; for all time.
          * @param {ActivitySortBy} [sortBy] Sort method.
          * @param {string} [query] Filter query. Authenticated users can override the default feed query.
          * @param {number} [limit] Maximum number of activities to return.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
-            return localVarFp.listFeedActivities(uid, sortBy, query, limit, options).then((request) => request(axios, basePath));
+        listFeedActivities(uid: string, period?: ActivityPeriod, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
+            return localVarFp.listFeedActivities(uid, period, sortBy, query, limit, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -798,19 +828,21 @@ export class FeedsApi extends BaseAPI {
      * 
      * @summary Generate an executive summary of multiple activities
      * @param {string} uid 
+     * @param {ActivityPeriod} [period] Time period to filter activities from. Defaults to \&#39;all\&#39; for all time.
      * @param {string} [query] Filter query. Authenticated users can override the default feed query.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeedsApi
      */
-    public getFeedSummary(uid: string, query?: string, options?: RawAxiosRequestConfig) {
-        return FeedsApiFp(this.configuration).getFeedSummary(uid, query, options).then((request) => request(this.axios, this.basePath));
+    public getFeedSummary(uid: string, period?: ActivityPeriod, query?: string, options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).getFeedSummary(uid, period, query, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @summary List activities for a feed
      * @param {string} uid 
+     * @param {ActivityPeriod} [period] Time period to filter activities from. Defaults to \&#39;all\&#39; for all time.
      * @param {ActivitySortBy} [sortBy] Sort method.
      * @param {string} [query] Filter query. Authenticated users can override the default feed query.
      * @param {number} [limit] Maximum number of activities to return.
@@ -818,8 +850,8 @@ export class FeedsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof FeedsApi
      */
-    public listFeedActivities(uid: string, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig) {
-        return FeedsApiFp(this.configuration).listFeedActivities(uid, sortBy, query, limit, options).then((request) => request(this.axios, this.basePath));
+    public listFeedActivities(uid: string, period?: ActivityPeriod, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig) {
+        return FeedsApiFp(this.configuration).listFeedActivities(uid, period, sortBy, query, limit, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
