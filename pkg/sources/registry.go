@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"time"
 
-	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/sources/types"
 
@@ -60,7 +61,7 @@ func (r *Registry) Initialize() error {
 	return nil
 }
 
-func (r *Registry) FindByUID(ctx context.Context, uid types2.TypedUID) (types.Source, error) {
+func (r *Registry) FindByUID(ctx context.Context, uid activitytypes.TypedUID) (types.Source, error) {
 	var fetcher types.Fetcher
 	for _, f := range r.fetchers {
 		if f.SourceType() == uid.Type() {
@@ -71,10 +72,16 @@ func (r *Registry) FindByUID(ctx context.Context, uid types2.TypedUID) (types.So
 	if fetcher == nil {
 		return nil, errors.New("source not found")
 	}
+
 	source, err := fetcher.FindByID(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
+
+	if err := r.initializeSource(ctx, source); err != nil {
+		return nil, fmt.Errorf("initialize source: %w", err)
+	}
+
 	return source, nil
 }
 
@@ -105,11 +112,45 @@ func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, er
 		Int("count", len(results)).
 		Msg("searched sources")
 
+	var filtered []types.Source
 	if query == "" {
-		return alphabeticalSort(results), nil
+		filtered = alphabeticalSort(results)
+	} else {
+		filtered = fuzzyReRank(results, query)
 	}
 
-	return fuzzyReRank(results, query), nil
+	r.initializeSources(ctx, filtered)
+
+	return filtered, nil
+}
+
+func (r *Registry) initializeSources(ctx context.Context, sources []types.Source) error {
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(len(sources))
+
+	for _, source := range sources {
+		g.Go(func() error {
+			if err := r.initializeSource(gctx, source); err != nil {
+				return fmt.Errorf("initialize source: %w", err)
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("initialize sources: %w", err)
+	}
+	return nil
+}
+
+func (r *Registry) initializeSource(ctx context.Context, source types.Source) error {
+	// Keep a minimum timeout to avoid long loading times because of slow favicon fetching.
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	if err := source.Initialize(ctx, sourceLogger(source, r.logger)); err != nil {
+		return fmt.Errorf("initialize source: %w", err)
+	}
+	return nil
 }
 
 // sourceWithSearchText holds a source and its searchable text for fuzzy matching

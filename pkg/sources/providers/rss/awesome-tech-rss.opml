@@ -122,7 +122,6 @@
 			<outline text="UXmatters" title="UXmatters" type="rss" xmlUrl="https://uxmatters.com/index.xml" />
 			<outline text="Articles on Smashing Magazine — For Web Designers And Developers" title="Articles on Smashing Magazine — For Web Designers And Developers" type="rss" xmlUrl="https://www.smashingmagazine.com/feed/" />
 			<outline text="UX Collective - Medium" title="UX Collective - Medium" type="rss" xmlUrl="https://uxdesign.cc/feed" />
-			<outline text="Airbnb Design" title="Airbnb Design" type="rss" xmlUrl="http://airbnb.design/feed/" />
 			<outline text="web.dev" title="web.dev" type="rss" xmlUrl="https://web.dev/feed.xml" />
 			<outline text="Slack Design" title="Slack Design" type="rss" xmlUrl="https://slack.design/feed/" />
 			<outline text="CSS-Tricks" title="CSS-Tricks" type="rss" xmlUrl="https://feeds.feedburner.com/CssTricks" />

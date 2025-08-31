@@ -203,16 +203,13 @@ func (r *Executor) getSourceTicker(source sourcetypes.Source) *time.Ticker {
 }
 
 // Add starts processing activities from the source.
+// Executor expects the source to be already initialized.
 func (r *Executor) Add(source sourcetypes.Source) error {
 	existing, _ := r.activeSourceRepo.GetByID(source.UID().String())
 
 	if existing != nil {
 		// source already exists, we don't need to do anything
 		return nil
-	}
-
-	if err := source.Initialize(context.Background(), sourceLogger(source, r.logger)); err != nil {
-		return fmt.Errorf("initialize source: %w", err)
 	}
 
 	err := r.activeSourceRepo.Add(source)
