@@ -68,8 +68,8 @@ func NewExecutor(
 	r := &Executor{
 		activityRepo:     activityRepo,
 		activeSourceRepo: sourceRepo,
-		activityQueue:    make(chan types.Activity),
-		errorQueue:       make(chan error),
+		activityQueue:    make(chan types.Activity, 1000),
+		errorQueue:       make(chan error, 1000),
 		done:             make(chan struct{}),
 		logger:           logger,
 		summarizer:       summarizer,
@@ -166,7 +166,7 @@ func (r *Executor) scheduleSource(source sourcetypes.Source) {
 
 func (r *Executor) executeSourceOnce(source sourcetypes.Source, since types.Activity) {
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	r.cancelBySourceID.Store(source.UID(), cancel)
 
 	activityChan := make(chan types.Activity, 100)
 	errorChan := make(chan error, 100)
@@ -196,9 +196,9 @@ func (r *Executor) executeSourceOnce(source sourcetypes.Source, since types.Acti
 }
 
 func (r *Executor) getSourceTicker(source sourcetypes.Source) *time.Ticker {
-	// Default to 30 minutes for all sources
+	// Default to 2 hours for all sources
 	// TODO: Make this configurable per source type?
-	return time.NewTicker(30 * time.Minute)
+	return time.NewTicker(2 * time.Hour)
 }
 
 // Add starts processing activities from the source.
@@ -221,7 +221,7 @@ func (r *Executor) Add(source sourcetypes.Source) error {
 
 	// Set to nil since there are no previous activities for this source yet.
 	var since types.Activity = nil
-	r.executeSourceOnce(source, since)
+	go r.executeSourceOnce(source, since)
 	r.scheduleSource(source)
 
 	return nil
