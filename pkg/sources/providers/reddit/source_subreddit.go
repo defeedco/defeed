@@ -69,6 +69,10 @@ func (s *SourceSubreddit) URL() string {
 	return fmt.Sprintf("https://reddit.com/r/%s/%s", s.Subreddit, s.SortBy)
 }
 
+func (s *SourceSubreddit) Icon() string {
+	return "https://reddit.com/favicon.ico"
+}
+
 type Post struct {
 	Post            *reddit.Post   `json:"post"`
 	ExternalContent string         `json:"external_content"`
@@ -145,7 +149,7 @@ func (p *Post) CreatedAt() time.Time {
 	return p.Post.Created.Time
 }
 
-func (s *SourceSubreddit) Initialize(logger *zerolog.Logger) error {
+func (s *SourceSubreddit) Initialize(ctx context.Context, logger *zerolog.Logger) error {
 	var client *reddit.Client
 	var err error
 

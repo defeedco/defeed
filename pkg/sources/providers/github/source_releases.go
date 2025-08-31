@@ -53,11 +53,15 @@ func (s *SourceRelease) URL() string {
 	return fmt.Sprintf("https://github.com/%s/%s/releases", s.Owner, s.Repo)
 }
 
+func (s *SourceRelease) Icon() string {
+	return "https://github.com/favicon.ico"
+}
+
 func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	s.fetchGithubReleases(ctx, since, feed, errs)
 }
 
-func (s *SourceRelease) Initialize(logger *zerolog.Logger) error {
+func (s *SourceRelease) Initialize(ctx context.Context, logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

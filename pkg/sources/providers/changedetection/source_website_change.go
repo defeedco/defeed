@@ -19,6 +19,7 @@ type SourceWebsiteChange struct {
 	InstanceURL string `json:"instanceUrl" validate:"omitempty,url"`
 	Token       string `json:"token"`
 	Limit       int    `json:"limit"`
+	IconURL     string `json:"icon_url"`
 	logger      *zerolog.Logger
 }
 
@@ -49,6 +50,10 @@ func (s *SourceWebsiteChange) URL() string {
 	return s.InstanceURL
 }
 
+func (s *SourceWebsiteChange) Icon() string {
+	return s.IconURL
+}
+
 func (s *SourceWebsiteChange) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	s.fetchAndSendNewChanges(ctx, since, feed, errs)
 }
@@ -70,7 +75,7 @@ func (s *SourceWebsiteChange) fetchAndSendNewChanges(ctx context.Context, since 
 	}
 }
 
-func (s *SourceWebsiteChange) Initialize(logger *zerolog.Logger) error {
+func (s *SourceWebsiteChange) Initialize(ctx context.Context, logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
@@ -84,6 +89,9 @@ func (s *SourceWebsiteChange) Initialize(logger *zerolog.Logger) error {
 	}
 
 	s.logger = logger
+
+	// Prefetch the favicon
+	s.IconURL = lib.FetchFaviconURL(ctx, s.logger, s.InstanceURL)
 
 	return nil
 }

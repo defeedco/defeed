@@ -307,6 +307,12 @@ export interface Source {
      * @memberof Source
      */
     'url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Source
+     */
+    'iconUrl': string;
 }
 
 

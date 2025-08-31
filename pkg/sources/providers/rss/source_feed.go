@@ -38,6 +38,7 @@ type SourceFeed struct {
 	Tags      []string
 	FeedURL   string            `json:"url" validate:"required,url"`
 	Headers   map[string]string `json:"headers"`
+	IconURL   string            `json:"icon_url"`
 	logger    *zerolog.Logger
 }
 
@@ -73,12 +74,35 @@ func (s *SourceFeed) URL() string {
 	return s.FeedURL
 }
 
-func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
+func (s *SourceFeed) Icon() string {
+	return s.IconURL
+}
+
+func (s *SourceFeed) getWebsiteURL() string {
+	// Try to extract the website URL from the feed URL
+	// For example, if feed URL is https://example.com/feed.xml,
+	// the website URL would be https://example.com
+	parsedURL, err := url.Parse(s.FeedURL)
+	if err != nil {
+		return ""
+	}
+
+	return parsedURL.Scheme + "://" + parsedURL.Host
+}
+
+func (s *SourceFeed) Initialize(ctx context.Context, logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
 
 	s.logger = logger
+
+	// Prefetch the favicon
+	websiteURL := s.getWebsiteURL()
+	if websiteURL != "" {
+		s.IconURL = lib.FetchFaviconURL(ctx, s.logger, websiteURL)
+	}
+
 	return nil
 }
 

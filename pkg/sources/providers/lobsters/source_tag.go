@@ -51,6 +51,10 @@ func (s *SourceTag) URL() string {
 	return fmt.Sprintf("https://lobste.rs/t/%s", s.Tag)
 }
 
+func (s *SourceTag) Icon() string {
+	return "https://lobste.rs/favicon.ico"
+}
+
 func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
 	s.fetchAndSendNewStories(ctx, since, feed, errs)
 }
@@ -76,7 +80,7 @@ func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Acti
 	}
 }
 
-func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
+func (s *SourceTag) Initialize(ctx context.Context, logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

@@ -118,6 +118,7 @@ type FeedSummary struct {
 // Source defines model for Source.
 type Source struct {
 	Description string     `json:"description"`
+	IconUrl     string     `json:"iconUrl"`
 	Name        string     `json:"name"`
 	Type        SourceType `json:"type"`
 	Uid         string     `json:"uid"`

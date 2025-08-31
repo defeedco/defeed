@@ -325,6 +325,7 @@ components:
         - name
         - description
         - url
+        - iconUrl
       properties:
         uid:
           type: string
@@ -335,6 +336,8 @@ components:
         description:
           type: string
         url:
+          type: string
+        iconUrl:
           type: string
 
     SourceType:

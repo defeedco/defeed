@@ -558,6 +558,7 @@ func serializeSource(in sourcetypes.Source) (Source, error) {
 		Uid:         in.UID().String(),
 		Type:        sourceType,
 		Url:         in.URL(),
+		IconUrl:     in.Icon(),
 		Name:        in.Name(),
 		Description: in.Description(),
 	}, nil

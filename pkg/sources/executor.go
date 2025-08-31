@@ -91,9 +91,10 @@ func (r *Executor) Initialize() error {
 
 	r.logger.Info().Int("count", len(sources)).Msg("Initializing sources")
 
+	ctx := context.Background()
 	for _, source := range sources {
 		sLogger := sourceLogger(source, r.logger)
-		if err := source.Initialize(sLogger); err != nil {
+		if err := source.Initialize(ctx, sLogger); err != nil {
 			sLogger.Error().
 				Err(err).
 				Msg("Failed to initialize source")
@@ -210,7 +211,7 @@ func (r *Executor) Add(source sourcetypes.Source) error {
 		return nil
 	}
 
-	if err := source.Initialize(sourceLogger(source, r.logger)); err != nil {
+	if err := source.Initialize(context.Background(), sourceLogger(source, r.logger)); err != nil {
 		return fmt.Errorf("initialize source: %w", err)
 	}
 

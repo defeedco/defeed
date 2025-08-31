@@ -47,6 +47,10 @@ func (s *SourceIssues) URL() string {
 	return fmt.Sprintf("https://github.com/%s/%s/issues", s.Owner, s.Repo)
 }
 
+func (s *SourceIssues) Icon() string {
+	return "https://github.com/favicon.ico"
+}
+
 func (s *SourceIssues) MarshalJSON() ([]byte, error) {
 	type Alias SourceIssues
 	return json.Marshal(&struct {
@@ -150,7 +154,7 @@ func (i *Issue) CreatedAt() time.Time {
 	return i.Issue.GetUpdatedAt().Time
 }
 
-func (s *SourceIssues) Initialize(logger *zerolog.Logger) error {
+func (s *SourceIssues) Initialize(ctx context.Context, logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

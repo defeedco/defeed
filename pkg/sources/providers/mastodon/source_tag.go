@@ -52,7 +52,12 @@ func (s *SourceTag) URL() string {
 	return fmt.Sprintf("%s/tags/%s", s.InstanceURL, s.Tag)
 }
 
-func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
+func (s *SourceTag) Icon() string {
+	// Note: might not work for all instances
+	return fmt.Sprintf("%s/packs/assets/favicon-48x48-DMnduFKh.png", s.InstanceURL)
+}
+
+func (s *SourceTag) Initialize(ctx context.Context, logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
