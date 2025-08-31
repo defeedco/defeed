@@ -20,8 +20,9 @@ var awesomeTechRSS string
 
 // FeedFetcher implements preset search functionality for RSS feeds
 type FeedFetcher struct {
-	ExampleFeeds []types.Source
-	Logger       *zerolog.Logger
+	// Feeds are the most relevant predefined feeds
+	Feeds  []types.Source
+	Logger *zerolog.Logger
 }
 
 func NewFeedFetcher(logger *zerolog.Logger) (*FeedFetcher, error) {
@@ -30,7 +31,7 @@ func NewFeedFetcher(logger *zerolog.Logger) (*FeedFetcher, error) {
 		return nil, fmt.Errorf("load OPML sources: %w", err)
 	}
 
-	exampleFeeds := []types.Source{
+	arxivCategories := []types.Source{
 		&SourceFeed{
 			Title:     "ArXiv AI",
 			FeedURL:   "https://rss.arxiv.org/rss/cs.AI",
@@ -83,11 +84,41 @@ func NewFeedFetcher(logger *zerolog.Logger) (*FeedFetcher, error) {
 		},
 	}
 
-	exampleFeeds = append(exampleFeeds, opmlSources...)
+	huggingFace := []types.Source{
+		// https://huggingface.co/posts/takarajordan/806643001426071
+		// Note: community maintained/hosted, might be unreliable.
+		&SourceFeed{
+			Title:     "HuggingFace Daily Papers",
+			FeedURL:   "https://papers.takara.ai/api/feed",
+			AboutFeed: "Your daily dose of AI research from @akhaliq",
+		},
+		&SourceFeed{
+			Title:     "HuggingFace Blog",
+			FeedURL:   "https://huggingface.co/blog/feed.xml",
+			AboutFeed: "The Hugging Face blog",
+		},
+	}
+
+	indieHackers := []types.Source{
+		// https://www.indiehackers.com/post/an-unofficial-feed-of-indie-hackers-2413a17623
+		// Note: community maintained/hosted, might be unreliable.
+		// Another alternative to try if this doesn't work wekk: https://github.com/ahonn/ihrss
+		&SourceFeed{
+			Title:     "Indie Hackers Posts",
+			FeedURL:   "https://feed.indiehackers.world/posts.rss",
+			AboutFeed: "User-submitted posts on indiehackers.com",
+		},
+	}
+
+	feeds := make([]types.Source, 0)
+	feeds = append(feeds, arxivCategories...)
+	feeds = append(feeds, opmlSources...)
+	feeds = append(feeds, huggingFace...)
+	feeds = append(feeds, indieHackers...)
 
 	return &FeedFetcher{
-		ExampleFeeds: exampleFeeds,
-		Logger:       logger,
+		Feeds:  feeds,
+		Logger: logger,
 	}, nil
 }
 
@@ -96,7 +127,7 @@ func (f *FeedFetcher) SourceType() string {
 }
 
 func (f *FeedFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
-	for _, source := range f.ExampleFeeds {
+	for _, source := range f.Feeds {
 		if lib.Equals(source.UID(), id) {
 			return source, nil
 		}
@@ -107,7 +138,7 @@ func (f *FeedFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.S
 func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
 	// TODO(sources): Support adding custom feed URL?
 	// Ignore the query, since the set of all available sources is small
-	return f.ExampleFeeds, nil
+	return f.Feeds, nil
 }
 
 func loadOPMLSources(logger *zerolog.Logger) ([]types.Source, error) {
