@@ -114,7 +114,8 @@ func (r *Executor) Initialize() error {
 			since = activities[0].Activity
 		}
 
-		r.executeSourceOnce(source, since)
+		// Do not block the initialization since the result/error reporting is async
+		go r.executeSourceOnce(source, since)
 		r.scheduleSource(source)
 
 		sLogger.Info().Msg("Source initialized")
