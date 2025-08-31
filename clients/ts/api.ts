@@ -214,6 +214,18 @@ export interface Feed {
      * @memberof Feed
      */
     'isPublic': boolean;
+    /**
+     * ID of the user who created and owns the feed. Feed can only be modified by him.
+     * @type {string}
+     * @memberof Feed
+     */
+    'createdBy': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Feed
+     */
+    'createdAt': string;
 }
 /**
  * 

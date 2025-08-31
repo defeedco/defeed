@@ -293,6 +293,8 @@ components:
         - query
         - sourceUids
         - isPublic
+        - createdBy
+        - createdAt
       properties:
         uid:
           type: string
@@ -308,6 +310,12 @@ components:
             type: string
         isPublic:
           type: boolean
+        createdBy:
+          description: "ID of the user who created and owns the feed. Feed can only be modified by him."
+          type: string
+        createdAt:
+          type: string
+          format: date-time
 
     Source:
       type: object

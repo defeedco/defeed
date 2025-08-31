@@ -485,6 +485,8 @@ func serializeFeed(in *feeds.Feed) Feed {
 		Icon:       in.Icon,
 		Query:      in.Query,
 		IsPublic:   in.Public,
+		CreatedBy:  in.UserID,
+		CreatedAt:  in.CreatedAt,
 		SourceUids: serializeSourceUIDs(in.SourceUIDs),
 	}
 }

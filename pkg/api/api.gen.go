@@ -83,6 +83,10 @@ type CreateFeedRequest struct {
 
 // Feed defines model for Feed.
 type Feed struct {
+	CreatedAt time.Time `json:"createdAt"`
+
+	// CreatedBy ID of the user who created and owns the feed. Feed can only be modified by him.
+	CreatedBy  string   `json:"createdBy"`
 	Icon       string   `json:"icon"`
 	IsPublic   bool     `json:"isPublic"`
 	Name       string   `json:"name"`
