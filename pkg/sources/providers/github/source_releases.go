@@ -61,7 +61,7 @@ func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed c
 	s.fetchGithubReleases(ctx, since, feed, errs)
 }
 
-func (s *SourceRelease) Initialize(ctx context.Context, logger *zerolog.Logger) error {
+func (s *SourceRelease) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

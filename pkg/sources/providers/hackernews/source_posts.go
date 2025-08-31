@@ -148,7 +148,7 @@ func (p *Post) CreatedAt() time.Time {
 	return time.Unix(int64(*p.Post.Time), 0)
 }
 
-func (s *SourcePosts) Initialize(ctx context.Context, logger *zerolog.Logger) error {
+func (s *SourcePosts) Initialize(logger *zerolog.Logger) error {
 	var err error
 	s.client, err = gohn.NewClient(nil)
 	if err != nil {

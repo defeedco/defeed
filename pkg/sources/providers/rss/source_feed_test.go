@@ -1,15 +1,13 @@
 package rss
 
 import (
-	"context"
 	"testing"
 
 	"github.com/rs/zerolog"
 )
 
-func TestSourceFeed_Initialize(t *testing.T) {
+func TestSourceFeed_fetchIcon(t *testing.T) {
 	logger := zerolog.Nop()
-	ctx := context.Background()
 
 	tests := []struct {
 		name              string
@@ -34,9 +32,9 @@ func TestSourceFeed_Initialize(t *testing.T) {
 				FeedURL: tt.feedURL,
 			}
 
-			err := source.Initialize(ctx, &logger)
+			err := source.fetchIcon(t.Context(), &logger)
 			if err != nil {
-				t.Errorf("Initialize() error = %v", err)
+				t.Errorf("fetchIcon() error = %v", err)
 				return
 			}
 

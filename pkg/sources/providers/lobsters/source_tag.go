@@ -80,7 +80,7 @@ func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Acti
 	}
 }
 
-func (s *SourceTag) Initialize(ctx context.Context, logger *zerolog.Logger) error {
+func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

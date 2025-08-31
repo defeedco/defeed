@@ -25,7 +25,7 @@ type Source interface {
 	// Icon returns the favicon URL for the source.
 	Icon() string
 	// Initialize initializes the internal state and prepares the logger.
-	Initialize(ctx context.Context, logger *zerolog.Logger) error
+	Initialize(logger *zerolog.Logger) error
 	// Stream performs a one-time fetch of new activities from the source.
 	// Since is the last activity emitted by the source.
 	// Feed is a channel to send activities to. Already seen activities are permitted.

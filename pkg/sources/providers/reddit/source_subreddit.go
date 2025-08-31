@@ -149,7 +149,7 @@ func (p *Post) CreatedAt() time.Time {
 	return p.Post.Created.Time
 }
 
-func (s *SourceSubreddit) Initialize(ctx context.Context, logger *zerolog.Logger) error {
+func (s *SourceSubreddit) Initialize(logger *zerolog.Logger) error {
 	var client *reddit.Client
 	var err error
 

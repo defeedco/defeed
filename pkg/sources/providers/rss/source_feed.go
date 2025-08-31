@@ -90,19 +90,21 @@ func (s *SourceFeed) getWebsiteURL() string {
 	return parsedURL.Scheme + "://" + parsedURL.Host
 }
 
-func (s *SourceFeed) Initialize(ctx context.Context, logger *zerolog.Logger) error {
+func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
 
 	s.logger = logger
 
-	// Prefetch the favicon
+	return nil
+}
+
+func (s *SourceFeed) fetchIcon(ctx context.Context, logger *zerolog.Logger) error {
 	websiteURL := s.getWebsiteURL()
 	if websiteURL != "" {
-		s.IconURL = lib.FetchFaviconURL(ctx, s.logger, websiteURL)
+		s.IconURL = lib.FetchFaviconURL(ctx, logger, websiteURL)
 	}
-
 	return nil
 }
 

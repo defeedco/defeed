@@ -59,7 +59,7 @@ func (s *SourceFeed) Icon() string {
 	return "https://lobste.rs/favicon.ico"
 }
 
-func (s *SourceFeed) Initialize(ctx context.Context, logger *zerolog.Logger) error {
+func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

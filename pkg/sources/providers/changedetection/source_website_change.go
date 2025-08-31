@@ -75,7 +75,7 @@ func (s *SourceWebsiteChange) fetchAndSendNewChanges(ctx context.Context, since 
 	}
 }
 
-func (s *SourceWebsiteChange) Initialize(ctx context.Context, logger *zerolog.Logger) error {
+func (s *SourceWebsiteChange) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
@@ -89,9 +89,6 @@ func (s *SourceWebsiteChange) Initialize(ctx context.Context, logger *zerolog.Lo
 	}
 
 	s.logger = logger
-
-	// Prefetch the favicon
-	s.IconURL = lib.FetchFaviconURL(ctx, s.logger, s.InstanceURL)
 
 	return nil
 }

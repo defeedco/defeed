@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"time"
 
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 
@@ -78,10 +77,6 @@ func (r *Registry) FindByUID(ctx context.Context, uid activitytypes.TypedUID) (t
 		return nil, err
 	}
 
-	if err := r.initializeSource(ctx, source); err != nil {
-		return nil, fmt.Errorf("initialize source: %w", err)
-	}
-
 	return source, nil
 }
 
@@ -119,38 +114,7 @@ func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, er
 		filtered = fuzzyReRank(results, query)
 	}
 
-	r.initializeSources(ctx, filtered)
-
 	return filtered, nil
-}
-
-func (r *Registry) initializeSources(ctx context.Context, sources []types.Source) error {
-	g, gctx := errgroup.WithContext(ctx)
-	g.SetLimit(len(sources))
-
-	for _, source := range sources {
-		g.Go(func() error {
-			if err := r.initializeSource(gctx, source); err != nil {
-				return fmt.Errorf("initialize source: %w", err)
-			}
-			return nil
-		})
-	}
-
-	if err := g.Wait(); err != nil {
-		return fmt.Errorf("initialize sources: %w", err)
-	}
-	return nil
-}
-
-func (r *Registry) initializeSource(ctx context.Context, source types.Source) error {
-	// Keep a minimum timeout to avoid long loading times because of slow favicon fetching.
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-	if err := source.Initialize(ctx, sourceLogger(source, r.logger)); err != nil {
-		return fmt.Errorf("initialize source: %w", err)
-	}
-	return nil
 }
 
 // sourceWithSearchText holds a source and its searchable text for fuzzy matching

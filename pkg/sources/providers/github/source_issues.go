@@ -154,7 +154,7 @@ func (i *Issue) CreatedAt() time.Time {
 	return i.Issue.GetUpdatedAt().Time
 }
 
-func (s *SourceIssues) Initialize(ctx context.Context, logger *zerolog.Logger) error {
+func (s *SourceIssues) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

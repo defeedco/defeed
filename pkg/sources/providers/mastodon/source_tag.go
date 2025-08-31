@@ -57,7 +57,7 @@ func (s *SourceTag) Icon() string {
 	return fmt.Sprintf("%s/packs/assets/favicon-48x48-DMnduFKh.png", s.InstanceURL)
 }
 
-func (s *SourceTag) Initialize(ctx context.Context, logger *zerolog.Logger) error {
+func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"time"
 
 	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/rs/zerolog"
+	"golang.org/x/sync/errgroup"
 )
 
 // Source: https://raw.githubusercontent.com/tuan3w/awesome-tech-rss/refs/heads/main/feeds.opml
@@ -116,6 +118,10 @@ func NewFeedFetcher(logger *zerolog.Logger) (*FeedFetcher, error) {
 	feeds = append(feeds, huggingFace...)
 	feeds = append(feeds, indieHackers...)
 
+	if err := fetchIcons(context.Background(), logger, feeds); err != nil {
+		return nil, fmt.Errorf("initialize feed sources: %w", err)
+	}
+
 	return &FeedFetcher{
 		Feeds:  feeds,
 		Logger: logger,
@@ -188,4 +194,27 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 	}
 
 	return result, nil
+}
+
+func fetchIcons(ctx context.Context, logger *zerolog.Logger, sources []types.Source) error {
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(len(sources))
+
+	for _, source := range sources {
+		g.Go(func() error {
+			ctx, cancel := context.WithTimeout(gctx, 2*time.Second)
+			defer cancel()
+
+			feedSource := source.(*SourceFeed)
+			if err := feedSource.fetchIcon(ctx, logger); err != nil {
+				return fmt.Errorf("fetch icon for feed source: %w", err)
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("fetch icons for feed sources: %w", err)
+	}
+	return nil
 }

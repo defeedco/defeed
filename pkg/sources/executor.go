@@ -91,10 +91,9 @@ func (r *Executor) Initialize() error {
 
 	r.logger.Info().Int("count", len(sources)).Msg("Initializing sources")
 
-	ctx := context.Background()
 	for _, source := range sources {
 		sLogger := sourceLogger(source, r.logger)
-		if err := source.Initialize(ctx, sLogger); err != nil {
+		if err := source.Initialize(sLogger); err != nil {
 			sLogger.Error().
 				Err(err).
 				Msg("Failed to initialize source")
@@ -203,13 +202,16 @@ func (r *Executor) getSourceTicker(source sourcetypes.Source) *time.Ticker {
 }
 
 // Add starts processing activities from the source.
-// Executor expects the source to be already initialized.
 func (r *Executor) Add(source sourcetypes.Source) error {
 	existing, _ := r.activeSourceRepo.GetByID(source.UID().String())
 
 	if existing != nil {
 		// source already exists, we don't need to do anything
 		return nil
+	}
+
+	if err := source.Initialize(sourceLogger(source, r.logger)); err != nil {
+		return fmt.Errorf("initialize source: %w", err)
 	}
 
 	err := r.activeSourceRepo.Add(source)

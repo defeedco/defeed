@@ -113,6 +113,7 @@
 			<outline text="Machine Learning" title="Machine Learning" type="rss" xmlUrl="http://www.reddit.com/r/MachineLearning/.rss" />
 			<outline text="Yannic Kilcher" title="Yannic Kilcher" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCCTn7xBfew" />
 			<outline text="Two Minute Papers" title="Two Minute Papers" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7l4upoX8nvctg" />
+			<outline text="Google AI news" title="Google AI news" type="rss" xmlUrl="https://blog.google/technology/ai/rss" />
 		</outline>
 		<outline text="Design" title="Design">
 			<outline text="UX Planet" title="UX Planet" type="rss" xmlUrl="https://uxplanet.org/feed" />
