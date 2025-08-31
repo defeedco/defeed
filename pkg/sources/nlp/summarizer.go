@@ -15,7 +15,7 @@ import (
 )
 
 //go:embed summarize-prompt.md
-var systemPrompt string
+var summarizeSinglePrompt string
 
 type ActivitySummarizer struct {
 	model llms.Model
@@ -44,7 +44,7 @@ func (llm *ActivitySummarizer) Summarize(
 	prompt := promptBuilder{}
 
 	// static system prompt
-	prompt.WriteString("SystemPrompt", systemPrompt)
+	prompt.WriteString("SystemPrompt", summarizeSinglePrompt)
 
 	parser, err := outputparser.NewDefined(completionResponse{})
 	if err != nil {
