@@ -25,7 +25,10 @@ You will receive a JSON object:
    • Reader is a field expert: keep technical terms intact.
    • No filler, ads, or greetings.
 
-3. **Full Summary (Expanded)**
+3. **Language**
+   • If the content is in any other language than English, translate it to English in the output.
+
+4. **Full Summary (Expanded)**
    • Format: Markdown, ≤120 words.
    • Use inline bold for names, metrics, dates; backticks for identifiers.
    • Links: Avoid displaying raw URLs. Instead, hyperlink relevant text (e.g., [Anthropic’s research](https://...)). Show raw links only if no suitable anchor text exists.
@@ -42,11 +45,11 @@ You will receive a JSON object:
 1 line on significance/impact
 ```
 
-4. **Short Summary**
+5. **Short Summary**
    • ≤30 words, plain text, no Markdown.
    • Capture the essence—something a colleague would repeat aloud.
 
-5. **Handling Input Markdown**
+6. **Handling Input Markdown**
    • Strip unnecessary formatting.
    • For code/math, describe purpose concisely.
 
