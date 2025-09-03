@@ -275,12 +275,16 @@ func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy
 		return nil, errors.New("feed not found")
 	}
 
-	if userID == "" && queryOverride != "" {
-		return nil, ErrAuthUsersOnly
+	query := feed.Query
+	if queryOverride != "" {
+		if userID == "" {
+			return nil, ErrAuthUsersOnly
+		}
+		query = queryOverride
 	}
 
 	// TODO(optimisation): Cache query embeddings
-	acts, err := r.sourceExecutor.Search(ctx, feed.Query, feed.SourceUIDs, 0.0, limit, sortBy, period)
+	acts, err := r.sourceExecutor.Search(ctx, query, feed.SourceUIDs, 0.0, limit, sortBy, period)
 	if err != nil {
 		return nil, fmt.Errorf("search activities: %w", err)
 	}
