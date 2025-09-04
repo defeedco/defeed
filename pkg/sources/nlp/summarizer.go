@@ -211,16 +211,16 @@ Guidelines:
 2. Focus on the most important insights and trends for each topic
 3. Be direct and informative in your summaries
 
-Topic name: {topic_name}
-Topic description: {topic_description}
-Activities: {activities}
+Topic name: {{.topic_name}}
+Topic description: {{.topic_description}}
+Topic activities: {{.topic_activities}}
 
 Activity summary:
-`, []string{"output_format", "topic_name", "topic_description", "activities"})
+`, []string{"topic_name", "topic_description", "topic_activities"})
 
-	inputActs := make([]summarizeActivityInput, len(activities))
-	for i, activity := range activities {
-		inputActs[i] = summarizeActivityInput{
+	activitiesInput := multiActivityInput{}
+	for _, activity := range activities {
+		activitiesInput.Activities = append(activitiesInput.Activities, summarizeActivityInput{
 			ID:        activity.Activity.UID().String(),
 			Title:     activity.Activity.Title(),
 			Body:      activity.Activity.Body(),
@@ -230,13 +230,18 @@ Activity summary:
 			// TODO(bart): Above is just a test, start using below code once the feed summary is removed to save costs.
 			//Title:   activity.Activity.Title(),
 			//Summary: activity.Summary.ShortSummary,
-		}
+		})
+	}
+
+	activitiesJSON, err := json.MarshalIndent(activitiesInput, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("marshal activities: %w", err)
 	}
 
 	prompt, err := template.Format(map[string]any{
 		"topic_name":        topic.Topic,
 		"topic_description": topic.Description,
-		"activities":        inputActs,
+		"topic_activities":  string(activitiesJSON),
 	})
 	if err != nil {
 		return "", fmt.Errorf("format prompt: %w", err)
