@@ -426,10 +426,6 @@ func (r *Registry) searchByTopicQueryGroups(
 		return acts[i].Similarity > acts[j].Similarity
 	})
 
-	if limit > 0 && len(acts) > limit {
-		acts = acts[:limit]
-	}
-
 	return acts, activityToTopic, nil
 }
 
