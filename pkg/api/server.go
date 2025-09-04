@@ -71,7 +71,7 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		return nil, fmt.Errorf("create embedder model: %w", err)
 	}
 
-	summarizer := nlp.NewSummarizer(summarizerModel)
+	summarizer := nlp.NewSummarizer(summarizerModel, logger)
 	embedder := nlp.NewEmbedder(embedderModel)
 
 	executor := sources.NewExecutor(

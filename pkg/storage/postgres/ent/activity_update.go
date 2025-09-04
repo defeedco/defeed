@@ -203,6 +203,27 @@ func (au *ActivityUpdate) ClearEmbedding() *ActivityUpdate {
 	return au
 }
 
+// SetUpdateCount sets the "update_count" field.
+func (au *ActivityUpdate) SetUpdateCount(i int) *ActivityUpdate {
+	au.mutation.ResetUpdateCount()
+	au.mutation.SetUpdateCount(i)
+	return au
+}
+
+// SetNillableUpdateCount sets the "update_count" field if the given value is not nil.
+func (au *ActivityUpdate) SetNillableUpdateCount(i *int) *ActivityUpdate {
+	if i != nil {
+		au.SetUpdateCount(*i)
+	}
+	return au
+}
+
+// AddUpdateCount adds i to the "update_count" field.
+func (au *ActivityUpdate) AddUpdateCount(i int) *ActivityUpdate {
+	au.mutation.AddUpdateCount(i)
+	return au
+}
+
 // Mutation returns the ActivityMutation object of the builder.
 func (au *ActivityUpdate) Mutation() *ActivityMutation {
 	return au.mutation
@@ -282,6 +303,12 @@ func (au *ActivityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if au.mutation.EmbeddingCleared() {
 		_spec.ClearField(activity.FieldEmbedding, field.TypeOther)
+	}
+	if value, ok := au.mutation.UpdateCount(); ok {
+		_spec.SetField(activity.FieldUpdateCount, field.TypeInt, value)
+	}
+	if value, ok := au.mutation.AddedUpdateCount(); ok {
+		_spec.AddField(activity.FieldUpdateCount, field.TypeInt, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -477,6 +504,27 @@ func (auo *ActivityUpdateOne) ClearEmbedding() *ActivityUpdateOne {
 	return auo
 }
 
+// SetUpdateCount sets the "update_count" field.
+func (auo *ActivityUpdateOne) SetUpdateCount(i int) *ActivityUpdateOne {
+	auo.mutation.ResetUpdateCount()
+	auo.mutation.SetUpdateCount(i)
+	return auo
+}
+
+// SetNillableUpdateCount sets the "update_count" field if the given value is not nil.
+func (auo *ActivityUpdateOne) SetNillableUpdateCount(i *int) *ActivityUpdateOne {
+	if i != nil {
+		auo.SetUpdateCount(*i)
+	}
+	return auo
+}
+
+// AddUpdateCount adds i to the "update_count" field.
+func (auo *ActivityUpdateOne) AddUpdateCount(i int) *ActivityUpdateOne {
+	auo.mutation.AddUpdateCount(i)
+	return auo
+}
+
 // Mutation returns the ActivityMutation object of the builder.
 func (auo *ActivityUpdateOne) Mutation() *ActivityMutation {
 	return auo.mutation
@@ -586,6 +634,12 @@ func (auo *ActivityUpdateOne) sqlSave(ctx context.Context) (_node *Activity, err
 	}
 	if auo.mutation.EmbeddingCleared() {
 		_spec.ClearField(activity.FieldEmbedding, field.TypeOther)
+	}
+	if value, ok := auo.mutation.UpdateCount(); ok {
+		_spec.SetField(activity.FieldUpdateCount, field.TypeInt, value)
+	}
+	if value, ok := auo.mutation.AddedUpdateCount(); ok {
+		_spec.AddField(activity.FieldUpdateCount, field.TypeInt, value)
 	}
 	_node = &Activity{config: auo.config}
 	_spec.Assign = _node.assignValues

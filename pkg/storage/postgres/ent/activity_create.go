@@ -104,6 +104,20 @@ func (ac *ActivityCreate) SetNillableEmbedding(pg *pgvector.Vector) *ActivityCre
 	return ac
 }
 
+// SetUpdateCount sets the "update_count" field.
+func (ac *ActivityCreate) SetUpdateCount(i int) *ActivityCreate {
+	ac.mutation.SetUpdateCount(i)
+	return ac
+}
+
+// SetNillableUpdateCount sets the "update_count" field if the given value is not nil.
+func (ac *ActivityCreate) SetNillableUpdateCount(i *int) *ActivityCreate {
+	if i != nil {
+		ac.SetUpdateCount(*i)
+	}
+	return ac
+}
+
 // SetID sets the "id" field.
 func (ac *ActivityCreate) SetID(s string) *ActivityCreate {
 	ac.mutation.SetID(s)
@@ -117,6 +131,7 @@ func (ac *ActivityCreate) Mutation() *ActivityMutation {
 
 // Save creates the Activity in the database.
 func (ac *ActivityCreate) Save(ctx context.Context) (*Activity, error) {
+	ac.defaults()
 	return withHooks(ctx, ac.sqlSave, ac.mutation, ac.hooks)
 }
 
@@ -139,6 +154,14 @@ func (ac *ActivityCreate) Exec(ctx context.Context) error {
 func (ac *ActivityCreate) ExecX(ctx context.Context) {
 	if err := ac.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (ac *ActivityCreate) defaults() {
+	if _, ok := ac.mutation.UpdateCount(); !ok {
+		v := activity.DefaultUpdateCount
+		ac.mutation.SetUpdateCount(v)
 	}
 }
 
@@ -176,6 +199,9 @@ func (ac *ActivityCreate) check() error {
 	}
 	if _, ok := ac.mutation.RawJSON(); !ok {
 		return &ValidationError{Name: "raw_json", err: errors.New(`ent: missing required field "Activity.raw_json"`)}
+	}
+	if _, ok := ac.mutation.UpdateCount(); !ok {
+		return &ValidationError{Name: "update_count", err: errors.New(`ent: missing required field "Activity.update_count"`)}
 	}
 	return nil
 }
@@ -260,6 +286,10 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 	if value, ok := ac.mutation.Embedding(); ok {
 		_spec.SetField(activity.FieldEmbedding, field.TypeOther, value)
 		_node.Embedding = &value
+	}
+	if value, ok := ac.mutation.UpdateCount(); ok {
+		_spec.SetField(activity.FieldUpdateCount, field.TypeInt, value)
+		_node.UpdateCount = value
 	}
 	return _node, _spec
 }
@@ -460,6 +490,24 @@ func (u *ActivityUpsert) UpdateEmbedding() *ActivityUpsert {
 // ClearEmbedding clears the value of the "embedding" field.
 func (u *ActivityUpsert) ClearEmbedding() *ActivityUpsert {
 	u.SetNull(activity.FieldEmbedding)
+	return u
+}
+
+// SetUpdateCount sets the "update_count" field.
+func (u *ActivityUpsert) SetUpdateCount(v int) *ActivityUpsert {
+	u.Set(activity.FieldUpdateCount, v)
+	return u
+}
+
+// UpdateUpdateCount sets the "update_count" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateUpdateCount() *ActivityUpsert {
+	u.SetExcluded(activity.FieldUpdateCount)
+	return u
+}
+
+// AddUpdateCount adds v to the "update_count" field.
+func (u *ActivityUpsert) AddUpdateCount(v int) *ActivityUpsert {
+	u.Add(activity.FieldUpdateCount, v)
 	return u
 }
 
@@ -686,6 +734,27 @@ func (u *ActivityUpsertOne) ClearEmbedding() *ActivityUpsertOne {
 	})
 }
 
+// SetUpdateCount sets the "update_count" field.
+func (u *ActivityUpsertOne) SetUpdateCount(v int) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetUpdateCount(v)
+	})
+}
+
+// AddUpdateCount adds v to the "update_count" field.
+func (u *ActivityUpsertOne) AddUpdateCount(v int) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.AddUpdateCount(v)
+	})
+}
+
+// UpdateUpdateCount sets the "update_count" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateUpdateCount() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateUpdateCount()
+	})
+}
+
 // Exec executes the query.
 func (u *ActivityUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -743,6 +812,7 @@ func (acb *ActivityCreateBulk) Save(ctx context.Context) ([]*Activity, error) {
 	for i := range acb.builders {
 		func(i int, root context.Context) {
 			builder := acb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ActivityMutation)
 				if !ok {
@@ -1072,6 +1142,27 @@ func (u *ActivityUpsertBulk) UpdateEmbedding() *ActivityUpsertBulk {
 func (u *ActivityUpsertBulk) ClearEmbedding() *ActivityUpsertBulk {
 	return u.Update(func(s *ActivityUpsert) {
 		s.ClearEmbedding()
+	})
+}
+
+// SetUpdateCount sets the "update_count" field.
+func (u *ActivityUpsertBulk) SetUpdateCount(v int) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetUpdateCount(v)
+	})
+}
+
+// AddUpdateCount adds v to the "update_count" field.
+func (u *ActivityUpsertBulk) AddUpdateCount(v int) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.AddUpdateCount(v)
+	})
+}
+
+// UpdateUpdateCount sets the "update_count" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateUpdateCount() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateUpdateCount()
 	})
 }
 

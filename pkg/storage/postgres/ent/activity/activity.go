@@ -35,6 +35,8 @@ const (
 	FieldRawJSON = "raw_json"
 	// FieldEmbedding holds the string denoting the embedding field in the database.
 	FieldEmbedding = "embedding"
+	// FieldUpdateCount holds the string denoting the update_count field in the database.
+	FieldUpdateCount = "update_count"
 	// Table holds the table name of the activity in the database.
 	Table = "activities"
 )
@@ -54,6 +56,7 @@ var Columns = []string{
 	FieldFullSummary,
 	FieldRawJSON,
 	FieldEmbedding,
+	FieldUpdateCount,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -65,6 +68,11 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultUpdateCount holds the default value on creation for the "update_count" field.
+	DefaultUpdateCount int
+)
 
 // OrderOption defines the ordering options for the Activity queries.
 type OrderOption func(*sql.Selector)
@@ -132,4 +140,9 @@ func ByRawJSON(opts ...sql.OrderTermOption) OrderOption {
 // ByEmbedding orders the results by the embedding field.
 func ByEmbedding(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmbedding, opts...).ToFunc()
+}
+
+// ByUpdateCount orders the results by the update_count field.
+func ByUpdateCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdateCount, opts...).ToFunc()
 }

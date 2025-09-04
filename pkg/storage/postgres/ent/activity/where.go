@@ -125,6 +125,11 @@ func Embedding(v pgvector.Vector) predicate.Activity {
 	return predicate.Activity(sql.FieldEQ(FieldEmbedding, v))
 }
 
+// UpdateCount applies equality check predicate on the "update_count" field. It's identical to UpdateCountEQ.
+func UpdateCount(v int) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldUpdateCount, v))
+}
+
 // UIDEQ applies the EQ predicate on the "uid" field.
 func UIDEQ(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldEQ(FieldUID, v))
@@ -863,6 +868,46 @@ func EmbeddingIsNil() predicate.Activity {
 // EmbeddingNotNil applies the NotNil predicate on the "embedding" field.
 func EmbeddingNotNil() predicate.Activity {
 	return predicate.Activity(sql.FieldNotNull(FieldEmbedding))
+}
+
+// UpdateCountEQ applies the EQ predicate on the "update_count" field.
+func UpdateCountEQ(v int) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldUpdateCount, v))
+}
+
+// UpdateCountNEQ applies the NEQ predicate on the "update_count" field.
+func UpdateCountNEQ(v int) predicate.Activity {
+	return predicate.Activity(sql.FieldNEQ(FieldUpdateCount, v))
+}
+
+// UpdateCountIn applies the In predicate on the "update_count" field.
+func UpdateCountIn(vs ...int) predicate.Activity {
+	return predicate.Activity(sql.FieldIn(FieldUpdateCount, vs...))
+}
+
+// UpdateCountNotIn applies the NotIn predicate on the "update_count" field.
+func UpdateCountNotIn(vs ...int) predicate.Activity {
+	return predicate.Activity(sql.FieldNotIn(FieldUpdateCount, vs...))
+}
+
+// UpdateCountGT applies the GT predicate on the "update_count" field.
+func UpdateCountGT(v int) predicate.Activity {
+	return predicate.Activity(sql.FieldGT(FieldUpdateCount, v))
+}
+
+// UpdateCountGTE applies the GTE predicate on the "update_count" field.
+func UpdateCountGTE(v int) predicate.Activity {
+	return predicate.Activity(sql.FieldGTE(FieldUpdateCount, v))
+}
+
+// UpdateCountLT applies the LT predicate on the "update_count" field.
+func UpdateCountLT(v int) predicate.Activity {
+	return predicate.Activity(sql.FieldLT(FieldUpdateCount, v))
+}
+
+// UpdateCountLTE applies the LTE predicate on the "update_count" field.
+func UpdateCountLTE(v int) predicate.Activity {
+	return predicate.Activity(sql.FieldLTE(FieldUpdateCount, v))
 }
 
 // And groups predicates with the AND operator between them.

@@ -25,6 +25,15 @@ func NewActivityRepository(db *DB) *ActivityRepository {
 func (r *ActivityRepository) Upsert(activity *types.DecoratedActivity) error {
 	ctx := context.Background()
 
+	// Get existing update count if activity exists
+	existingUpdateCount, err := r.db.Client().Activity.Query().
+		Where(entactivity.ID(activity.Activity.UID().String())).
+		Select(entactivity.FieldUpdateCount).
+		Int(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		return fmt.Errorf("get existing update count: %w", err)
+	}
+
 	rawJson, err := activity.Activity.MarshalJSON()
 	if err != nil {
 		return fmt.Errorf("marshal activity: %w", err)
@@ -44,6 +53,7 @@ func (r *ActivityRepository) Upsert(activity *types.DecoratedActivity) error {
 		SetShortSummary(activity.Summary.ShortSummary).
 		SetFullSummary(activity.Summary.FullSummary).
 		SetEmbedding(pgvector.NewVector(activity.Embedding)).
+		SetUpdateCount(existingUpdateCount + 1).
 		// https://github.com/ent/ent/issues/2494#issuecomment-1182015427
 		OnConflictColumns(entactivity.FieldID).
 		UpdateNewValues().

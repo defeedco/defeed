@@ -36,25 +36,27 @@ const (
 // ActivityMutation represents an operation that mutates the Activity nodes in the graph.
 type ActivityMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *string
-	uid           *string
-	source_uid    *string
-	source_type   *string
-	title         *string
-	body          *string
-	url           *string
-	image_url     *string
-	created_at    *time.Time
-	short_summary *string
-	full_summary  *string
-	raw_json      *string
-	embedding     *pgvector.Vector
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Activity, error)
-	predicates    []predicate.Activity
+	op              Op
+	typ             string
+	id              *string
+	uid             *string
+	source_uid      *string
+	source_type     *string
+	title           *string
+	body            *string
+	url             *string
+	image_url       *string
+	created_at      *time.Time
+	short_summary   *string
+	full_summary    *string
+	raw_json        *string
+	embedding       *pgvector.Vector
+	update_count    *int
+	addupdate_count *int
+	clearedFields   map[string]struct{}
+	done            bool
+	oldValue        func(context.Context) (*Activity, error)
+	predicates      []predicate.Activity
 }
 
 var _ ent.Mutation = (*ActivityMutation)(nil)
@@ -606,6 +608,62 @@ func (m *ActivityMutation) ResetEmbedding() {
 	delete(m.clearedFields, activity.FieldEmbedding)
 }
 
+// SetUpdateCount sets the "update_count" field.
+func (m *ActivityMutation) SetUpdateCount(i int) {
+	m.update_count = &i
+	m.addupdate_count = nil
+}
+
+// UpdateCount returns the value of the "update_count" field in the mutation.
+func (m *ActivityMutation) UpdateCount() (r int, exists bool) {
+	v := m.update_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateCount returns the old "update_count" field's value of the Activity entity.
+// If the Activity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ActivityMutation) OldUpdateCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateCount: %w", err)
+	}
+	return oldValue.UpdateCount, nil
+}
+
+// AddUpdateCount adds i to the "update_count" field.
+func (m *ActivityMutation) AddUpdateCount(i int) {
+	if m.addupdate_count != nil {
+		*m.addupdate_count += i
+	} else {
+		m.addupdate_count = &i
+	}
+}
+
+// AddedUpdateCount returns the value that was added to the "update_count" field in this mutation.
+func (m *ActivityMutation) AddedUpdateCount() (r int, exists bool) {
+	v := m.addupdate_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUpdateCount resets all changes to the "update_count" field.
+func (m *ActivityMutation) ResetUpdateCount() {
+	m.update_count = nil
+	m.addupdate_count = nil
+}
+
 // Where appends a list predicates to the ActivityMutation builder.
 func (m *ActivityMutation) Where(ps ...predicate.Activity) {
 	m.predicates = append(m.predicates, ps...)
@@ -640,7 +698,7 @@ func (m *ActivityMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ActivityMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 13)
 	if m.uid != nil {
 		fields = append(fields, activity.FieldUID)
 	}
@@ -677,6 +735,9 @@ func (m *ActivityMutation) Fields() []string {
 	if m.embedding != nil {
 		fields = append(fields, activity.FieldEmbedding)
 	}
+	if m.update_count != nil {
+		fields = append(fields, activity.FieldUpdateCount)
+	}
 	return fields
 }
 
@@ -709,6 +770,8 @@ func (m *ActivityMutation) Field(name string) (ent.Value, bool) {
 		return m.RawJSON()
 	case activity.FieldEmbedding:
 		return m.Embedding()
+	case activity.FieldUpdateCount:
+		return m.UpdateCount()
 	}
 	return nil, false
 }
@@ -742,6 +805,8 @@ func (m *ActivityMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldRawJSON(ctx)
 	case activity.FieldEmbedding:
 		return m.OldEmbedding(ctx)
+	case activity.FieldUpdateCount:
+		return m.OldUpdateCount(ctx)
 	}
 	return nil, fmt.Errorf("unknown Activity field %s", name)
 }
@@ -835,6 +900,13 @@ func (m *ActivityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetEmbedding(v)
 		return nil
+	case activity.FieldUpdateCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateCount(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Activity field %s", name)
 }
@@ -842,13 +914,21 @@ func (m *ActivityMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *ActivityMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addupdate_count != nil {
+		fields = append(fields, activity.FieldUpdateCount)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *ActivityMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case activity.FieldUpdateCount:
+		return m.AddedUpdateCount()
+	}
 	return nil, false
 }
 
@@ -857,6 +937,13 @@ func (m *ActivityMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ActivityMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case activity.FieldUpdateCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUpdateCount(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Activity numeric field %s", name)
 }
@@ -928,6 +1015,9 @@ func (m *ActivityMutation) ResetField(name string) error {
 		return nil
 	case activity.FieldEmbedding:
 		m.ResetEmbedding()
+		return nil
+	case activity.FieldUpdateCount:
+		m.ResetUpdateCount()
 		return nil
 	}
 	return fmt.Errorf("unknown Activity field %s", name)

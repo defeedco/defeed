@@ -32,6 +32,9 @@ func (Activity) Fields() []ent.Field {
 			}).
 			Nillable().
 			Optional(),
+		// Internal field for monitoring purposes
+		field.Int("update_count").
+			Default(0),
 	}
 }
 

@@ -23,6 +23,7 @@ var (
 		{Name: "full_summary", Type: field.TypeString},
 		{Name: "raw_json", Type: field.TypeString},
 		{Name: "embedding", Type: field.TypeOther, Nullable: true, SchemaType: map[string]string{"postgres": "vector(3072)"}},
+		{Name: "update_count", Type: field.TypeInt, Default: 0},
 	}
 	// ActivitiesTable holds the schema information for the "activities" table.
 	ActivitiesTable = &schema.Table{

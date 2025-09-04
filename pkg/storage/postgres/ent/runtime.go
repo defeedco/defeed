@@ -2,8 +2,19 @@
 
 package ent
 
+import (
+	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
+	"github.com/glanceapp/glance/pkg/storage/postgres/ent/schema"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	activityFields := schema.Activity{}.Fields()
+	_ = activityFields
+	// activityDescUpdateCount is the schema descriptor for update_count field.
+	activityDescUpdateCount := activityFields[13].Descriptor()
+	// activity.DefaultUpdateCount holds the default value on creation for the update_count field.
+	activity.DefaultUpdateCount = activityDescUpdateCount.Default.(int)
 }
