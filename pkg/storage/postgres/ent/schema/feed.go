@@ -3,7 +3,6 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
-	activities "github.com/glanceapp/glance/pkg/sources/activities/types"
 )
 
 type Feed struct {
@@ -21,7 +20,6 @@ func (Feed) Fields() []ent.Field {
 		field.JSON("source_uids", []string{}),
 		field.Time("created_at"),
 		field.Time("updated_at"),
-		field.JSON("summaries", map[string]activities.ActivitiesSummary{}).Optional(),
 	}
 }
 

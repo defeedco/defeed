@@ -6,14 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/lib"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"io"
 	"net/http"
 	"slices"
 	"strings"
-	"time"
-
-	"github.com/glanceapp/glance/pkg/lib"
-	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
 	"github.com/glanceapp/glance/pkg/sources/providers/github"
@@ -74,7 +72,7 @@ func NewServer(logger *zerolog.Logger, apiConfig *Config, feedsConfig *feeds.Con
 
 	summarizer := nlp.NewSummarizer(summarizerModel, logger)
 	embedder := nlp.NewEmbedder(embedderModel)
-	queryRewriter := nlp.NewQueryRewriter(summarizerModel)
+	queryRewriter := nlp.NewQueryRewriter(summarizerModel, logger)
 
 	executor := sources.NewExecutor(
 		logger,
@@ -394,30 +392,6 @@ func (s *Server) DeleteOwnFeed(w http.ResponseWriter, r *http.Request, uid strin
 	s.serializeRes(w, map[string]string{"message": "Feed deleted successfully"})
 }
 
-func (s *Server) GetFeedSummary(w http.ResponseWriter, r *http.Request, feedID string, params GetFeedSummaryParams) {
-	userID := r.Context().Value(userIDContextKey).(string)
-
-	var queryOverride string
-	if params.Query != nil {
-		queryOverride = *params.Query
-	}
-
-	period := deserializePeriod(params.Period)
-
-	feedSummary, err := s.feedRegistry.Summary(r.Context(), feedID, userID, queryOverride, period)
-	if err != nil {
-		if errors.Is(err, feeds.ErrInsufficientActivity) {
-			s.statusCode(w, http.StatusAccepted)
-			return
-		}
-
-		s.internalError(w, err, "generate feed summary")
-		return
-	}
-
-	s.serializeRes(w, serializeFeedSummary(feedSummary))
-}
-
 func deserializeReq[Req any](r *http.Request, req *Req) error {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
@@ -463,22 +437,6 @@ func (s *Server) badRequest(w http.ResponseWriter, err error, msg string) {
 
 func (s *Server) statusCode(w http.ResponseWriter, code int) {
 	w.WriteHeader(code)
-}
-
-func serializeFeedSummary(in *activitytypes.ActivitiesSummary) FeedSummary {
-	highlights := make([]FeedHighlight, 0, len(in.Highlights))
-	for _, h := range in.Highlights {
-		highlights = append(highlights, FeedHighlight{
-			Content:           h.Content,
-			SourceActivityIds: h.SourceActivityIDs,
-		})
-	}
-
-	return FeedSummary{
-		Overview:   in.Overview,
-		Highlights: highlights,
-		CreatedAt:  in.CreatedAt.Format(time.RFC3339),
-	}
 }
 
 func serializeFeeds(in []*feeds.Feed) []Feed {

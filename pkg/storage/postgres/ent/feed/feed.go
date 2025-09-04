@@ -27,8 +27,6 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// FieldSummaries holds the string denoting the summaries field in the database.
-	FieldSummaries = "summaries"
 	// Table holds the table name of the feed in the database.
 	Table = "feeds"
 )
@@ -44,7 +42,6 @@ var Columns = []string{
 	FieldSourceUids,
 	FieldCreatedAt,
 	FieldUpdatedAt,
-	FieldSummaries,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

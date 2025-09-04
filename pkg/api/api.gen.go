@@ -116,26 +116,6 @@ type Feed struct {
 	Uid        string   `json:"uid"`
 }
 
-// FeedHighlight defines model for FeedHighlight.
-type FeedHighlight struct {
-	// Content A concise highlight summarizing a key point
-	Content string `json:"content"`
-
-	// SourceActivityIds List of activity IDs that contributed to this highlight
-	SourceActivityIds []string `json:"sourceActivityIds"`
-}
-
-// FeedSummary defines model for FeedSummary.
-type FeedSummary struct {
-	CreatedAt string `json:"createdAt"`
-
-	// Highlights List of key highlights extracted from the activities
-	Highlights []FeedHighlight `json:"highlights"`
-
-	// Overview A concise one-paragraph overview of the overall direction and themes
-	Overview string `json:"overview"`
-}
-
 // Source defines model for Source.
 type Source struct {
 	Description string     `json:"description"`
@@ -167,15 +147,6 @@ type ListFeedActivitiesParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
-// GetFeedSummaryParams defines parameters for GetFeedSummary.
-type GetFeedSummaryParams struct {
-	// Period Time period to filter activities from. Defaults to 'all' for all time.
-	Period *ActivityPeriod `form:"period,omitempty" json:"period,omitempty"`
-
-	// Query Filter query. Authenticated users can override the default feed query.
-	Query *string `form:"query,omitempty" json:"query,omitempty"`
-}
-
 // ListSourcesParams defines parameters for ListSources.
 type ListSourcesParams struct {
 	// Query Filter sources by name or description.
@@ -205,9 +176,6 @@ type ServerInterface interface {
 	// List activities for a feed
 	// (GET /feeds/{uid}/activities)
 	ListFeedActivities(w http.ResponseWriter, r *http.Request, uid string, params ListFeedActivitiesParams)
-	// Generate an executive summary of multiple activities
-	// (GET /feeds/{uid}/summary)
-	GetFeedSummary(w http.ResponseWriter, r *http.Request, uid string, params GetFeedSummaryParams)
 	// List available sources
 	// (GET /sources)
 	ListSources(w http.ResponseWriter, r *http.Request, params ListSourcesParams)
@@ -384,56 +352,6 @@ func (siw *ServerInterfaceWrapper) ListFeedActivities(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListFeedActivities(w, r, uid, params)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// GetFeedSummary operation middleware
-func (siw *ServerInterfaceWrapper) GetFeedSummary(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// ------------- Path parameter "uid" -------------
-	var uid string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "uid", r.PathValue("uid"), &uid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uid", Err: err})
-		return
-	}
-
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
-
-	r = r.WithContext(ctx)
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetFeedSummaryParams
-
-	// ------------- Optional query parameter "period" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "period", r.URL.Query(), &params.Period)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "period", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "query" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetFeedSummary(w, r, uid, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -632,7 +550,6 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("DELETE "+options.BaseURL+"/feeds/{uid}", wrapper.DeleteOwnFeed)
 	m.HandleFunc("PUT "+options.BaseURL+"/feeds/{uid}", wrapper.UpdateOwnFeed)
 	m.HandleFunc("GET "+options.BaseURL+"/feeds/{uid}/activities", wrapper.ListFeedActivities)
-	m.HandleFunc("GET "+options.BaseURL+"/feeds/{uid}/summary", wrapper.GetFeedSummary)
 	m.HandleFunc("GET "+options.BaseURL+"/sources", wrapper.ListSources)
 	m.HandleFunc("GET "+options.BaseURL+"/sources/{uid}", wrapper.GetSource)
 

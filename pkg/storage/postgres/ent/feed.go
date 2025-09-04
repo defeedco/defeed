@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 )
 
@@ -34,9 +33,7 @@ type Feed struct {
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Summaries holds the value of the "summaries" field.
-	Summaries    map[string]types.ActivitiesSummary `json:"summaries,omitempty"`
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -45,7 +42,7 @@ func (*Feed) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case feed.FieldSourceUids, feed.FieldSummaries:
+		case feed.FieldSourceUids:
 			values[i] = new([]byte)
 		case feed.FieldPublic:
 			values[i] = new(sql.NullBool)
@@ -124,14 +121,6 @@ func (f *Feed) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				f.UpdatedAt = value.Time
 			}
-		case feed.FieldSummaries:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field summaries", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &f.Summaries); err != nil {
-					return fmt.Errorf("unmarshal field summaries: %w", err)
-				}
-			}
 		default:
 			f.selectValues.Set(columns[i], values[i])
 		}
@@ -191,9 +180,6 @@ func (f *Feed) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(f.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("summaries=")
-	builder.WriteString(fmt.Sprintf("%v", f.Summaries))
 	builder.WriteByte(')')
 	return builder.String()
 }

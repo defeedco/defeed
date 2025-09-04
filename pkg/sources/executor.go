@@ -50,8 +50,7 @@ type activityStore interface {
 }
 
 type summarizer interface {
-	Summarize(ctx context.Context, activity types.Activity) (*types.ActivitySummary, error)
-	SummarizeMany(ctx context.Context, activities []*types.DecoratedActivity, query string) (*types.ActivitiesSummary, error)
+	SummarizeActivity(ctx context.Context, activity types.Activity) (*types.ActivitySummary, error)
 }
 
 type embedder interface {
@@ -269,7 +268,7 @@ func (r *Executor) startWorkers(nWorkers int) {
 
 					actLogger.Debug().Msg("Processing activity")
 
-					summary, err := r.summarizer.Summarize(context.Background(), act)
+					summary, err := r.summarizer.SummarizeActivity(context.Background(), act)
 					if err != nil {
 						actLogger.Error().
 							Err(err).

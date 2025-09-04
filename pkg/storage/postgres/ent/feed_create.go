@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 )
 
@@ -69,12 +68,6 @@ func (fc *FeedCreate) SetCreatedAt(t time.Time) *FeedCreate {
 // SetUpdatedAt sets the "updated_at" field.
 func (fc *FeedCreate) SetUpdatedAt(t time.Time) *FeedCreate {
 	fc.mutation.SetUpdatedAt(t)
-	return fc
-}
-
-// SetSummaries sets the "summaries" field.
-func (fc *FeedCreate) SetSummaries(ms map[string]types.ActivitiesSummary) *FeedCreate {
-	fc.mutation.SetSummaries(ms)
 	return fc
 }
 
@@ -209,10 +202,6 @@ func (fc *FeedCreate) createSpec() (*Feed, *sqlgraph.CreateSpec) {
 	if value, ok := fc.mutation.UpdatedAt(); ok {
 		_spec.SetField(feed.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if value, ok := fc.mutation.Summaries(); ok {
-		_spec.SetField(feed.FieldSummaries, field.TypeJSON, value)
-		_node.Summaries = value
 	}
 	return _node, _spec
 }
@@ -359,24 +348,6 @@ func (u *FeedUpsert) SetUpdatedAt(v time.Time) *FeedUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *FeedUpsert) UpdateUpdatedAt() *FeedUpsert {
 	u.SetExcluded(feed.FieldUpdatedAt)
-	return u
-}
-
-// SetSummaries sets the "summaries" field.
-func (u *FeedUpsert) SetSummaries(v map[string]types.ActivitiesSummary) *FeedUpsert {
-	u.Set(feed.FieldSummaries, v)
-	return u
-}
-
-// UpdateSummaries sets the "summaries" field to the value that was provided on create.
-func (u *FeedUpsert) UpdateSummaries() *FeedUpsert {
-	u.SetExcluded(feed.FieldSummaries)
-	return u
-}
-
-// ClearSummaries clears the value of the "summaries" field.
-func (u *FeedUpsert) ClearSummaries() *FeedUpsert {
-	u.SetNull(feed.FieldSummaries)
 	return u
 }
 
@@ -537,27 +508,6 @@ func (u *FeedUpsertOne) SetUpdatedAt(v time.Time) *FeedUpsertOne {
 func (u *FeedUpsertOne) UpdateUpdatedAt() *FeedUpsertOne {
 	return u.Update(func(s *FeedUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetSummaries sets the "summaries" field.
-func (u *FeedUpsertOne) SetSummaries(v map[string]types.ActivitiesSummary) *FeedUpsertOne {
-	return u.Update(func(s *FeedUpsert) {
-		s.SetSummaries(v)
-	})
-}
-
-// UpdateSummaries sets the "summaries" field to the value that was provided on create.
-func (u *FeedUpsertOne) UpdateSummaries() *FeedUpsertOne {
-	return u.Update(func(s *FeedUpsert) {
-		s.UpdateSummaries()
-	})
-}
-
-// ClearSummaries clears the value of the "summaries" field.
-func (u *FeedUpsertOne) ClearSummaries() *FeedUpsertOne {
-	return u.Update(func(s *FeedUpsert) {
-		s.ClearSummaries()
 	})
 }
 
@@ -884,27 +834,6 @@ func (u *FeedUpsertBulk) SetUpdatedAt(v time.Time) *FeedUpsertBulk {
 func (u *FeedUpsertBulk) UpdateUpdatedAt() *FeedUpsertBulk {
 	return u.Update(func(s *FeedUpsert) {
 		s.UpdateUpdatedAt()
-	})
-}
-
-// SetSummaries sets the "summaries" field.
-func (u *FeedUpsertBulk) SetSummaries(v map[string]types.ActivitiesSummary) *FeedUpsertBulk {
-	return u.Update(func(s *FeedUpsert) {
-		s.SetSummaries(v)
-	})
-}
-
-// UpdateSummaries sets the "summaries" field to the value that was provided on create.
-func (u *FeedUpsertBulk) UpdateSummaries() *FeedUpsertBulk {
-	return u.Update(func(s *FeedUpsert) {
-		s.UpdateSummaries()
-	})
-}
-
-// ClearSummaries clears the value of the "summaries" field.
-func (u *FeedUpsertBulk) ClearSummaries() *FeedUpsertBulk {
-	return u.Update(func(s *FeedUpsert) {
-		s.ClearSummaries()
 	})
 }
 

@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
 )
@@ -140,18 +139,6 @@ func (fu *FeedUpdate) SetNillableUpdatedAt(t *time.Time) *FeedUpdate {
 	return fu
 }
 
-// SetSummaries sets the "summaries" field.
-func (fu *FeedUpdate) SetSummaries(ms map[string]types.ActivitiesSummary) *FeedUpdate {
-	fu.mutation.SetSummaries(ms)
-	return fu
-}
-
-// ClearSummaries clears the value of the "summaries" field.
-func (fu *FeedUpdate) ClearSummaries() *FeedUpdate {
-	fu.mutation.ClearSummaries()
-	return fu
-}
-
 // Mutation returns the FeedMutation object of the builder.
 func (fu *FeedUpdate) Mutation() *FeedMutation {
 	return fu.mutation
@@ -221,12 +208,6 @@ func (fu *FeedUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := fu.mutation.UpdatedAt(); ok {
 		_spec.SetField(feed.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := fu.mutation.Summaries(); ok {
-		_spec.SetField(feed.FieldSummaries, field.TypeJSON, value)
-	}
-	if fu.mutation.SummariesCleared() {
-		_spec.ClearField(feed.FieldSummaries, field.TypeJSON)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, fu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -358,18 +339,6 @@ func (fuo *FeedUpdateOne) SetNillableUpdatedAt(t *time.Time) *FeedUpdateOne {
 	return fuo
 }
 
-// SetSummaries sets the "summaries" field.
-func (fuo *FeedUpdateOne) SetSummaries(ms map[string]types.ActivitiesSummary) *FeedUpdateOne {
-	fuo.mutation.SetSummaries(ms)
-	return fuo
-}
-
-// ClearSummaries clears the value of the "summaries" field.
-func (fuo *FeedUpdateOne) ClearSummaries() *FeedUpdateOne {
-	fuo.mutation.ClearSummaries()
-	return fuo
-}
-
 // Mutation returns the FeedMutation object of the builder.
 func (fuo *FeedUpdateOne) Mutation() *FeedMutation {
 	return fuo.mutation
@@ -469,12 +438,6 @@ func (fuo *FeedUpdateOne) sqlSave(ctx context.Context) (_node *Feed, err error) 
 	}
 	if value, ok := fuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(feed.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := fuo.mutation.Summaries(); ok {
-		_spec.SetField(feed.FieldSummaries, field.TypeJSON, value)
-	}
-	if fuo.mutation.SummariesCleared() {
-		_spec.ClearField(feed.FieldSummaries, field.TypeJSON)
 	}
 	_node = &Feed{config: fuo.config}
 	_spec.Assign = _node.assignValues

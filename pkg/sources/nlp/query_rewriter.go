@@ -3,17 +3,20 @@ package nlp
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog"
+	"github.com/tmc/langchaingo/prompts"
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/outputparser"
 )
 
 type QueryRewriter struct {
-	model llms.Model
+	model  llms.Model
+	logger *zerolog.Logger
 }
 
-func NewQueryRewriter(model llms.Model) *QueryRewriter {
-	return &QueryRewriter{model: model}
+func NewQueryRewriter(model llms.Model, logger *zerolog.Logger) *QueryRewriter {
+	return &QueryRewriter{model: model, logger: logger}
 }
 
 type TopicQueryGroup struct {
@@ -26,15 +29,9 @@ type queryRewriteResponse struct {
 	Topics []*TopicQueryGroup `json:"topics" describe:"List of topic-based queries, maximum 5 topics"`
 }
 
-type queryRewriteInput struct {
-	OriginalQuery string `json:"original_query"`
-}
-
 func (qr *QueryRewriter) RewriteToTopics(ctx context.Context, originalQuery string) ([]*TopicQueryGroup, error) {
-	prompt := promptBuilder{}
-
-	systemPrompt := `You are an AI assistant tasked with reformulating user queries to improve retrieval in a RAG system. The system searches embeddings of online activity summaries. 
-
+	template := prompts.NewPromptTemplate(`You are an AI assistant tasked with reformulating user queries to improve retrieval in a RAG system. The system searches embeddings of online activity summaries. 
+## Task
 Given the original query, rewrite it into multiple topic-based queries that are more specific, detailed, and likely to retrieve relevant information.
 
 Guidelines:
@@ -45,33 +42,44 @@ Guidelines:
 5. Make queries more specific than the original to get better retrieval results
 6. If the original query is already very specific, create related topics that would be of interest
 
-Example:
+## Example
 Original: "AI developments"
 Topics:
 - topic: "Machine Learning Breakthroughs", queries: ["recent machine learning research breakthroughs", "neural networks deep learning advances", "ML model optimization techniques"]
 - topic: "AI Industry News", queries: ["artificial intelligence industry news", "company announcements funding AI startups", "AI market trends"]
 - Topic: "AI Ethics and Regulation", queries: ["AI ethics artificial intelligence regulation", "policy governance responsible AI", "AI safety guidelines"]
-`
 
-	prompt.WriteString("SystemPrompt", systemPrompt)
+## Output format
+
+{{.output_format_instructions}}
+
+## Input
+
+Original (user) query: {{.original_query}}
+
+## Output
+`, []string{
+		"output_format_instructions",
+		"original_query",
+	})
 
 	parser, err := outputparser.NewDefined(queryRewriteResponse{})
 	if err != nil {
 		return nil, fmt.Errorf("creating parser: %w", err)
 	}
-	prompt.WriteString("FormatInstructions", parser.GetFormatInstructions())
 
-	input := queryRewriteInput{
-		OriginalQuery: originalQuery,
-	}
-	if err := prompt.WriteJSON("Input", input); err != nil {
-		return nil, fmt.Errorf("write json: %w", err)
+	prompt, err := template.Format(map[string]any{
+		"output_format_instructions": parser.GetFormatInstructions(),
+		"original_query":             originalQuery,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("format prompt: %w", err)
 	}
 
 	out, err := llms.GenerateFromSinglePrompt(
 		ctx,
 		qr.model,
-		prompt.String(),
+		prompt,
 		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
 		llms.WithTemperature(1.0),
 	)
@@ -81,6 +89,11 @@ Topics:
 
 	response, err := parseResponse(parser, out)
 	if err != nil {
+		qr.logger.Error().
+			Err(err).
+			Str("prompt", prompt).
+			Str("output", out).
+			Msg("Error parsing query rewrite response")
 		return nil, fmt.Errorf("parse response: %w", err)
 	}
 

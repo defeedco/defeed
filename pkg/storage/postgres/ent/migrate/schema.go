@@ -42,7 +42,6 @@ var (
 		{Name: "source_uids", Type: field.TypeJSON},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "summaries", Type: field.TypeJSON, Nullable: true},
 	}
 	// FeedsTable holds the schema information for the "feeds" table.
 	FeedsTable = &schema.Table{

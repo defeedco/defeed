@@ -43,8 +43,7 @@ type feedStore interface {
 }
 
 type summarizer interface {
-	SummarizeMany(ctx context.Context, activities []*activities.DecoratedActivity, query string) (*activities.ActivitiesSummary, error)
-	SummarizeTopicActivities(ctx context.Context, topic *nlp.TopicQueryGroup, activities []*activities.DecoratedActivity) (string, error)
+	SummarizeTopic(ctx context.Context, topic *nlp.TopicQueryGroup, activities []*activities.DecoratedActivity) (string, error)
 }
 
 func NewRegistry(store feedStore, sourceExecutor *sources.Executor, sourceRegistry *sources.Registry, summarizer summarizer, queryRewriter queryRewriter, config *Config) *Registry {
@@ -71,8 +70,6 @@ type Feed struct {
 	UserID string
 	// Public is true if any user can access the feed.
 	Public bool
-	// Summaries is a map of cached overviews by period
-	Summaries map[activities.Period]activities.ActivitiesSummary
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -106,7 +103,6 @@ func (r *Registry) Create(ctx context.Context, req CreateRequest) (*Feed, error)
 		Query:      req.Query,
 		SourceUIDs: req.SourceUIDs,
 		UserID:     req.UserID,
-		Summaries:  make(map[activities.Period]activities.ActivitiesSummary),
 		Public:     false,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
@@ -198,88 +194,6 @@ func (r *Registry) ListByUserID(ctx context.Context, userID string) ([]*Feed, er
 	}
 
 	return authorizedFeeds, nil
-}
-
-// Summary returns the overview of the recent relevant activities
-// If the userID is provided, an optional queryOverride can be provided as a request-scoped override parameter.
-func (r *Registry) Summary(ctx context.Context, feedID, userID, queryOverride string, period activities.Period) (*activities.ActivitiesSummary, error) {
-	feed, err := r.store.GetByID(ctx, feedID)
-	if err != nil {
-		return nil, errors.New("feed not found")
-	}
-
-	// TODO(config): Move to env config struct
-	refreshDuration := 1 * time.Hour
-	now := time.Now()
-
-	// Check if we have a cached summary for this period and if it's still fresh
-	if cachedSummary, exists := feed.Summaries[period]; exists && now.Sub(cachedSummary.CreatedAt) < refreshDuration {
-		if userID == "" && queryOverride != "" {
-			return nil, ErrAuthUsersOnly
-		}
-
-		if queryOverride != "" && queryOverride != feed.Query {
-			summary, err := r.summarize(ctx, queryOverride, feed.SourceUIDs, period)
-			if err != nil {
-				return nil, fmt.Errorf("summarize: %w", err)
-			}
-			return summary, nil
-		}
-
-		return &cachedSummary, nil
-	}
-
-	// Generate new summary for this period
-	summary, err := r.summarize(ctx, feed.Query, feed.SourceUIDs, period)
-	if err != nil {
-		return nil, fmt.Errorf("summarize: %w", err)
-	}
-
-	// Cache the summary for this period
-	if feed.Summaries == nil {
-		feed.Summaries = make(map[activities.Period]activities.ActivitiesSummary)
-	}
-	feed.Summaries[period] = *summary
-	feed.UpdatedAt = time.Now()
-
-	err = r.store.Upsert(ctx, *feed)
-	if err != nil {
-		return nil, fmt.Errorf("upsert feed: %w", err)
-	}
-
-	if userID == "" && queryOverride != "" {
-		return nil, ErrAuthUsersOnly
-	}
-
-	if queryOverride != "" && queryOverride != feed.Query {
-		summary, err := r.summarize(ctx, queryOverride, feed.SourceUIDs, period)
-		if err != nil {
-			return nil, fmt.Errorf("summarize: %w", err)
-		}
-		return summary, nil
-	}
-
-	return summary, nil
-}
-
-func (r *Registry) summarize(ctx context.Context, query string, sourceUIDs []activities.TypedUID, period activities.Period) (*activities.ActivitiesSummary, error) {
-	limit := 20
-	acts, err := r.sourceExecutor.Search(ctx, query, sourceUIDs, 0.0, limit, activities.SortBySimilarity, period)
-	if err != nil {
-		return nil, fmt.Errorf("search: %w", err)
-	}
-
-	if len(acts) < limit {
-		// Not enough activities to summarize
-		return nil, ErrInsufficientActivity
-	}
-
-	summary, err := r.summarizer.SummarizeMany(ctx, acts, query)
-	if err != nil {
-		return nil, fmt.Errorf("summarize many: %w", err)
-	}
-
-	return summary, nil
 }
 
 type ActivitiesResponse struct {
@@ -453,7 +367,7 @@ func (r *Registry) summarizeTopics(
 			}
 		}
 		g.Go(func() error {
-			summary, err := r.summarizer.SummarizeTopicActivities(gctx, topic, topicActs)
+			summary, err := r.summarizer.SummarizeTopic(gctx, topic, topicActs)
 			if err != nil {
 				return fmt.Errorf("summarize topic activities: %w", err)
 			}

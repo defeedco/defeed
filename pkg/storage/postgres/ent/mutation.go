@@ -11,7 +11,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
 	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
@@ -1086,7 +1085,6 @@ type FeedMutation struct {
 	appendsource_uids []string
 	created_at        *time.Time
 	updated_at        *time.Time
-	summaries         *map[string]types.ActivitiesSummary
 	clearedFields     map[string]struct{}
 	done              bool
 	oldValue          func(context.Context) (*Feed, error)
@@ -1500,55 +1498,6 @@ func (m *FeedMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetSummaries sets the "summaries" field.
-func (m *FeedMutation) SetSummaries(ms map[string]types.ActivitiesSummary) {
-	m.summaries = &ms
-}
-
-// Summaries returns the value of the "summaries" field in the mutation.
-func (m *FeedMutation) Summaries() (r map[string]types.ActivitiesSummary, exists bool) {
-	v := m.summaries
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSummaries returns the old "summaries" field's value of the Feed entity.
-// If the Feed object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FeedMutation) OldSummaries(ctx context.Context) (v map[string]types.ActivitiesSummary, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSummaries is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSummaries requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSummaries: %w", err)
-	}
-	return oldValue.Summaries, nil
-}
-
-// ClearSummaries clears the value of the "summaries" field.
-func (m *FeedMutation) ClearSummaries() {
-	m.summaries = nil
-	m.clearedFields[feed.FieldSummaries] = struct{}{}
-}
-
-// SummariesCleared returns if the "summaries" field was cleared in this mutation.
-func (m *FeedMutation) SummariesCleared() bool {
-	_, ok := m.clearedFields[feed.FieldSummaries]
-	return ok
-}
-
-// ResetSummaries resets all changes to the "summaries" field.
-func (m *FeedMutation) ResetSummaries() {
-	m.summaries = nil
-	delete(m.clearedFields, feed.FieldSummaries)
-}
-
 // Where appends a list predicates to the FeedMutation builder.
 func (m *FeedMutation) Where(ps ...predicate.Feed) {
 	m.predicates = append(m.predicates, ps...)
@@ -1583,7 +1532,7 @@ func (m *FeedMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *FeedMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 8)
 	if m.user_id != nil {
 		fields = append(fields, feed.FieldUserID)
 	}
@@ -1607,9 +1556,6 @@ func (m *FeedMutation) Fields() []string {
 	}
 	if m.updated_at != nil {
 		fields = append(fields, feed.FieldUpdatedAt)
-	}
-	if m.summaries != nil {
-		fields = append(fields, feed.FieldSummaries)
 	}
 	return fields
 }
@@ -1635,8 +1581,6 @@ func (m *FeedMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case feed.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case feed.FieldSummaries:
-		return m.Summaries()
 	}
 	return nil, false
 }
@@ -1662,8 +1606,6 @@ func (m *FeedMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldCreatedAt(ctx)
 	case feed.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case feed.FieldSummaries:
-		return m.OldSummaries(ctx)
 	}
 	return nil, fmt.Errorf("unknown Feed field %s", name)
 }
@@ -1729,13 +1671,6 @@ func (m *FeedMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
-	case feed.FieldSummaries:
-		v, ok := value.(map[string]types.ActivitiesSummary)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSummaries(v)
-		return nil
 	}
 	return fmt.Errorf("unknown Feed field %s", name)
 }
@@ -1765,11 +1700,7 @@ func (m *FeedMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *FeedMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(feed.FieldSummaries) {
-		fields = append(fields, feed.FieldSummaries)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1782,11 +1713,6 @@ func (m *FeedMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *FeedMutation) ClearField(name string) error {
-	switch name {
-	case feed.FieldSummaries:
-		m.ClearSummaries()
-		return nil
-	}
 	return fmt.Errorf("unknown Feed nullable field %s", name)
 }
 
@@ -1817,9 +1743,6 @@ func (m *FeedMutation) ResetField(name string) error {
 		return nil
 	case feed.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case feed.FieldSummaries:
-		m.ResetSummaries()
 		return nil
 	}
 	return fmt.Errorf("unknown Feed field %s", name)

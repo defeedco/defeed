@@ -208,46 +208,6 @@ paths:
         '404':
           description: Feed not found
 
-  /feeds/{uid}/summary:
-    get:
-      summary: Generate an executive summary of multiple activities
-      operationId: getFeedSummary
-      tags:
-        - feeds
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: uid
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: period
-          in: query
-          description: Time period to filter activities from. Defaults to 'all' for all time.
-          schema:
-            $ref: '#/components/schemas/ActivityPeriod'
-        - name: query
-          in: query
-          description: Filter query. Authenticated users can override the default feed query.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Summary of feed activities
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeedSummary'
-        '202':
-          description: Insufficient activity to summarize. Retry later.
-        '400':
-          description: Invalid request
-        '401':
-          description: Unauthorized - Invalid or missing authentication token
-        '404':
-          description: Feed not found
-
 components:
   securitySchemes:
     bearerAuth:
@@ -373,25 +333,6 @@ components:
         - month
         - week
         - day
-
-    FeedSummary:
-      type: object
-      required:
-        - overview
-        - highlights
-        - createdAt
-      properties:
-        overview:
-          type: string
-          description: A concise one-paragraph overview of the overall direction and themes
-        highlights:
-          type: array
-          items:
-            $ref: '#/components/schemas/FeedHighlight'
-          description: List of key highlights extracted from the activities
-        createdAt:
-          type: string
-          format: datetime
 
     FeedHighlight:
       type: object
