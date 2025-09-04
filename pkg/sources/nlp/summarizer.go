@@ -3,12 +3,14 @@ package nlp
 import (
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/rs/zerolog"
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/outputparser"
@@ -18,11 +20,12 @@ import (
 var summarizeSinglePrompt string
 
 type ActivitySummarizer struct {
-	model llms.Model
+	model  llms.Model
+	logger *zerolog.Logger
 }
 
-func NewSummarizer(model llms.Model) *ActivitySummarizer {
-	return &ActivitySummarizer{model: model}
+func NewSummarizer(model llms.Model, logger *zerolog.Logger) *ActivitySummarizer {
+	return &ActivitySummarizer{model: model, logger: logger}
 }
 
 type completionResponse struct {
@@ -68,6 +71,7 @@ func (llm *ActivitySummarizer) Summarize(
 		llms.WithTemperature(1.0),
 	)
 	if err != nil {
+		logGenerateCompletionError(llm.logger, prompt.String(), err)
 		return nil, fmt.Errorf("generate completion: %w", err)
 	}
 
@@ -167,6 +171,7 @@ For each highlight, you must also list the IDs of the source activities that con
 		llms.WithTemperature(1.0),
 	)
 	if err != nil {
+		logGenerateCompletionError(llm.logger, prompt.String(), err)
 		return nil, fmt.Errorf("generate completion: %w", err)
 	}
 
@@ -229,4 +234,13 @@ func (p *promptBuilder) WriteJSON(tag string, v any) error {
 
 func (p *promptBuilder) String() string {
 	return p.prompt.String()
+}
+
+func logGenerateCompletionError(logger *zerolog.Logger, prompt string, err error) {
+	logger.Error().
+		Err(err).
+		// Log in base64 for a more compact representation
+		Str("prompt_base64", base64.StdEncoding.EncodeToString([]byte(prompt))).
+		Int("prompt_bytes", len(prompt)).
+		Msg("Error generating completion")
 }
