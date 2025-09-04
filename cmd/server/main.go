@@ -40,7 +40,7 @@ func run() error {
 		return fmt.Errorf("connect to database: %w", err)
 	}
 
-	server, err := api.NewServer(logger, &cfg.APIConfig, db)
+	server, err := api.NewServer(logger, &cfg.APIConfig, &cfg.FeedsConfig, db)
 	if err != nil {
 		return fmt.Errorf("create server: %w", err)
 	}

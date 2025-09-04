@@ -202,9 +202,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Activity'
+                $ref: '#/components/schemas/ActivitiesListResponse'
         '401':
           description: Unauthorized - Invalid or missing authentication token
         '404':
@@ -409,6 +407,46 @@ components:
           items:
             type: string
           description: List of activity IDs that contributed to this highlight
+
+    ActivitiesListResponse:
+      type: object
+      required:
+        - topics
+        - results
+      properties:
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityTopic'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+
+    ActivityTopic:
+      type: object
+      required:
+        - title
+        - summary
+        - queries
+        - activityIds
+      properties:
+        title:
+          type: string
+          description: Title of the topic.
+        summary:
+          type: string
+          description: Summary of the activities in this topic.
+        queries:
+          type: array
+          description: LLM generated sub-queries used to filter activities for this topic.
+          items:
+            type: string
+        activityIds:
+          type: array
+          items:
+            type: string
+          description: List of activity IDs in this topic.
 
     Activity:
       type: object

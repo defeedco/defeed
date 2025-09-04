@@ -52,9 +52,10 @@ type Server struct {
 
 var _ ServerInterface = (*Server)(nil)
 
-func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, error) {
+func NewServer(logger *zerolog.Logger, apiConfig *Config, feedsConfig *feeds.Config, db *postgres.DB) (*Server, error) {
 	limiter := lib.NewOpenAILimiter(logger)
 
+	// TODO: Move service initialization to main.go
 	summarizerModel, err := openai.New(
 		openai.WithModel("gpt-5-nano-2025-08-07"),
 		openai.WithHTTPClient(limiter),
@@ -73,6 +74,7 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 
 	summarizer := nlp.NewSummarizer(summarizerModel, logger)
 	embedder := nlp.NewEmbedder(embedderModel)
+	queryRewriter := nlp.NewQueryRewriter(summarizerModel)
 
 	executor := sources.NewExecutor(
 		logger,
@@ -91,7 +93,7 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 	}
 
 	feedStore := postgres.NewFeedRepository(db)
-	feedRegistry := feeds.NewRegistry(feedStore, executor, registry, summarizer)
+	feedRegistry := feeds.NewRegistry(feedStore, executor, registry, summarizer, queryRewriter, feedsConfig)
 
 	mux := http.NewServeMux()
 
@@ -101,8 +103,8 @@ func NewServer(logger *zerolog.Logger, cfg *Config, db *postgres.DB) (*Server, e
 		executor:     executor,
 		feedRegistry: feedRegistry,
 		http: http.Server{
-			Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
-			Handler: authMiddleware(corsMiddleware(mux, cfg.CORSOrigin)),
+			Addr:    fmt.Sprintf("%s:%d", apiConfig.Host, apiConfig.Port),
+			Handler: authMiddleware(corsMiddleware(mux, apiConfig.CORSOrigin)),
 		},
 	}
 
@@ -243,13 +245,22 @@ func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid 
 		return
 	}
 
-	activities, err := serializeActivities(out)
+	activities, err := serializeActivities(out.Results)
 	if err != nil {
 		s.internalError(w, err, "serialize activities")
 		return
 	}
 
-	s.serializeRes(w, activities)
+	topics, err := serializeTopics(out.Topics)
+	if err != nil {
+		s.internalError(w, err, "serialize topics")
+		return
+	}
+
+	s.serializeRes(w, ActivitiesListResponse{
+		Results: *activities,
+		Topics:  *topics,
+	})
 }
 
 func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params ListSourcesParams) {
@@ -499,18 +510,34 @@ func serializeSourceUIDs(in []activitytypes.TypedUID) []string {
 	return out
 }
 
-func serializeActivities(in []*activitytypes.DecoratedActivity) ([]*Activity, error) {
-	out := make([]*Activity, 0, len(in))
+func serializeActivities(in []*activitytypes.DecoratedActivity) (*[]Activity, error) {
+	out := make([]Activity, 0, len(in))
 
 	for _, e := range in {
 		activity, err := serializeActivity(e)
 		if err != nil {
 			return nil, fmt.Errorf("serialize activity: %w", err)
 		}
-		out = append(out, activity)
+		out = append(out, *activity)
 	}
 
-	return out, nil
+	return &out, nil
+}
+
+func serializeTopics(in []*feeds.Topic) (*[]ActivityTopic, error) {
+	out := make([]ActivityTopic, 0, len(in))
+
+	for _, topic := range in {
+		serializedTopic := &ActivityTopic{
+			Title:       topic.Title,
+			Summary:     topic.Summary,
+			Queries:     topic.Queries,
+			ActivityIds: topic.ActivityIDs,
+		}
+		out = append(out, *serializedTopic)
+	}
+
+	return &out, nil
 }
 
 func serializeActivity(in *activitytypes.DecoratedActivity) (*Activity, error) {

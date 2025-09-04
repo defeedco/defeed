@@ -46,6 +46,12 @@ const (
 	RssFeed                SourceType = "rssFeed"
 )
 
+// ActivitiesListResponse defines model for ActivitiesListResponse.
+type ActivitiesListResponse struct {
+	Results []Activity      `json:"results"`
+	Topics  []ActivityTopic `json:"topics"`
+}
+
 // Activity defines model for Activity.
 type Activity struct {
 	Body      string    `json:"body"`
@@ -72,6 +78,21 @@ type ActivityPeriod string
 
 // ActivitySortBy defines model for ActivitySortBy.
 type ActivitySortBy string
+
+// ActivityTopic defines model for ActivityTopic.
+type ActivityTopic struct {
+	// ActivityIds List of activity IDs in this topic.
+	ActivityIds []string `json:"activityIds"`
+
+	// Queries LLM generated sub-queries used to filter activities for this topic.
+	Queries []string `json:"queries"`
+
+	// Summary Summary of the activities in this topic.
+	Summary string `json:"summary"`
+
+	// Title Title of the topic.
+	Title string `json:"title"`
+}
 
 // CreateFeedRequest defines model for CreateFeedRequest.
 type CreateFeedRequest struct {

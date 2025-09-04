@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tmc/langchaingo/prompts"
+
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 
@@ -40,7 +42,7 @@ type completionInput struct {
 	CreatedAt string `json:"created_at"`
 }
 
-func (llm *ActivitySummarizer) Summarize(
+func (sum *ActivitySummarizer) Summarize(
 	ctx context.Context,
 	activity types.Activity,
 ) (*types.ActivitySummary, error) {
@@ -65,13 +67,13 @@ func (llm *ActivitySummarizer) Summarize(
 
 	out, err := llms.GenerateFromSinglePrompt(
 		ctx,
-		llm.model,
+		sum.model,
 		prompt.String(),
 		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
 		llms.WithTemperature(1.0),
 	)
 	if err != nil {
-		logGenerateCompletionError(llm.logger, prompt.String(), err)
+		logGenerateCompletionError(sum.logger, prompt.String(), err)
 		return nil, fmt.Errorf("generate completion: %w", err)
 	}
 
@@ -96,7 +98,7 @@ type activityHighlight struct {
 	SourceIDs []string `json:"source_ids" describe:"List of activity IDs that contributed to this highlight"`
 }
 
-type multiActivityInputActivity struct {
+type summarizeActivityInput struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
 	Body      string `json:"body"`
@@ -105,10 +107,10 @@ type multiActivityInputActivity struct {
 }
 
 type multiActivityInput struct {
-	Activities []multiActivityInputActivity `json:"activities"`
+	Activities []summarizeActivityInput `json:"activities"`
 }
 
-func (llm *ActivitySummarizer) SummarizeMany(
+func (sum *ActivitySummarizer) SummarizeMany(
 	ctx context.Context,
 	activities []*types.DecoratedActivity,
 	query string,
@@ -143,11 +145,11 @@ For each highlight, you must also list the IDs of the source activities that con
 	prompt.WriteString("FormatInstructions", parser.GetFormatInstructions())
 
 	input := multiActivityInput{
-		Activities: make([]multiActivityInputActivity, len(activities)),
+		Activities: make([]summarizeActivityInput, len(activities)),
 	}
 
 	for i, activity := range activities {
-		input.Activities[i] = multiActivityInputActivity{
+		input.Activities[i] = summarizeActivityInput{
 			ID:        activity.Activity.UID().String(),
 			Title:     activity.Activity.Title(),
 			Body:      activity.Activity.Body(),
@@ -166,12 +168,12 @@ For each highlight, you must also list the IDs of the source activities that con
 
 	out, err := llms.GenerateFromSinglePrompt(
 		ctx,
-		llm.model,
+		sum.model,
 		prompt.String(),
 		llms.WithTemperature(1.0),
 	)
 	if err != nil {
-		logGenerateCompletionError(llm.logger, prompt.String(), err)
+		logGenerateCompletionError(sum.logger, prompt.String(), err)
 		return nil, fmt.Errorf("generate completion: %w", err)
 	}
 
@@ -193,6 +195,65 @@ For each highlight, you must also list the IDs of the source activities that con
 		Highlights: highlights,
 		CreatedAt:  time.Now(),
 	}, nil
+}
+
+// TODO: Refactor to langchain prompt templates
+func (sum *ActivitySummarizer) SummarizeTopicActivities(ctx context.Context, topic *TopicQueryGroup, activities []*types.DecoratedActivity) (string, error) {
+	if len(activities) == 0 {
+		return "", nil
+	}
+
+	template := prompts.NewPromptTemplate(`You are an expert at analyzing and summarizing online activity information. 
+Given a list of activities, generate the summary of key insights that are relevant for the given topic.
+
+Guidelines:
+1. Summaries should be 1-2 sentences that capture the main themes
+2. Focus on the most important insights and trends for each topic
+3. Be direct and informative in your summaries
+
+Topic name: {topic_name}
+Topic description: {topic_description}
+Activities: {activities}
+
+Activity summary:
+`, []string{"output_format", "topic_name", "topic_description", "activities"})
+
+	inputActs := make([]summarizeActivityInput, len(activities))
+	for i, activity := range activities {
+		inputActs[i] = summarizeActivityInput{
+			ID:        activity.Activity.UID().String(),
+			Title:     activity.Activity.Title(),
+			Body:      activity.Activity.Body(),
+			URL:       activity.Activity.URL(),
+			CreatedAt: activity.Activity.CreatedAt().Format(time.RFC3339) + "Z",
+
+			// TODO(bart): Above is just a test, start using below code once the feed summary is removed to save costs.
+			//Title:   activity.Activity.Title(),
+			//Summary: activity.Summary.ShortSummary,
+		}
+	}
+
+	prompt, err := template.Format(map[string]any{
+		"topic_name":        topic.Topic,
+		"topic_description": topic.Description,
+		"activities":        inputActs,
+	})
+	if err != nil {
+		return "", fmt.Errorf("format prompt: %w", err)
+	}
+
+	out, err := llms.GenerateFromSinglePrompt(
+		ctx,
+		sum.model,
+		prompt,
+		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
+		llms.WithTemperature(1.0),
+	)
+	if err != nil {
+		return "", fmt.Errorf("generate completion: %w", err)
+	}
+
+	return out, nil
 }
 
 func parseResponse[T any](parser outputparser.Defined[T], response string) (*T, error) {

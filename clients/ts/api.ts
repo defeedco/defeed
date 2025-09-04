@@ -26,6 +26,25 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerM
 /**
  * 
  * @export
+ * @interface ActivitiesListResponse
+ */
+export interface ActivitiesListResponse {
+    /**
+     * 
+     * @type {Array<ActivityTopic>}
+     * @memberof ActivitiesListResponse
+     */
+    'topics': Array<ActivityTopic>;
+    /**
+     * 
+     * @type {Array<Activity>}
+     * @memberof ActivitiesListResponse
+     */
+    'results': Array<Activity>;
+}
+/**
+ * 
+ * @export
  * @interface Activity
  */
 export interface Activity {
@@ -128,6 +147,37 @@ export const ActivitySortBy = {
 export type ActivitySortBy = typeof ActivitySortBy[keyof typeof ActivitySortBy];
 
 
+/**
+ * 
+ * @export
+ * @interface ActivityTopic
+ */
+export interface ActivityTopic {
+    /**
+     * Title of the topic.
+     * @type {string}
+     * @memberof ActivityTopic
+     */
+    'title': string;
+    /**
+     * Summary of the activities in this topic.
+     * @type {string}
+     * @memberof ActivityTopic
+     */
+    'summary': string;
+    /**
+     * LLM generated sub-queries used to filter activities for this topic.
+     * @type {Array<string>}
+     * @memberof ActivityTopic
+     */
+    'queries': Array<string>;
+    /**
+     * List of activity IDs in this topic.
+     * @type {Array<string>}
+     * @memberof ActivityTopic
+     */
+    'activityIds': Array<string>;
+}
 /**
  * 
  * @export
@@ -700,7 +750,7 @@ export const FeedsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listFeedActivities(uid: string, period?: ActivityPeriod, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Activity>>> {
+        async listFeedActivities(uid: string, period?: ActivityPeriod, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ActivitiesListResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listFeedActivities(uid, period, sortBy, query, limit, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FeedsApi.listFeedActivities']?.[localVarOperationServerIndex]?.url;
@@ -785,7 +835,7 @@ export const FeedsApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listFeedActivities(uid: string, period?: ActivityPeriod, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<Activity>> {
+        listFeedActivities(uid: string, period?: ActivityPeriod, sortBy?: ActivitySortBy, query?: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<ActivitiesListResponse> {
             return localVarFp.listFeedActivities(uid, period, sortBy, query, limit, options).then((request) => request(axios, basePath));
         },
         /**

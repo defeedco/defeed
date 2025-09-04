@@ -4,10 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/glanceapp/glance/pkg/sources"
 	activities "github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/glanceapp/glance/pkg/sources/nlp"
 	"github.com/google/uuid"
 )
 
@@ -23,6 +27,12 @@ type Registry struct {
 	sourceExecutor *sources.Executor
 	sourceRegistry *sources.Registry
 	summarizer     summarizer
+	queryRewriter  queryRewriter
+	config         *Config
+}
+
+type queryRewriter interface {
+	RewriteToTopics(ctx context.Context, originalQuery string) ([]*nlp.TopicQueryGroup, error)
 }
 
 type feedStore interface {
@@ -34,10 +44,18 @@ type feedStore interface {
 
 type summarizer interface {
 	SummarizeMany(ctx context.Context, activities []*activities.DecoratedActivity, query string) (*activities.ActivitiesSummary, error)
+	SummarizeTopicActivities(ctx context.Context, topic *nlp.TopicQueryGroup, activities []*activities.DecoratedActivity) (string, error)
 }
 
-func NewRegistry(store feedStore, sourceExecutor *sources.Executor, sourceRegistry *sources.Registry, summarizer summarizer) *Registry {
-	return &Registry{store: store, sourceExecutor: sourceExecutor, sourceRegistry: sourceRegistry, summarizer: summarizer}
+func NewRegistry(store feedStore, sourceExecutor *sources.Executor, sourceRegistry *sources.Registry, summarizer summarizer, queryRewriter queryRewriter, config *Config) *Registry {
+	return &Registry{
+		store:          store,
+		sourceExecutor: sourceExecutor,
+		sourceRegistry: sourceRegistry,
+		summarizer:     summarizer,
+		queryRewriter:  queryRewriter,
+		config:         config,
+	}
 }
 
 type Feed struct {
@@ -264,7 +282,27 @@ func (r *Registry) summarize(ctx context.Context, query string, sourceUIDs []act
 	return summary, nil
 }
 
-func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy activities.SortBy, limit int, queryOverride string, period activities.Period) ([]*activities.DecoratedActivity, error) {
+type ActivitiesResponse struct {
+	Results []*activities.DecoratedActivity
+	Topics  []*Topic
+}
+
+type Topic struct {
+	Title       string   `json:"title"`
+	Summary     string   `json:"summary"`
+	Queries     []string `json:"queries"`
+	ActivityIDs []string `json:"activityIds"`
+}
+
+func (r *Registry) Activities(
+	ctx context.Context,
+	feedID string,
+	userID string,
+	sortBy activities.SortBy,
+	limit int,
+	queryOverride string,
+	period activities.Period,
+) (*ActivitiesResponse, error) {
 	feed, err := r.store.GetByID(ctx, feedID)
 	if err != nil {
 		return nil, fmt.Errorf("get feed: %w", err)
@@ -283,11 +321,162 @@ func (r *Registry) Activities(ctx context.Context, feedID, userID string, sortBy
 		query = queryOverride
 	}
 
-	// TODO(optimisation): Cache query embeddings
-	acts, err := r.sourceExecutor.Search(ctx, query, feed.SourceUIDs, 0.0, limit, sortBy, period)
+	topicQueryGroups, err := r.queryRewriter.RewriteToTopics(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("search activities: %w", err)
+		return nil, fmt.Errorf("rewrite query to topics: %w", err)
 	}
 
-	return acts, nil
+	acts, activityToTopic, err := r.searchByTopicQueryGroups(ctx, feed.SourceUIDs, topicQueryGroups, sortBy, period, limit)
+	if err != nil {
+		return nil, fmt.Errorf("search by topic query groups: %w", err)
+	}
+
+	var topicToSummary map[string]string
+	if r.config.SummarizeTopics {
+		topicToSummary, err = r.summarizeTopics(ctx, topicQueryGroups, acts, activityToTopic)
+		if err != nil {
+			return nil, fmt.Errorf("summarize topics: %w", err)
+		}
+	}
+
+	topics := make([]*Topic, len(topicQueryGroups))
+	for i, topicGroup := range topicQueryGroups {
+		activityIDs := make([]string, 0)
+		for actID, topic := range activityToTopic {
+			if topic == topicGroup.Topic {
+				activityIDs = append(activityIDs, actID)
+			}
+		}
+
+		// Allow empty summary
+		summary := topicToSummary[topicGroup.Topic]
+
+		topics[i] = &Topic{
+			Title:       topicGroup.Topic,
+			Queries:     topicGroup.Queries,
+			ActivityIDs: activityIDs,
+			Summary:     summary,
+		}
+	}
+
+	return &ActivitiesResponse{
+		Results: acts,
+		Topics:  topics,
+	}, nil
+}
+
+func (r *Registry) searchByTopicQueryGroups(
+	ctx context.Context,
+	sourceUIDs []activities.TypedUID,
+	topics []*nlp.TopicQueryGroup,
+	sortBy activities.SortBy,
+	period activities.Period,
+	limit int,
+) ([]*activities.DecoratedActivity, map[string]string, error) {
+	actsByGroupByQuery := make([][][]*activities.DecoratedActivity, len(topics))
+
+	// Calculate limit per topic to ensure we don't exceed the total limit
+	limitPerTopic := limit / len(topics)
+	if limitPerTopic == 0 {
+		limitPerTopic = 1
+	}
+
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(-1) // no limit
+
+	for ti, topic := range topics {
+		actsByGroupByQuery[ti] = make([][]*activities.DecoratedActivity, len(topic.Queries))
+		for qi, query := range topic.Queries {
+			g.Go(func() error {
+				// TODO: Set min similarity filter?
+				acts, err := r.sourceExecutor.Search(gctx, query, sourceUIDs, 0.0, limitPerTopic, sortBy, period)
+				if err != nil {
+					return fmt.Errorf("search activities for topic %s: %w", topic.Topic, err)
+				}
+
+				actsByGroupByQuery[ti][qi] = acts
+
+				return nil
+			})
+		}
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, nil, fmt.Errorf("wait search: %w", err)
+	}
+
+	seenActs := make(map[string]bool)
+	activityToTopic := make(map[string]string)
+	acts := make([]*activities.DecoratedActivity, 0)
+	for ti, topicGroup := range actsByGroupByQuery {
+		for _, queryGroup := range topicGroup {
+			for _, act := range queryGroup {
+				if seenActs[act.Activity.UID().String()] {
+					continue
+				}
+
+				activityToTopic[act.Activity.UID().String()] = topics[ti].Topic
+				seenActs[act.Activity.UID().String()] = true
+				acts = append(acts, act)
+			}
+		}
+	}
+
+	sort.Slice(acts, func(i, j int) bool {
+		return acts[i].Similarity > acts[j].Similarity
+	})
+
+	if limit > 0 && len(acts) > limit {
+		acts = acts[:limit]
+	}
+
+	return acts, activityToTopic, nil
+}
+
+func (r *Registry) summarizeTopics(
+	ctx context.Context,
+	topics []*nlp.TopicQueryGroup,
+	allActivities []*activities.DecoratedActivity,
+	activityToTopic map[string]string,
+) (map[string]string, error) {
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(5)
+
+	indexedSummaries := make([]string, len(topics))
+	for ti, topic := range topics {
+		topicActs := make([]*activities.DecoratedActivity, 0)
+		for actID, actTopic := range activityToTopic {
+			if topic.Topic == actTopic {
+			actLoop:
+				for _, act := range allActivities {
+					if act.Activity.UID().String() == actID {
+						topicActs = append(topicActs, act)
+						break actLoop
+					}
+				}
+			}
+		}
+		g.Go(func() error {
+			summary, err := r.summarizer.SummarizeTopicActivities(gctx, topic, topicActs)
+			if err != nil {
+				return fmt.Errorf("summarize topic activities: %w", err)
+			}
+
+			indexedSummaries[ti] = summary
+
+			return nil
+
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("wait summarize: %w", err)
+	}
+
+	topicToSummary := make(map[string]string)
+	for ti, summary := range indexedSummaries {
+		topicToSummary[topics[ti].Topic] = summary
+	}
+
+	return topicToSummary, nil
 }
