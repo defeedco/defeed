@@ -147,7 +147,13 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activ
 	}
 
 	for _, item := range rssFeed.Items {
-		if since != nil && item.PublishedParsed.Before(sinceTime) {
+		if item.PublishedParsed == nil {
+			s.logger.Warn().Msgf("skipping item with no published date: %+v", item)
+			continue
+		}
+		// Skip items that are older or haven't been updated since the last seen activity
+		if item.PublishedParsed.Before(sinceTime) &&
+			(item.UpdatedParsed == nil || item.UpdatedParsed.Before(sinceTime)) {
 			continue
 		}
 
@@ -248,8 +254,8 @@ func (e *FeedItem) ImageURL() string {
 	if e.Item.Image != nil && e.Item.Image.URL != "" {
 		return e.Item.Image.URL
 	}
-	if url := findThumbnailInItemExtensions(e.Item); url != "" {
-		return url
+	if thumbURL := findThumbnailInItemExtensions(e.Item); thumbURL != "" {
+		return thumbURL
 	}
 	return ""
 }
@@ -288,14 +294,14 @@ func recursiveFindThumbnailInExtensions(extensions map[string][]gofeedext.Extens
 	for _, exts := range extensions {
 		for _, ext := range exts {
 			if ext.Name == "thumbnail" || ext.Name == "image" {
-				if url, ok := ext.Attrs["url"]; ok {
-					return url
+				if attrURL, ok := ext.Attrs["url"]; ok {
+					return attrURL
 				}
 			}
 
 			if ext.Children != nil {
-				if url := recursiveFindThumbnailInExtensions(ext.Children); url != "" {
-					return url
+				if childURL := recursiveFindThumbnailInExtensions(ext.Children); childURL != "" {
+					return childURL
 				}
 			}
 		}
@@ -304,7 +310,7 @@ func recursiveFindThumbnailInExtensions(extensions map[string][]gofeedext.Extens
 	return ""
 }
 
-var htmlTagsWithAttributesPattern = regexp.MustCompile(`<\/?[a-zA-Z0-9-]+ *(?:[a-zA-Z-]+=(?:"|').*?(?:"|') ?)* *\/?>`)
+var htmlTagsWithAttributesPattern = regexp.MustCompile(`</?[a-zA-Z0-9-]+ *(?:[a-zA-Z-]+=["'].*?["'] ?)* */?>`)
 var sequentialWhitespacePattern = regexp.MustCompile(`\s+`)
 
 func sanitizeFeedDescription(description string) string {
