@@ -197,7 +197,7 @@ func (r *Executor) executeSourceOnce(source sourcetypes.Source, since types.Acti
 func (r *Executor) getSourceTicker(source sourcetypes.Source) *time.Ticker {
 	// Default to 2 hours for all sources
 	// TODO: Make this configurable per source type?
-	return time.NewTicker(2 * time.Hour)
+	return time.NewTicker(4 * time.Hour)
 }
 
 // Add starts processing activities from the source.
