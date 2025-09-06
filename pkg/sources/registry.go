@@ -117,40 +117,101 @@ func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, er
 	return filtered, nil
 }
 
-// sourceWithSearchText holds a source and its searchable text for fuzzy matching
-type sourceWithSearchText struct {
-	source     types.Source
-	searchText string
+// sourceWithScore holds a source and its calculated relevance score
+type sourceWithScore struct {
+	source types.Source
+	score  float64
 }
 
-// fuzzyReRank reranks sources using fuzzy search scoring
+// fuzzyReRank reranks sources using improved fuzzy search scoring
 func fuzzyReRank(input []types.Source, query string) []types.Source {
 	if len(input) == 0 || query == "" {
 		return input
 	}
 
-	query = strings.TrimSpace(query)
+	query = strings.TrimSpace(strings.ToLower(query))
 
-	sourcesWithText := make([]sourceWithSearchText, len(input))
-	searchTexts := make([]string, len(input))
+	sourcesWithScore := make([]sourceWithScore, len(input))
 
 	for i, source := range input {
-		searchText := buildSearchText(source)
-		sourcesWithText[i] = sourceWithSearchText{
-			source:     source,
-			searchText: searchText,
+		score := calculateRelevanceScore(source, query)
+		sourcesWithScore[i] = sourceWithScore{
+			source: source,
+			score:  score,
 		}
-		searchTexts[i] = searchText
 	}
 
-	ranks := fuzzy.RankFindNormalizedFold(query, searchTexts)
+	// Sort by score (higher is better)
+	sort.Slice(sourcesWithScore, func(i, j int) bool {
+		return sourcesWithScore[i].score > sourcesWithScore[j].score
+	})
 
-	result := make([]types.Source, len(ranks))
-	for i, rank := range ranks {
-		result[i] = sourcesWithText[rank.OriginalIndex].source
+	result := make([]types.Source, len(sourcesWithScore))
+	for i, item := range sourcesWithScore {
+		result[i] = item.source
 	}
 
 	return result
+}
+
+// calculateRelevanceScore calculates a relevance score for a source based on the query
+func calculateRelevanceScore(source types.Source, query string) float64 {
+	score := 0.0
+
+	name := strings.ToLower(strings.TrimSpace(source.Name()))
+	description := strings.ToLower(strings.TrimSpace(source.Description()))
+
+	// Exact match in title gets highest score
+	if name == query {
+		score += 100.0
+	} else if strings.Contains(name, query) {
+		// Partial match in title gets high score
+		// Score based on how much of the title matches
+		matchRatio := float64(len(query)) / float64(len(name))
+		score += 50.0 * matchRatio
+	}
+
+	// Check for fuzzy match in title using Levenshtein distance
+	if name != "" {
+		distance := fuzzy.LevenshteinDistance(query, name)
+		maxLen := max(len(query), len(name))
+		if maxLen > 0 {
+			similarity := 1.0 - float64(distance)/float64(maxLen)
+			if similarity > 0.6 { // Only consider if reasonably similar
+				score += 30.0 * similarity
+			}
+		}
+	}
+
+	// Exact match in description gets medium score
+	if strings.Contains(description, query) {
+		// Score based on position - earlier matches are better
+		pos := strings.Index(description, query)
+		positionScore := 1.0 - float64(pos)/float64(max(len(description), 1))
+		score += 20.0 * positionScore
+	}
+
+	// Fuzzy match in description gets lower score
+	if description != "" {
+		distance := fuzzy.LevenshteinDistance(query, description)
+		maxLen := max(len(query), len(description))
+		if maxLen > 0 {
+			similarity := 1.0 - float64(distance)/float64(maxLen)
+			if similarity > 0.7 { // Higher threshold for description
+				score += 10.0 * similarity
+			}
+		}
+	}
+
+	return score
+}
+
+// max returns the maximum of two integers
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // alphabeticalSort sorts sources alphabetically by name (case-insensitive)
@@ -161,21 +222,4 @@ func alphabeticalSort(input []types.Source) []types.Source {
 		return strings.ToLower(sorted[i].Name()) < strings.ToLower(sorted[j].Name())
 	})
 	return sorted
-}
-
-// buildSearchText creates a searchable text string from a source's key fields
-func buildSearchText(source types.Source) string {
-	parts := []string{
-		source.Name(),
-		source.Description(),
-	}
-
-	var nonEmptyParts []string
-	for _, part := range parts {
-		if strings.TrimSpace(part) != "" {
-			nonEmptyParts = append(nonEmptyParts, part)
-		}
-	}
-
-	return strings.Join(nonEmptyParts, " ")
 }

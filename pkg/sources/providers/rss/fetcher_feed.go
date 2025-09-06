@@ -15,10 +15,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// Source: https://raw.githubusercontent.com/tuan3w/awesome-tech-rss/refs/heads/main/feeds.opml
+// Modified from: https://raw.githubusercontent.com/tuan3w/awesome-tech-rss/refs/heads/main/feeds.opml
 //
-//go:embed awesome-tech-rss.opml
-var awesomeTechRSS string
+//go:embed feeds.opml
+var feedsOPML string
 
 // FeedFetcher implements preset search functionality for RSS feeds
 type FeedFetcher struct {
@@ -28,95 +28,10 @@ type FeedFetcher struct {
 }
 
 func NewFeedFetcher(logger *zerolog.Logger) (*FeedFetcher, error) {
-	opmlSources, err := loadOPMLSources(logger)
+	feeds, err := loadOPMLSources(logger)
 	if err != nil {
 		return nil, fmt.Errorf("load OPML sources: %w", err)
 	}
-
-	arxivCategories := []types.Source{
-		&SourceFeed{
-			Title:     "ArXiv AI",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.AI",
-			AboutFeed: "Covers all areas of AI except Vision, Robotics, Machine Learning, Multiagent Systems, and Computation and Language.",
-		},
-		&SourceFeed{
-			Title:     "ArXiv Machine Learning",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.LG",
-			AboutFeed: "All aspects of machine learning research including supervised, unsupervised, reinforcement learning, robustness, and fairness.",
-		},
-		&SourceFeed{
-			Title:     "ArXiv Computer Vision",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.CV",
-			AboutFeed: "Image processing, computer vision, pattern recognition, and scene understanding.",
-		},
-		&SourceFeed{
-			Title:     "ArXiv Natural Language Processing",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.CL",
-			AboutFeed: "Natural language processing and computational linguistics research.",
-		},
-		&SourceFeed{
-			Title:     "ArXiv Cryptography & Security",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.CR",
-			AboutFeed: "Cryptography, authentication, public key systems, and security research.",
-		},
-		&SourceFeed{
-			Title:     "ArXiv Distributed Computing",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.DC",
-			AboutFeed: "Fault-tolerance, distributed algorithms, parallel computation, and cluster computing.",
-		},
-		&SourceFeed{
-			Title:     "ArXiv Databases",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.DB",
-			AboutFeed: "Database management, data mining, and data processing research.",
-		},
-		&SourceFeed{
-			Title:     "ArXiv Software Engineering",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.SE",
-			AboutFeed: "Software engineering, development methodologies, and software quality research.",
-		},
-		&SourceFeed{
-			Title:     "ArXiv Human-Computer Interaction",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.HC",
-			AboutFeed: "Human factors, user interfaces, and collaborative computing research.",
-		},
-		&SourceFeed{
-			Title:     "ArXiv Information Retrieval",
-			FeedURL:   "https://rss.arxiv.org/rss/cs.IR",
-			AboutFeed: "Indexing, search, content analysis, and information retrieval systems.",
-		},
-	}
-
-	huggingFace := []types.Source{
-		// https://huggingface.co/posts/takarajordan/806643001426071
-		// Note: community maintained/hosted, might be unreliable.
-		&SourceFeed{
-			Title:     "HuggingFace Daily Papers",
-			FeedURL:   "https://papers.takara.ai/api/feed",
-			AboutFeed: "Your daily dose of AI research from @akhaliq",
-		},
-		&SourceFeed{
-			Title:     "HuggingFace Blog",
-			FeedURL:   "https://huggingface.co/blog/feed.xml",
-			AboutFeed: "The Hugging Face blog",
-		},
-	}
-
-	indieHackers := []types.Source{
-		// https://www.indiehackers.com/post/an-unofficial-feed-of-indie-hackers-2413a17623
-		// Note: community maintained/hosted, might be unreliable.
-		// Another alternative to try if this doesn't work wekk: https://github.com/ahonn/ihrss
-		&SourceFeed{
-			Title:     "Indie Hackers Posts",
-			FeedURL:   "https://feed.indiehackers.world/posts.rss",
-			AboutFeed: "User-submitted posts on indiehackers.com",
-		},
-	}
-
-	feeds := make([]types.Source, 0)
-	feeds = append(feeds, arxivCategories...)
-	feeds = append(feeds, opmlSources...)
-	feeds = append(feeds, huggingFace...)
-	feeds = append(feeds, indieHackers...)
 
 	if err := fetchIcons(context.Background(), logger, feeds); err != nil {
 		return nil, fmt.Errorf("initialize feed sources: %w", err)
@@ -148,7 +63,7 @@ func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source,
 }
 
 func loadOPMLSources(logger *zerolog.Logger) ([]types.Source, error) {
-	opml, err := lib.ParseOPML(awesomeTechRSS)
+	opml, err := lib.ParseOPML(feedsOPML)
 	if err != nil {
 		return nil, fmt.Errorf("parse OPML: %w", err)
 	}
@@ -180,8 +95,9 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 			}
 
 			source := &SourceFeed{
-				Title:   outline.Title,
-				FeedURL: outline.XMLUrl,
+				Title:     outline.Title,
+				FeedURL:   outline.XMLUrl,
+				AboutFeed: outline.Text,
 			}
 
 			if seen[source.UID().String()] {
@@ -202,7 +118,7 @@ func fetchIcons(ctx context.Context, logger *zerolog.Logger, sources []types.Sou
 
 	for _, source := range sources {
 		g.Go(func() error {
-			ctx, cancel := context.WithTimeout(gctx, 2*time.Second)
+			ctx, cancel := context.WithTimeout(gctx, 10*time.Second)
 			defer cancel()
 
 			feedSource := source.(*SourceFeed)
