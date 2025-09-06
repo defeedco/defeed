@@ -184,7 +184,7 @@ func findFaviconInHTML(ctx context.Context, logger *zerolog.Logger, websiteURL s
 		return ""
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; DefeedBot/1.0)")
+	req.Header.Set("User-Agent", DefeedUserAgentString)
 
 	// Skip certificate verification to avoid occasional "failed to verify certificate" errors
 	client := &http.Client{

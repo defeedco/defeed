@@ -24,7 +24,7 @@ var ErrAuthUsersOnly = errors.New("query override supported for authenticated us
 var ErrInsufficientActivity = errors.New("insufficient activity to summarize")
 
 type Registry struct {
-	store            feedStore
+	feedRepository   feedStore
 	sourceExecutor   *sources.Scheduler
 	sourceRegistry   *sources.Registry
 	activityRegistry *activities.Registry
@@ -49,20 +49,22 @@ type summarizer interface {
 }
 
 func NewRegistry(
-	store feedStore,
+	feedRepository feedStore,
 	sourceExecutor *sources.Scheduler,
 	sourceRegistry *sources.Registry,
+	activityRegistry *activities.Registry,
 	summarizer summarizer,
 	queryRewriter queryRewriter,
 	config *Config,
 ) *Registry {
 	return &Registry{
-		store:          store,
-		sourceExecutor: sourceExecutor,
-		sourceRegistry: sourceRegistry,
-		summarizer:     summarizer,
-		queryRewriter:  queryRewriter,
-		config:         config,
+		feedRepository:   feedRepository,
+		sourceExecutor:   sourceExecutor,
+		sourceRegistry:   sourceRegistry,
+		activityRegistry: activityRegistry,
+		summarizer:       summarizer,
+		queryRewriter:    queryRewriter,
+		config:           config,
 	}
 }
 
@@ -135,7 +137,7 @@ type UpdateRequest struct {
 }
 
 func (r *Registry) Update(ctx context.Context, req UpdateRequest) (*Feed, error) {
-	feed, err := r.store.GetByID(ctx, req.ID)
+	feed, err := r.feedRepository.GetByID(ctx, req.ID)
 	if err != nil || feed.UserID != req.UserID {
 		return nil, errors.New("feed not found")
 	}
@@ -157,7 +159,7 @@ func (r *Registry) Update(ctx context.Context, req UpdateRequest) (*Feed, error)
 }
 
 func (r *Registry) executeAndUpsert(ctx context.Context, feed Feed) error {
-	err := r.store.Upsert(ctx, feed)
+	err := r.feedRepository.Upsert(ctx, feed)
 	if err != nil {
 		return fmt.Errorf("upsert feed: %w", err)
 	}
@@ -178,19 +180,19 @@ func (r *Registry) executeAndUpsert(ctx context.Context, feed Feed) error {
 }
 
 func (r *Registry) Remove(ctx context.Context, uid string, userID string) error {
-	feed, err := r.store.GetByID(ctx, uid)
+	feed, err := r.feedRepository.GetByID(ctx, uid)
 	if err != nil || feed.UserID != userID {
 		return errors.New("feed not found")
 	}
 
 	// TODO(optimisation): Remove the source from executor if no other feeds are using it
-	return r.store.Remove(ctx, uid)
+	return r.feedRepository.Remove(ctx, uid)
 }
 
 // ListByUserID returns both the feeds that the user owns and public ones.
 // If userID is empty, only public feeds are returned.
 func (r *Registry) ListByUserID(ctx context.Context, userID string) ([]*Feed, error) {
-	feeds, err := r.store.List(ctx)
+	feeds, err := r.feedRepository.List(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("list feeds: %w", err)
 	}
@@ -226,7 +228,7 @@ func (r *Registry) Activities(
 	queryOverride string,
 	period activitytypes.Period,
 ) (*ActivitiesResponse, error) {
-	feed, err := r.store.GetByID(ctx, feedID)
+	feed, err := r.feedRepository.GetByID(ctx, feedID)
 	if err != nil {
 		return nil, fmt.Errorf("get feed: %w", err)
 	}

@@ -99,7 +99,7 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 	}
 
 	feedStore := postgres.NewFeedRepository(db)
-	feedRegistry := feeds.NewRegistry(feedStore, sourceScheduler, sourceRegistry, summarizer, queryRewriter, &config.Feeds)
+	feedRegistry := feeds.NewRegistry(feedStore, sourceScheduler, sourceRegistry, activityRegistry, summarizer, queryRewriter, &config.Feeds)
 
 	server, err := api.NewServer(logger, &config.API, sourceRegistry, sourceScheduler, feedRegistry)
 	if err != nil {
