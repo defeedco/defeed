@@ -30,18 +30,16 @@ func NewRegistry(
 }
 
 type summarizer interface {
-	SummarizeActivity(ctx context.Context, activity types.Activity) (*types.ActivitySummary, error)
+	SummarizeActivity(ctx context.Context, act types.Activity) (*types.ActivitySummary, error)
 }
 
 type embedder interface {
-	Embed(ctx context.Context, summary *types.ActivitySummary) ([]float32, error)
+	Embed(ctx context.Context, sum *types.ActivitySummary) ([]float32, error)
 }
 
 type activityStore interface {
-	Upsert(activity *types.DecoratedActivity) error
-	Remove(uid string) error
-	List() ([]*types.DecoratedActivity, error)
-	Search(req types.SearchRequest) (*types.SearchResult, error)
+	Upsert(ctx context.Context, act *types.DecoratedActivity) error
+	Search(ctx context.Context, req types.SearchRequest) (*types.SearchResult, error)
 }
 
 // Create processes a single activity and stores it in the database.
@@ -49,7 +47,7 @@ type activityStore interface {
 func (r *Registry) Create(ctx context.Context, activity types.Activity, upsert bool) (bool, error) {
 	// Check if activity already exists and has been processed
 	if !upsert {
-		result, err := r.activityRepo.Search(types.SearchRequest{
+		result, err := r.activityRepo.Search(ctx, types.SearchRequest{
 			ActivityUIDs: []types.TypedUID{activity.UID()},
 			Limit:        1,
 		})
@@ -78,7 +76,7 @@ func (r *Registry) Create(ctx context.Context, activity types.Activity, upsert b
 		return false, fmt.Errorf("compute embedding: %w", err)
 	}
 
-	err = r.activityRepo.Upsert(&types.DecoratedActivity{
+	err = r.activityRepo.Upsert(ctx, &types.DecoratedActivity{
 		Activity:  activity,
 		Summary:   summary,
 		Embedding: embedding,
@@ -113,7 +111,7 @@ func (r *Registry) Search(ctx context.Context, req SearchRequest) (*types.Search
 		queryEmbedding = embedding
 	}
 
-	return r.activityRepo.Search(types.SearchRequest{
+	return r.activityRepo.Search(ctx, types.SearchRequest{
 		SourceUIDs:     req.SourceUIDs,
 		ActivityUIDs:   req.ActivityUIDs,
 		MinSimilarity:  req.MinSimilarity,

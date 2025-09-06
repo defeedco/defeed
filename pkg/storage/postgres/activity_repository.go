@@ -26,9 +26,7 @@ func NewActivityRepository(db *DB) *ActivityRepository {
 	return &ActivityRepository{db: db}
 }
 
-func (r *ActivityRepository) Upsert(activity *types.DecoratedActivity) error {
-	ctx := context.Background()
-
+func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.DecoratedActivity) error {
 	// Get existing update count if activity exists
 	existingUpdateCount, err := r.db.Client().Activity.Query().
 		Where(entactivity.ID(activity.Activity.UID().String())).
@@ -66,41 +64,12 @@ func (r *ActivityRepository) Upsert(activity *types.DecoratedActivity) error {
 	return err
 }
 
-func (r *ActivityRepository) Remove(uid string) error {
-	ctx := context.Background()
-	return r.db.Client().Activity.DeleteOneID(uid).Exec(ctx)
-}
-
-func (r *ActivityRepository) List() ([]*types.DecoratedActivity, error) {
-	ctx := context.Background()
-
-	results, err := r.db.Client().Activity.Query().
-		Order(ent.Desc(entactivity.FieldCreatedAt)).
-		All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]*types.DecoratedActivity, len(results))
-	for i, a := range results {
-		out, err := activityFromEnt(a, 0)
-		if err != nil {
-			return nil, fmt.Errorf("deserialize activity: %w", err)
-		}
-		result[i] = out
-	}
-
-	return result, nil
-}
-
 type activityWithSimilarity struct {
 	ent.Activity
 	Similarity float64 `sql:"similarity"`
 }
 
-func (r *ActivityRepository) Search(req types.SearchRequest) (*types.SearchResult, error) {
-	ctx := context.Background()
-
+func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest) (*types.SearchResult, error) {
 	// Build the base query for both count and data
 	query := r.db.Client().Activity.Query()
 
