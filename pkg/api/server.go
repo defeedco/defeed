@@ -550,6 +550,12 @@ func serializeSource(in sourcetypes.Source) (Source, error) {
 		return Source{}, fmt.Errorf("serialize source type: %w", err)
 	}
 
+	// Map internal topic tags to API TopicTag
+	apiTags := make([]TopicTag, 0)
+	for _, t := range in.Topics() {
+		apiTags = append(apiTags, TopicTag(t))
+	}
+
 	return Source{
 		Uid:         in.UID().String(),
 		Type:        sourceType,
@@ -557,6 +563,7 @@ func serializeSource(in sourcetypes.Source) (Source, error) {
 		IconUrl:     in.Icon(),
 		Name:        in.Name(),
 		Description: in.Description(),
+		TopicTags:   apiTags,
 	}, nil
 }
 

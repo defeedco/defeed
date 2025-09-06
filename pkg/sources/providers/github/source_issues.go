@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
@@ -27,7 +28,7 @@ func NewIssuesSource() *SourceIssues {
 	return &SourceIssues{}
 }
 
-func (s *SourceIssues) UID() types.TypedUID {
+func (s *SourceIssues) UID() activitytypes.TypedUID {
 	return &TypedUID{
 		Typ:   TypeGithubIssues,
 		Owner: s.Owner,
@@ -49,6 +50,10 @@ func (s *SourceIssues) URL() string {
 
 func (s *SourceIssues) Icon() string {
 	return "https://github.com/favicon.ico"
+}
+
+func (s *SourceIssues) Topics() []sourcetypes.TopicTag {
+	return []sourcetypes.TopicTag{sourcetypes.TopicDevTools, sourcetypes.TopicOpenSource}
 }
 
 func (s *SourceIssues) MarshalJSON() ([]byte, error) {
@@ -120,11 +125,11 @@ func (i *Issue) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Issue) UID() types.TypedUID {
+func (i *Issue) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeGithubIssues, fmt.Sprintf("%d", i.Issue.GetNumber()))
 }
 
-func (i *Issue) SourceUID() types.TypedUID {
+func (i *Issue) SourceUID() activitytypes.TypedUID {
 	return i.SourceID
 }
 
@@ -175,11 +180,11 @@ func (s *SourceIssues) Initialize(logger *zerolog.Logger) error {
 	return nil
 }
 
-func (s *SourceIssues) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceIssues) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	s.fetchIssueActivities(ctx, since, feed, errs)
 }
 
-func (s *SourceIssues) fetchIssueActivities(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceIssues) fetchIssueActivities(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	var sinceTime time.Time
 	if since != nil {
 		sinceTime = since.CreatedAt()

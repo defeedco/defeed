@@ -293,13 +293,13 @@ func filterAndRankByInterests(input []types.Source, interests []string) []types.
 
 	scoredList := make([]scored, 0, len(input))
 	for _, s := range input {
-		tags := deriveSourceTags(s)
-		if len(tags) == 0 {
+		providerTags := s.Topics()
+		if len(providerTags) == 0 {
 			continue
 		}
 		matches := 0
-		for _, t := range tags {
-			if _, ok := interestSet[strings.ToLower(strings.TrimSpace(t))]; ok {
+		for _, t := range providerTags {
+			if _, ok := interestSet[strings.ToLower(strings.TrimSpace(string(t)))]; ok {
 				matches++
 			}
 		}

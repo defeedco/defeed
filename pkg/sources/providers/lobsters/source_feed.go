@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/rs/zerolog"
 )
 
@@ -27,7 +28,7 @@ func NewSourceFeed() *SourceFeed {
 	}
 }
 
-func (s *SourceFeed) UID() types.TypedUID {
+func (s *SourceFeed) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeLobstersFeed, lib.StripURL(s.InstanceURL), s.FeedName)
 }
 
@@ -59,6 +60,14 @@ func (s *SourceFeed) Icon() string {
 	return "https://lobste.rs/favicon.ico"
 }
 
+func (s *SourceFeed) Topics() []sourcetypes.TopicTag {
+	switch s.FeedName {
+	case "hottest", "newest":
+		return []sourcetypes.TopicTag{sourcetypes.TopicDevTools, sourcetypes.TopicOpenSource}
+	}
+	return []sourcetypes.TopicTag{sourcetypes.TopicDevTools}
+}
+
 func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
@@ -69,11 +78,11 @@ func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 	return nil
 }
 
-func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceFeed) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	s.fetchAndSendNewStories(ctx, since, feed, errs)
 }
 
-func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	stories, err := s.client.GetStoriesByFeed(ctx, s.FeedName)
 	if err != nil {
 		errs <- err

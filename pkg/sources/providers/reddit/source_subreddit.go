@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"strings"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/rs/zerolog"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
@@ -35,7 +37,7 @@ func NewSourceSubreddit() *SourceSubreddit {
 	return &SourceSubreddit{}
 }
 
-func (s *SourceSubreddit) UID() types.TypedUID {
+func (s *SourceSubreddit) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
 }
 
@@ -73,11 +75,32 @@ func (s *SourceSubreddit) Icon() string {
 	return "https://reddit.com/favicon.ico"
 }
 
+func (s *SourceSubreddit) Topics() []sourcetypes.TopicTag {
+	tags := []sourcetypes.TopicTag{}
+	switch strings.ToLower(s.Subreddit) {
+	case "chatgpt", "local_llama", "localllama", "local_llms", "llama", "openai":
+		tags = append(tags, sourcetypes.TopicLLMs, sourcetypes.TopicAIResearch)
+	case "machinelearning", "deeplearning":
+		tags = append(tags, sourcetypes.TopicAIResearch)
+	case "javascript", "reactjs", "webdev":
+		tags = append(tags, sourcetypes.TopicDevTools, sourcetypes.TopicWebPerformance)
+	case "golang", "rust", "programming":
+		tags = append(tags, sourcetypes.TopicSystemsProgramming, sourcetypes.TopicOpenSource)
+	case "startups", "entrepreneur":
+		tags = append(tags, sourcetypes.TopicStartups, sourcetypes.TopicGrowthEngineering)
+	case "kubernetes", "devops":
+		tags = append(tags, sourcetypes.TopicCloudInfrastructure, sourcetypes.TopicDistributedSystems)
+	case "linux":
+		tags = append(tags, sourcetypes.TopicSystemsProgramming, sourcetypes.TopicOpenSource)
+	}
+	return tags
+}
+
 type Post struct {
-	Post            *reddit.Post   `json:"post"`
-	ExternalContent string         `json:"external_content"`
-	SourceID        types.TypedUID `json:"source_id"`
-	SourceTyp       string         `json:"source_type"`
+	Post            *reddit.Post            `json:"post"`
+	ExternalContent string                  `json:"external_content"`
+	SourceID        activitytypes.TypedUID  `json:"source_id"`
+	SourceTyp       string                  `json:"source_type"`
 }
 
 func NewPost() *Post {
@@ -117,11 +140,11 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (p *Post) UID() types.TypedUID {
+func (p *Post) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(p.SourceTyp, p.Post.ID)
 }
 
-func (p *Post) SourceUID() types.TypedUID {
+func (p *Post) SourceUID() activitytypes.TypedUID {
 	return p.SourceID
 }
 
@@ -139,9 +162,6 @@ func (p *Post) URL() string {
 }
 
 func (p *Post) ImageURL() string {
-	// TODO(pulse): Fetch thumbnail URL
-	// The go-reddit library doesn't provide direct access to thumbnail URLs
-	// We'll need to fetch this information separately if needed
 	return ""
 }
 
@@ -173,11 +193,11 @@ func (s *SourceSubreddit) Initialize(logger *zerolog.Logger) error {
 	return nil
 }
 
-func (s *SourceSubreddit) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceSubreddit) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	s.fetchSubredditPosts(ctx, since, feed, errs)
 }
 
-func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	subrLogger := s.logger.With().
 		Str("subreddit", s.Subreddit).
 		Str("sort_by", s.SortBy).
@@ -235,7 +255,7 @@ outer:
 	}
 }
 
-func (s *SourceSubreddit) fetchRecentPosts(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceSubreddit) fetchRecentPosts(ctx context.Context, feed chan<- activitytypes.Activity, errs chan<- error) {
 	redditPosts, _, err := s.fetchByCurrentTimeline(ctx, &reddit.ListOptions{
 		Limit: 10,
 	})

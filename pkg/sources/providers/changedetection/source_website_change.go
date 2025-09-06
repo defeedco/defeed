@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/rs/zerolog"
 )
 
@@ -27,7 +28,7 @@ func NewSourceWebsiteChange() *SourceWebsiteChange {
 	return &SourceWebsiteChange{}
 }
 
-func (s *SourceWebsiteChange) UID() types.TypedUID {
+func (s *SourceWebsiteChange) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeChangedetectionWebsite, lib.StripURL(s.InstanceURL), s.WatchUUID)
 }
 
@@ -54,11 +55,15 @@ func (s *SourceWebsiteChange) Icon() string {
 	return s.IconURL
 }
 
-func (s *SourceWebsiteChange) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceWebsiteChange) Topics() []sourcetypes.TopicTag {
+	return []sourcetypes.TopicTag{sourcetypes.TopicDevTools, sourcetypes.TopicWebPerformance}
+}
+
+func (s *SourceWebsiteChange) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	s.fetchAndSendNewChanges(ctx, since, feed, errs)
 }
 
-func (s *SourceWebsiteChange) fetchAndSendNewChanges(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceWebsiteChange) fetchAndSendNewChanges(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	change, err := s.fetchWatchFromChangeDetection(ctx)
 	if err != nil {
 		errs <- err
@@ -125,7 +130,7 @@ type WebsiteChange struct {
 	lastChanged  time.Time
 	diffURL      string
 	previousHash string
-	sourceUID    types.TypedUID
+	sourceUID    activitytypes.TypedUID
 }
 
 func NewWebsiteChange() *WebsiteChange {
@@ -162,11 +167,11 @@ func (c *WebsiteChange) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (c *WebsiteChange) SourceUID() types.TypedUID {
+func (c *WebsiteChange) SourceUID() activitytypes.TypedUID {
 	return c.sourceUID
 }
 
-func (c *WebsiteChange) UID() types.TypedUID {
+func (c *WebsiteChange) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeChangedetectionWebsite, lib.StripURL(c.url), fmt.Sprintf("%d", c.lastChanged.Unix()))
 }
 

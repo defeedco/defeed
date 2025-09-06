@@ -6,7 +6,8 @@ import (
 	"fmt"
 
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/mattn/go-mastodon"
 	"github.com/rs/zerolog"
 )
@@ -27,7 +28,7 @@ func NewSourceAccount() *SourceAccount {
 	}
 }
 
-func (s *SourceAccount) UID() types.TypedUID {
+func (s *SourceAccount) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeMastodonAccount, lib.StripURL(s.InstanceURL), s.Account)
 }
 
@@ -57,6 +58,13 @@ func (s *SourceAccount) Icon() string {
 	return fmt.Sprintf("%s/packs/assets/favicon-48x48-DMnduFKh.png", s.InstanceURL)
 }
 
+func (s *SourceAccount) Topics() []sourcetypes.TopicTag {
+	if tag, ok := sourcetypes.ParseTopicTag(s.AccountBio); ok {
+		return []sourcetypes.TopicTag{tag}
+	}
+	return []sourcetypes.TopicTag{sourcetypes.TopicOpenSource}
+}
+
 func (s *SourceAccount) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
@@ -73,7 +81,7 @@ func (s *SourceAccount) Initialize(logger *zerolog.Logger) error {
 	return nil
 }
 
-func (s *SourceAccount) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceAccount) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	account, err := s.fetchAccount(ctx)
 	if err != nil {
 		errs <- fmt.Errorf("fetch account: %w", err)
@@ -93,7 +101,7 @@ func (s *SourceAccount) fetchAccount(ctx context.Context) (*mastodon.Account, er
 	return account, nil
 }
 
-func (s *SourceAccount) fetchAccountPosts(ctx context.Context, accountID mastodon.ID, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceAccount) fetchAccountPosts(ctx context.Context, accountID mastodon.ID, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	var sinceID mastodon.ID
 	if since != nil {
 		sincePost := since.(*Post)
@@ -142,7 +150,7 @@ outer:
 	}
 }
 
-func (s *SourceAccount) fetchLatestPosts(ctx context.Context, accountID mastodon.ID, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceAccount) fetchLatestPosts(ctx context.Context, accountID mastodon.ID, feed chan<- activitytypes.Activity, errs chan<- error) {
 	accLogger := s.logger.With().
 		Str("account_id", string(accountID)).
 		Logger()
