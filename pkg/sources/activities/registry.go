@@ -82,6 +82,10 @@ func (r *Registry) Create(ctx context.Context, activity types.Activity, upsert b
 		Embedding: embedding,
 	})
 	if err != nil {
+		r.logger.Error().
+			Err(err).
+			Any("activity", activity).
+			Msg("store activity")
 		return false, fmt.Errorf("store activity: %w", err)
 	}
 
