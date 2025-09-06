@@ -83,7 +83,7 @@ func (r *ActivityRepository) List() ([]*types.DecoratedActivity, error) {
 
 	result := make([]*types.DecoratedActivity, len(results))
 	for i, a := range results {
-		out, err := activityFromEnt(a)
+		out, err := activityFromEnt(a, 0)
 		if err != nil {
 			return nil, fmt.Errorf("deserialize activity: %w", err)
 		}
@@ -235,7 +235,7 @@ func (r *ActivityRepository) Search(req types.SearchRequest) (*types.SearchResul
 
 	result := make([]*types.DecoratedActivity, len(rows))
 	for i, a := range rows {
-		res, err := activityFromEnt(&a.Activity)
+		res, err := activityFromEnt(&a.Activity, float32(a.Similarity))
 		if err != nil {
 			return nil, fmt.Errorf("deserialize db activity: %w", err)
 		}
@@ -320,7 +320,7 @@ func deserializeCursor(input string) (cursor, error) {
 	return cur, nil
 }
 
-func activityFromEnt(in *ent.Activity) (*types.DecoratedActivity, error) {
+func activityFromEnt(in *ent.Activity, similarity float32) (*types.DecoratedActivity, error) {
 	act, err := activities.NewActivity(in.SourceType)
 	if err != nil {
 		return nil, fmt.Errorf("new activity: %w", err)
@@ -332,7 +332,9 @@ func activityFromEnt(in *ent.Activity) (*types.DecoratedActivity, error) {
 	}
 
 	return &types.DecoratedActivity{
-		Activity: act,
+		Activity:   act,
+		Embedding:  in.Embedding.Slice(),
+		Similarity: similarity,
 		Summary: &types.ActivitySummary{
 			ShortSummary: in.ShortSummary,
 			FullSummary:  in.FullSummary,

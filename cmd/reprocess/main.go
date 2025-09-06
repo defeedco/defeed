@@ -123,9 +123,10 @@ func run(ctx context.Context, config Config) error {
 		Msg("Starting reprocessing")
 
 	// Create a pool with limited concurrency
-	pool := pond.NewPool(config.MaxActivities)
+	pool := pond.NewPool(config.MaxConcurrency)
 	skipped := atomic.Int32{}
 	errored := atomic.Int32{}
+	fetchCount := 0
 
 	for {
 		result, err := activityRegistry.Search(ctx, searchReq)
@@ -133,14 +134,19 @@ func run(ctx context.Context, config Config) error {
 			return fmt.Errorf("search activities: %w", err)
 		}
 		searchReq.Cursor = result.NextCursor
+		fetchCount += len(result.Activities)
 
 		logger.Info().
 			Int("activities_count", len(result.Activities)).
 			Str("next_cursor", result.NextCursor).
 			Bool("has_more", result.HasMore).
-			Msg("Starting processing")
+			Msg("Processing batch")
 
 		if !result.HasMore {
+			break
+		}
+
+		if config.MaxActivities > 0 && fetchCount > config.MaxActivities {
 			break
 		}
 
@@ -210,10 +216,6 @@ func buildSearchRequest(config Config) (activities.SearchRequest, error) {
 
 			req.ActivityUIDs[i] = parsedUID
 		}
-	}
-
-	if config.MaxActivities > 0 && config.MaxActivities < config.BatchSize {
-		req.Limit = config.MaxActivities
 	}
 
 	return req, nil
