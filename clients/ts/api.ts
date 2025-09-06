@@ -338,6 +338,12 @@ export interface Source {
      * @memberof Source
      */
     'iconUrl': string;
+    /**
+     * 
+     * @type {Array<TopicTag>}
+     * @memberof Source
+     */
+    'topicTags': Array<TopicTag>;
 }
 
 
@@ -361,6 +367,33 @@ export const SourceType = {
 } as const;
 
 export type SourceType = typeof SourceType[keyof typeof SourceType];
+
+
+/**
+ * Specific niche technology/startup interests
+ * @export
+ * @enum {string}
+ */
+
+export const TopicTag = {
+    Llms: 'llms',
+    Startups: 'startups',
+    AgenticSystems: 'agentic_systems',
+    Devtools: 'devtools',
+    WebPerformance: 'web_performance',
+    DistributedSystems: 'distributed_systems',
+    Databases: 'databases',
+    SecurityEngineering: 'security_engineering',
+    SystemsProgramming: 'systems_programming',
+    ProductManagement: 'product_management',
+    GrowthEngineering: 'growth_engineering',
+    AiResearch: 'ai_research',
+    Robotics: 'robotics',
+    OpenSource: 'open_source',
+    CloudInfrastructure: 'cloud_infrastructure'
+} as const;
+
+export type TopicTag = typeof TopicTag[keyof typeof TopicTag];
 
 
 /**
@@ -883,11 +916,11 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
          * 
          * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
-         * @param {Array<string>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;programming&amp;interests&#x3D;ai
+         * @param {Array<TopicTag>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;llms&amp;interests&#x3D;startups
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listSources: async (query?: string, interests?: Array<string>, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        listSources: async (query?: string, interests?: Array<TopicTag>, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/sources`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -950,11 +983,11 @@ export const SourcesApiFp = function(configuration?: Configuration) {
          * 
          * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
-         * @param {Array<string>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;programming&amp;interests&#x3D;ai
+         * @param {Array<TopicTag>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;llms&amp;interests&#x3D;startups
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listSources(query?: string, interests?: Array<string>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Source>>> {
+        async listSources(query?: string, interests?: Array<TopicTag>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Source>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listSources(query, interests, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['SourcesApi.listSources']?.[localVarOperationServerIndex]?.url;
@@ -984,11 +1017,11 @@ export const SourcesApiFactory = function (configuration?: Configuration, basePa
          * 
          * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
-         * @param {Array<string>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;programming&amp;interests&#x3D;ai
+         * @param {Array<TopicTag>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;llms&amp;interests&#x3D;startups
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listSources(query?: string, interests?: Array<string>, options?: RawAxiosRequestConfig): AxiosPromise<Array<Source>> {
+        listSources(query?: string, interests?: Array<TopicTag>, options?: RawAxiosRequestConfig): AxiosPromise<Array<Source>> {
             return localVarFp.listSources(query, interests, options).then((request) => request(axios, basePath));
         },
     };
@@ -1017,12 +1050,12 @@ export class SourcesApi extends BaseAPI {
      * 
      * @summary List available sources
      * @param {string} [query] Filter sources by name or description.
-     * @param {Array<string>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;programming&amp;interests&#x3D;ai
+     * @param {Array<TopicTag>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;llms&amp;interests&#x3D;startups
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SourcesApi
      */
-    public listSources(query?: string, interests?: Array<string>, options?: RawAxiosRequestConfig) {
+    public listSources(query?: string, interests?: Array<TopicTag>, options?: RawAxiosRequestConfig) {
         return SourcesApiFp(this.configuration).listSources(query, interests, options).then((request) => request(this.axios, this.basePath));
     }
 }

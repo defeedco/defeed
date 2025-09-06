@@ -46,6 +46,25 @@ const (
 	RssFeed                SourceType = "rssFeed"
 )
 
+// Defines values for TopicTag.
+const (
+	AgenticSystems      TopicTag = "agentic_systems"
+	AiResearch          TopicTag = "ai_research"
+	CloudInfrastructure TopicTag = "cloud_infrastructure"
+	Databases           TopicTag = "databases"
+	Devtools            TopicTag = "devtools"
+	DistributedSystems  TopicTag = "distributed_systems"
+	GrowthEngineering   TopicTag = "growth_engineering"
+	Llms                TopicTag = "llms"
+	OpenSource          TopicTag = "open_source"
+	ProductManagement   TopicTag = "product_management"
+	Robotics            TopicTag = "robotics"
+	SecurityEngineering TopicTag = "security_engineering"
+	Startups            TopicTag = "startups"
+	SystemsProgramming  TopicTag = "systems_programming"
+	WebPerformance      TopicTag = "web_performance"
+)
+
 // ActivitiesListResponse defines model for ActivitiesListResponse.
 type ActivitiesListResponse struct {
 	Results []Activity      `json:"results"`
@@ -121,6 +140,7 @@ type Source struct {
 	Description string     `json:"description"`
 	IconUrl     string     `json:"iconUrl"`
 	Name        string     `json:"name"`
+	TopicTags   []TopicTag `json:"topicTags"`
 	Type        SourceType `json:"type"`
 	Uid         string     `json:"uid"`
 	Url         string     `json:"url"`
@@ -128,6 +148,9 @@ type Source struct {
 
 // SourceType defines model for SourceType.
 type SourceType string
+
+// TopicTag Specific niche technology/startup interests
+type TopicTag string
 
 // UpdateFeedRequest defines model for UpdateFeedRequest.
 type UpdateFeedRequest = CreateFeedRequest
@@ -152,8 +175,8 @@ type ListSourcesParams struct {
 	// Query Filter sources by name or description.
 	Query *string `form:"query,omitempty" json:"query,omitempty"`
 
-	// Interests Optional list of user interests to personalize results. Example: interests=programming&interests=ai
-	Interests *[]string `form:"interests,omitempty" json:"interests,omitempty"`
+	// Interests Optional list of user interests to personalize results. Example: interests=llms&interests=startups
+	Interests *[]TopicTag `form:"interests,omitempty" json:"interests,omitempty"`
 }
 
 // CreateOwnFeedJSONRequestBody defines body for CreateOwnFeed for application/json ContentType.
