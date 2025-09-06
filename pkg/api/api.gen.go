@@ -151,6 +151,9 @@ type ListFeedActivitiesParams struct {
 type ListSourcesParams struct {
 	// Query Filter sources by name or description.
 	Query *string `form:"query,omitempty" json:"query,omitempty"`
+
+	// Interests Optional list of user interests to personalize results. Example: interests=programming&interests=ai
+	Interests *[]string `form:"interests,omitempty" json:"interests,omitempty"`
 }
 
 // CreateOwnFeedJSONRequestBody defines body for CreateOwnFeed for application/json ContentType.
@@ -380,6 +383,14 @@ func (siw *ServerInterfaceWrapper) ListSources(w http.ResponseWriter, r *http.Re
 	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "interests" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "interests", r.URL.Query(), &params.Interests)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "interests", Err: err})
 		return
 	}
 

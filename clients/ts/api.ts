@@ -883,10 +883,11 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
          * 
          * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
+         * @param {Array<string>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;programming&amp;interests&#x3D;ai
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listSources: async (query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        listSources: async (query?: string, interests?: Array<string>, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/sources`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -905,6 +906,10 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
 
             if (query !== undefined) {
                 localVarQueryParameter['query'] = query;
+            }
+
+            if (interests) {
+                localVarQueryParameter['interests'] = interests;
             }
 
 
@@ -945,11 +950,12 @@ export const SourcesApiFp = function(configuration?: Configuration) {
          * 
          * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
+         * @param {Array<string>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;programming&amp;interests&#x3D;ai
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listSources(query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Source>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listSources(query, options);
+        async listSources(query?: string, interests?: Array<string>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Source>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listSources(query, interests, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['SourcesApi.listSources']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -978,11 +984,12 @@ export const SourcesApiFactory = function (configuration?: Configuration, basePa
          * 
          * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
+         * @param {Array<string>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;programming&amp;interests&#x3D;ai
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listSources(query?: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<Source>> {
-            return localVarFp.listSources(query, options).then((request) => request(axios, basePath));
+        listSources(query?: string, interests?: Array<string>, options?: RawAxiosRequestConfig): AxiosPromise<Array<Source>> {
+            return localVarFp.listSources(query, interests, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1010,12 +1017,13 @@ export class SourcesApi extends BaseAPI {
      * 
      * @summary List available sources
      * @param {string} [query] Filter sources by name or description.
+     * @param {Array<string>} [interests] Optional list of user interests to personalize results. Example: interests&#x3D;programming&amp;interests&#x3D;ai
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SourcesApi
      */
-    public listSources(query?: string, options?: RawAxiosRequestConfig) {
-        return SourcesApiFp(this.configuration).listSources(query, options).then((request) => request(this.axios, this.basePath));
+    public listSources(query?: string, interests?: Array<string>, options?: RawAxiosRequestConfig) {
+        return SourcesApiFp(this.configuration).listSources(query, interests, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

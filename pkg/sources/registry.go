@@ -80,8 +80,14 @@ func (r *Registry) FindByUID(ctx context.Context, uid activitytypes.TypedUID) (t
 	return source, nil
 }
 
+// SearchParams configures how sources are searched and ranked.
+type SearchParams struct {
+    Query     string
+    Interests []string
+}
+
 // Search searches for sources from available fetchers
-func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, error) {
+func (r *Registry) Search(ctx context.Context, params SearchParams) ([]types.Source, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.SetLimit(len(r.fetchers))
@@ -89,7 +95,7 @@ func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, er
 	results := make([]types.Source, 0)
 	for _, f := range r.fetchers {
 		g.Go(func() error {
-			res, err := f.Search(gctx, query)
+			res, err := f.Search(gctx, params.Query)
 			if err != nil {
 				return fmt.Errorf("fetcher search: %w", err)
 			}
@@ -103,15 +109,27 @@ func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, er
 	}
 
 	r.logger.Debug().
-		Str("query", query).
+		Str("query", params.Query).
 		Int("count", len(results)).
 		Msg("searched sources")
 
+	// Normalize interests
+	normalizedInterests := make([]string, 0, len(params.Interests))
+	for _, it := range params.Interests {
+		it = strings.TrimSpace(strings.ToLower(it))
+		if it != "" {
+			normalizedInterests = append(normalizedInterests, it)
+		}
+	}
+
 	var filtered []types.Source
-	if query == "" {
-		filtered = alphabeticalSort(results)
-	} else {
-		filtered = fuzzyReRank(results, query)
+	switch {
+	case params.Query != "":
+		filtered = fuzzyReRank(results, params.Query)
+	case len(normalizedInterests) > 0:
+		filtered = filterAndRankByInterests(results, normalizedInterests)
+	default:
+		filtered = curatedDefaultSort(results)
 	}
 
 	return filtered, nil
@@ -222,4 +240,193 @@ func alphabeticalSort(input []types.Source) []types.Source {
 		return strings.ToLower(sorted[i].Name()) < strings.ToLower(sorted[j].Name())
 	})
 	return sorted
+}
+
+// curatedDefaultSort provides a non-personalized default ordering prioritizing
+// familiar, high-signal sources first so the UI feels less overwhelming.
+func curatedDefaultSort(input []types.Source) []types.Source {
+	sorted := make([]types.Source, len(input))
+	copy(sorted, input)
+
+	baseWeight := func(s types.Source) int {
+		switch s.UID().Type() {
+		case reddit.TypeRedditSubreddit:
+			return 100
+		case hackernews.TypeHackerNewsPosts:
+			return 95
+		case lobsters.TypeLobstersTag, lobsters.TypeLobstersFeed:
+			return 90
+		case github.TypeGithubIssues, github.TypeGithubReleases:
+			return 80
+		case rss.TypeRSSFeed:
+			return 70
+		case mastodon.TypeMastodonAccount, mastodon.TypeMastodonTag:
+			return 65
+		default:
+			return 50
+		}
+	}
+
+	sort.Slice(sorted, func(i, j int) bool {
+		wi := baseWeight(sorted[i])
+		wj := baseWeight(sorted[j])
+		if wi == wj {
+			return strings.ToLower(sorted[i].Name()) < strings.ToLower(sorted[j].Name())
+		}
+		return wi > wj
+	})
+	return sorted
+}
+
+// filterAndRankByInterests keeps only sources that overlap with the provided interests
+// and ranks by number of matching tags, falling back to alphabetical for stability.
+func filterAndRankByInterests(input []types.Source, interests []string) []types.Source {
+	interestSet := make(map[string]struct{}, len(interests))
+	for _, t := range interests {
+		interestSet[t] = struct{}{}
+	}
+
+	type scored struct {
+		s     types.Source
+		score int
+	}
+
+	scoredList := make([]scored, 0, len(input))
+	for _, s := range input {
+		tags := deriveSourceTags(s)
+		if len(tags) == 0 {
+			continue
+		}
+		matches := 0
+		for _, t := range tags {
+			if _, ok := interestSet[strings.ToLower(strings.TrimSpace(t))]; ok {
+				matches++
+			}
+		}
+		if matches > 0 {
+			scoredList = append(scoredList, scored{s: s, score: matches})
+		}
+	}
+
+	if len(scoredList) == 0 {
+		return curatedDefaultSort(input)
+	}
+
+	sort.Slice(scoredList, func(i, j int) bool {
+		if scoredList[i].score == scoredList[j].score {
+			return strings.ToLower(scoredList[i].s.Name()) < strings.ToLower(scoredList[j].s.Name())
+		}
+		return scoredList[i].score > scoredList[j].score
+	})
+
+	out := make([]types.Source, len(scoredList))
+	for i, sc := range scoredList {
+		out[i] = sc.s
+	}
+	return out
+}
+
+// deriveSourceTags attempts to infer topical tags for a source based on its
+// type and available metadata. This avoids adding a new provider interface.
+func deriveSourceTags(s types.Source) []string {
+	tags := []string{"news"}
+
+	switch s.UID().Type() {
+	case reddit.TypeRedditSubreddit:
+		tags = append(tags, "reddit")
+		if sub, ok := s.(*reddit.SourceSubreddit); ok {
+			tags = append(tags, strings.ToLower(sub.Subreddit))
+			tags = append(tags, tokenizeToTags(sub.SubredditSummary)...)
+		}
+	case hackernews.TypeHackerNewsPosts:
+		tags = append(tags, "hackernews", "technology", "programming")
+	case lobsters.TypeLobstersTag:
+		tags = append(tags, "lobsters", "technology", "programming")
+		if lt, ok := s.(*lobsters.SourceTag); ok {
+			tags = append(tags, strings.ToLower(lt.Tag))
+			tags = append(tags, tokenizeToTags(lt.TagDescription)...)
+		}
+	case lobsters.TypeLobstersFeed:
+		tags = append(tags, "lobsters", "technology")
+	case github.TypeGithubIssues, github.TypeGithubReleases:
+		tags = append(tags, "github", "software", "engineering", "programming")
+	case rss.TypeRSSFeed:
+		tags = append(tags, "rss")
+		if rf, ok := s.(*rss.SourceFeed); ok {
+			for _, t := range rf.Tags {
+				if t != "" {
+					tags = append(tags, strings.ToLower(strings.TrimSpace(t)))
+				}
+			}
+			tags = append(tags, tokenizeToTags(rf.Title)...)
+			tags = append(tags, tokenizeToTags(rf.AboutFeed)...)
+		}
+	case mastodon.TypeMastodonAccount, mastodon.TypeMastodonTag:
+		tags = append(tags, "mastodon", "social")
+	}
+
+	// Expand and dedupe
+	tags = expandTagSynonyms(tags)
+	seen := map[string]struct{}{}
+	uniq := make([]string, 0, len(tags))
+	for _, t := range tags {
+		t = strings.ToLower(strings.TrimSpace(t))
+		if t == "" {
+			continue
+		}
+		if _, ok := seen[t]; ok {
+			continue
+		}
+		seen[t] = struct{}{}
+		uniq = append(uniq, t)
+	}
+	return uniq
+}
+
+func tokenizeToTags(s string) []string {
+	if s == "" {
+		return nil
+	}
+	s = strings.ToLower(s)
+	for _, sep := range []string{",", ";", "/", "|", "-"} {
+		s = strings.ReplaceAll(s, sep, " ")
+	}
+	parts := strings.Fields(s)
+	tags := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if len(p) < 3 || len(p) > 30 {
+			continue
+		}
+		tags = append(tags, p)
+	}
+	return tags
+}
+
+func expandTagSynonyms(tags []string) []string {
+	if len(tags) == 0 {
+		return tags
+	}
+	syn := map[string][]string{
+		"ai":            {"artificialintelligence", "ml", "machinelearning"},
+		"ml":            {"machinelearning", "ai"},
+		"programming":   {"software", "engineering", "coding", "development", "dev"},
+		"web":           {"webdev", "frontend", "backend", "javascript", "react"},
+		"security":      {"infosec", "netsec", "appsec", "cybersecurity"},
+		"linux":         {"unix", "opensource"},
+		"opensource":    {"oss", "foss"},
+		"startup":       {"startups", "entrepreneurship"},
+		"data":          {"datascience", "analytics"},
+		"datascience":   {"data", "machinelearning"},
+		"devops":        {"infrastructure", "kubernetes", "containers"},
+		"rss":           {"blog", "news"},
+		"technology":    {"tech"},
+	}
+	out := make([]string, 0, len(tags)*2)
+	out = append(out, tags...)
+	for _, t := range tags {
+		if alts, ok := syn[strings.ToLower(strings.TrimSpace(t))]; ok {
+			out = append(out, alts...)
+		}
+	}
+	return out
 }

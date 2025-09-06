@@ -23,6 +23,15 @@ paths:
           description: Filter sources by name or description.
           schema:
             type: string
+        - name: interests
+          in: query
+          description: "Optional list of user interests to personalize results. Example: interests=programming&interests=ai"
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
       security:
         - bearerAuth: []
       responses:

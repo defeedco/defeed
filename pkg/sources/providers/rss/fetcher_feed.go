@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"time"
+	"strings"
 
 	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
@@ -98,6 +99,21 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 				Title:     outline.Title,
 				FeedURL:   outline.XMLUrl,
 				AboutFeed: outline.Text,
+			}
+
+			// Derive simple topical tags from OPML category and outline metadata
+			if category.Title != "" || category.Text != "" {
+				cat := category.Title
+				if cat == "" {
+					cat = category.Text
+				}
+				source.Tags = append(source.Tags, strings.ToLower(cat))
+			}
+			if outline.Title != "" {
+				source.Tags = append(source.Tags, strings.ToLower(outline.Title))
+			}
+			if outline.Text != "" {
+				source.Tags = append(source.Tags, strings.ToLower(outline.Text))
 			}
 
 			if seen[source.UID().String()] {

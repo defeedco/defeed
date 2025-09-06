@@ -267,7 +267,18 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params List
 		query = *params.Query
 	}
 
-	result, err := s.registry.Search(r.Context(), query)
+	// Optional personalization via "interests" query params
+	interests := make([]string, 0)
+	if vals, ok := r.URL.Query()["interests"]; ok {
+		for _, v := range vals {
+			v = strings.TrimSpace(v)
+			if v != "" {
+				interests = append(interests, v)
+			}
+		}
+	}
+
+	result, err := s.registry.Search(r.Context(), sources.SearchParams{Query: query, Interests: interests})
 	if err != nil {
 		s.internalError(w, err, "search source presets")
 		return
