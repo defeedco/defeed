@@ -188,7 +188,7 @@ func findFaviconInHTML(ctx context.Context, logger *zerolog.Logger, websiteURL s
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Warn().Str("url", websiteURL).Msg("failed to fetch HTML for favicon")
+		logger.Error().Err(err).Str("url", websiteURL).Msg("failed to fetch HTML for favicon")
 		return ""
 	}
 	defer resp.Body.Close()

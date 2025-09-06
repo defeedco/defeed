@@ -27,8 +27,8 @@ func (Activity) Fields() []ent.Field {
 		field.String("raw_json"),
 		field.Other("embedding", pgvector.Vector{}).
 			SchemaType(map[string]string{
-				// Use text-embedding-3-large output dimensions
-				dialect.Postgres: "vector(3072)",
+				// Use text-embedding-3-small output dimensions (6.5x cheaper than large)
+				dialect.Postgres: "vector(1536)",
 			}).
 			Nillable().
 			Optional(),

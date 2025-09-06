@@ -107,6 +107,14 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 		query = query.Where(entactivity.SourceUIDIn(sourceUIDs...))
 	}
 
+	if len(req.ActivityUIDs) > 0 {
+		activityUIDs := make([]string, len(req.ActivityUIDs))
+		for i, uid := range req.ActivityUIDs {
+			activityUIDs[i] = uid.String()
+		}
+		query = query.Where(entactivity.IDIn(activityUIDs...))
+	}
+
 	// Add time-based filtering based on period
 	if req.Period != types.PeriodAll {
 		var since time.Time

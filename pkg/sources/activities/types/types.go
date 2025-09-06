@@ -39,17 +39,6 @@ type DecoratedActivity struct {
 	Similarity float32
 }
 
-type ActivitiesSummary struct {
-	Overview   string
-	Highlights []ActivityHighlight
-	CreatedAt  time.Time
-}
-
-type ActivityHighlight struct {
-	Content           string
-	SourceActivityIDs []string
-}
-
 type SortBy string
 
 const (
@@ -63,6 +52,8 @@ type SearchRequest struct {
 	MinSimilarity float32
 	// SourceUIDs ignored if empty
 	SourceUIDs []TypedUID
+	// ActivityUIDs filters by specific activity UIDs
+	ActivityUIDs []TypedUID
 	// Limit the maximum number of results to return
 	Limit int
 	// SortBy specifies the field to sort results by (similarity or date)

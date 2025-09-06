@@ -21,3 +21,13 @@ ent-generate:
 test:
 	@echo ">>> Running tests..."
 	@go test ./pkg/...
+
+.PHONY: reprocess
+reprocess:
+	@echo ">>> Running reprocessing tool..."
+	@go run ./cmd/reprocess --env-file=./cmd/reprocess/.env $(ARGS)
+
+.PHONY: reprocess-dry-run
+reprocess-dry-run:
+	@echo ">>> Running reprocessing tool (dry run)..."
+	@go run ./cmd/reprocess --dry-run --env-file=./cmd/reprocess/.env $(ARGS)
