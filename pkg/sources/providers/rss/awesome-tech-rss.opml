@@ -24,16 +24,13 @@
 			<outline text="Andrew Chen" title="Andrew Chen" type="rss" xmlUrl="http://andrewchen.co/feed/" />
 			<outline text="Both Sides of the Table - Medium" title="Both Sides of the Table - Medium" type="rss" xmlUrl="https://bothsidesofthetable.com/feed" />
 			<outline text="Both Sides of the Table" title="Both Sides of the Table" type="rss" xmlUrl="http://feeds.feedburner.com/BothSidesOfTheTable" />
-			<outline text="OnStartups" title="OnStartups" type="rss" xmlUrl="http://feed.onstartups.com/onstartups" />
 			<outline text="The Black Box of Product Management - Medium" title="The Black Box of Product Management - Medium" type="rss" xmlUrl="https://medium.com/feed/the-black-box-of-product-management" />
 			<outline text="Product Life" title="Product Life" type="rss" xmlUrl="https://productlife.to/feed" />
 			<outline text="Irrational Exuberance" title="Irrational Exuberance" type="rss" xmlUrl="https://lethain.com/feeds/" />
 		</outline>
 		<outline text="Tech News" title="Tech News">
-			<outline text="SlashGear" title="SlashGear" type="rss" xmlUrl="http://feeds.slashgear.com/slashgear" />
 			<outline text="VentureBeat" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" />
 			<outline text="The Verge" title="The Verge" type="rss" xmlUrl="http://www.theverge.com/rss/full.xml" />
-			<outline text="Engadget" title="Engadget" type="rss" xmlUrl="http://www.engadget.com/rss-full.xml" />
 			<outline text="Tech in Asia" title="Tech in Asia" type="rss" xmlUrl="https://feeds2.feedburner.com/PennOlson" />
 			<outline text="TechCrunch" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" />
 			<outline text="Fast Company " title="Fast Company " type="rss" xmlUrl="http://www.fastcodesign.com/rss.xml" />
@@ -96,11 +93,10 @@
 			<outline text="Distill" title="Distill" type="rss" xmlUrl="http://distill.pub/rss.xml" />
 			<outline text="Lil’Log" title="Lil’Log" type="rss" xmlUrl="https://lilianweng.github.io/lil-log/feed.xml" />
 			<outline text="MIT News - Artificial intelligence" title="MIT News - Artificial intelligence" type="rss" xmlUrl="http://news.mit.edu/rss/topic/artificial-intelligence2" />
-			<outline text="Sebastian Ruder" title="Sebastian Ruder" type="rss" xmlUrl="http://ruder.io/rss/index.rss" />
 			<outline text="The Berkeley Artificial Intelligence Research Blog" title="The Berkeley Artificial Intelligence Research Blog" type="rss" xmlUrl="http://bair.berkeley.edu/blog/feed.xml" />
 			<outline text="DeepLearningAI" title="DeepLearningAI" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCcIXc5mJsHVYTZR1maL5l9w" />
 			<outline text="Eric Jang" title="Eric Jang" type="rss" xmlUrl="http://blog.evjang.com/feeds/posts/default?alt=rss" />
-			<outline text="OpenAI " title="OpenAI " type="rss" xmlUrl="https://blog.openai.com/rss/" />
+			<outline text="OpenAI " title="OpenAI " type="rss" xmlUrl="https://openai.com/news/rss.xml" />
 			<outline text="The Gradient" title="The Gradient" type="rss" xmlUrl="https://thegradient.pub/rss/" />
 			<outline text="Magenta" title="Magenta" type="rss" xmlUrl="http://magenta.tensorflow.org/feed.xml" />
 			<outline text="NLP News" title="NLP News" type="rss" xmlUrl="http://newsletter.ruder.io/?format=rss" />
@@ -119,7 +115,6 @@
 			<outline text="UX Planet" title="UX Planet" type="rss" xmlUrl="https://uxplanet.org/feed" />
 			<outline text="NN/g latest articles and announcements" title="NN/g latest articles and announcements" type="rss" xmlUrl="https://www.nngroup.com/feed/rss/" />
 			<outline text="UX Movement" title="UX Movement" type="rss" xmlUrl="http://feeds.feedburner.com/uxmovement" />
-			<outline text="Inside Design" title="Inside Design" type="rss" xmlUrl="http://blog.invisionapp.com/feed/" />
 			<outline text="UXmatters" title="UXmatters" type="rss" xmlUrl="https://uxmatters.com/index.xml" />
 			<outline text="Articles on Smashing Magazine — For Web Designers And Developers" title="Articles on Smashing Magazine — For Web Designers And Developers" type="rss" xmlUrl="https://www.smashingmagazine.com/feed/" />
 			<outline text="UX Collective - Medium" title="UX Collective - Medium" type="rss" xmlUrl="https://uxdesign.cc/feed" />

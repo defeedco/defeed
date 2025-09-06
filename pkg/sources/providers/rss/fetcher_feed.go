@@ -15,7 +15,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// Source: https://raw.githubusercontent.com/tuan3w/awesome-tech-rss/refs/heads/main/feeds.opml
+// Modified from: https://raw.githubusercontent.com/tuan3w/awesome-tech-rss/refs/heads/main/feeds.opml
 //
 //go:embed awesome-tech-rss.opml
 var awesomeTechRSS string
@@ -33,6 +33,7 @@ func NewFeedFetcher(logger *zerolog.Logger) (*FeedFetcher, error) {
 		return nil, fmt.Errorf("load OPML sources: %w", err)
 	}
 
+	// TODO: Move these to opml file
 	arxivCategories := []types.Source{
 		&SourceFeed{
 			Title:     "ArXiv AI",
@@ -202,7 +203,7 @@ func fetchIcons(ctx context.Context, logger *zerolog.Logger, sources []types.Sou
 
 	for _, source := range sources {
 		g.Go(func() error {
-			ctx, cancel := context.WithTimeout(gctx, 2*time.Second)
+			ctx, cancel := context.WithTimeout(gctx, 10*time.Second)
 			defer cancel()
 
 			feedSource := source.(*SourceFeed)
