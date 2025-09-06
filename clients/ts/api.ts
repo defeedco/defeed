@@ -36,6 +36,18 @@ export interface ActivitiesListResponse {
      */
     'topics': Array<ActivityTopic>;
     /**
+     * Cursor to use for fetching the next page of results
+     * @type {string}
+     * @memberof ActivitiesListResponse
+     */
+    'nextCursor'?: string;
+    /**
+     * Whether there are more results available
+     * @type {boolean}
+     * @memberof ActivitiesListResponse
+     */
+    'hasMore'?: boolean;
+    /**
      * 
      * @type {Array<Activity>}
      * @memberof ActivitiesListResponse

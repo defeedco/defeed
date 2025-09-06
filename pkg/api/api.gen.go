@@ -48,8 +48,13 @@ const (
 
 // ActivitiesListResponse defines model for ActivitiesListResponse.
 type ActivitiesListResponse struct {
-	Results []Activity      `json:"results"`
-	Topics  []ActivityTopic `json:"topics"`
+	// HasMore Whether there are more results available
+	HasMore *bool `json:"hasMore,omitempty"`
+
+	// NextCursor Cursor to use for fetching the next page of results
+	NextCursor *string         `json:"nextCursor,omitempty"`
+	Results    []Activity      `json:"results"`
+	Topics     []ActivityTopic `json:"topics"`
 }
 
 // Activity defines model for Activity.

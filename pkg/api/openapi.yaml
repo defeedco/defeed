@@ -359,6 +359,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ActivityTopic'
+        nextCursor:
+          type: string
+          description: Cursor to use for fetching the next page of results
+        hasMore:
+          type: boolean
+          description: Whether there are more results available
         results:
           type: array
           items:

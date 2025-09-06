@@ -19,7 +19,7 @@ var DefaultHTTPClient = &http.Client{
 
 var BuildVersion = "dev"
 
-var PulseUserAgentString = "Pulse/" + BuildVersion + " +https://github.com/bartolomej/pulse"
+var DefeedUserAgentString = "Defeed/" + BuildVersion
 
 type requestDoer interface {
 	Do(*http.Request) (*http.Response, error)
