@@ -2,8 +2,12 @@ package postgres
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/lib"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/glanceapp/glance/pkg/sources/activities"
@@ -94,9 +98,10 @@ type activityWithSimilarity struct {
 	Similarity float64 `sql:"similarity"`
 }
 
-func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.DecoratedActivity, error) {
+func (r *ActivityRepository) Search(req types.SearchRequest) (*types.SearchResult, error) {
 	ctx := context.Background()
 
+	// Build the base query for both count and data
 	query := r.db.Client().Activity.Query()
 
 	if len(req.SourceUIDs) > 0 {
@@ -153,10 +158,6 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 		s.AppendSelect(sql.As(simExpr, "similarity"))
 	})
 
-	if req.Limit > 0 {
-		query = query.Limit(req.Limit)
-	}
-
 	switch req.SortBy {
 	case types.SortBySimilarity:
 		if len(req.QueryEmbedding) > 0 {
@@ -168,6 +169,39 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 		}
 	case types.SortByDate:
 		query = query.Order(ent.Desc(entactivity.FieldCreatedAt))
+	}
+
+	if req.Cursor != "" {
+		cur, err := deserializeCursor(req.Cursor)
+		if err != nil {
+			return nil, fmt.Errorf("deserialize cursor: %w", err)
+		}
+		cursorTime := time.Time(cur.Timestamp)
+		cursorID := cur.ID
+
+		if req.SortBy == types.SortByDate {
+			// For date sort, filter activities older than the cursor
+			query = query.Where(func(s *sql.Selector) {
+				s.Where(
+					sql.Or(
+						// Either the timestamp is less than the cursor
+						sql.LT(s.C(entactivity.FieldCreatedAt), cursorTime),
+						// Or the timestamp is equal and the ID is different (for ties)
+						sql.And(
+							sql.EQ(s.C(entactivity.FieldCreatedAt), cursorTime),
+							sql.LT(s.C(entactivity.FieldID), cursorID),
+						),
+					),
+				)
+			})
+		} else {
+			return nil, fmt.Errorf("pagination is not supported for sorting by %s", req.SortBy)
+		}
+	}
+
+	if req.Limit > 0 {
+		// Fetch one more to determine if there are more results
+		query = query.Limit(req.Limit + 1)
 	}
 
 	fields := []string{
@@ -192,28 +226,98 @@ func (r *ActivityRepository) Search(req types.SearchRequest) ([]*types.Decorated
 		return nil, fmt.Errorf("search scan: %w", err)
 	}
 
-	result := make([]*types.DecoratedActivity, len(rows))
-	for i, a := range rows {
-		act, err := activities.NewActivity(a.SourceType)
-		if err != nil {
-			return nil, fmt.Errorf("new activity: %w", err)
-		}
-		err = act.UnmarshalJSON([]byte(a.RawJSON))
-		if err != nil {
-			return nil, fmt.Errorf("unmarshal activity: %w", err)
-		}
-		result[i] = &types.DecoratedActivity{
-			Activity: act,
-			Summary: &types.ActivitySummary{
-				ShortSummary: a.ShortSummary,
-				FullSummary:  a.FullSummary,
-			},
-			Embedding:  a.Embedding.Slice(),
-			Similarity: float32(a.Similarity),
-		}
+	// Check if there are more results
+	hasMore := false
+	if len(rows) > req.Limit {
+		hasMore = true
+		rows = rows[:req.Limit] // Remove the extra item
 	}
 
-	return result, nil
+	result := make([]*types.DecoratedActivity, len(rows))
+	for i, a := range rows {
+		res, err := activityFromEnt(&a.Activity)
+		if err != nil {
+			return nil, fmt.Errorf("deserialize db activity: %w", err)
+		}
+		result[i] = res
+	}
+
+	var nextCursor string
+	if hasMore && len(result) > 0 {
+		lastActivity := result[len(result)-1]
+
+		nextCur := cursor{
+			Timestamp: cursorTimestamp(lastActivity.Activity.CreatedAt()),
+			ID:        lastActivity.Activity.UID().String(),
+		}
+
+		encodedNextCur, err := serializeCursor(nextCur)
+		if err != nil {
+			return nil, fmt.Errorf("serialize cursor: %w", err)
+		}
+		nextCursor = encodedNextCur
+	}
+
+	return &types.SearchResult{
+		Activities: result,
+		NextCursor: nextCursor,
+		HasMore:    hasMore,
+	}, nil
+}
+
+type cursorTimestamp time.Time
+
+func (ct cursorTimestamp) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Time(ct).Format(time.RFC3339))
+}
+
+func (ct *cursorTimestamp) UnmarshalJSON(data []byte) error {
+	var timestampStr string
+	if err := json.Unmarshal(data, &timestampStr); err != nil {
+		return err
+	}
+
+	t, err := time.Parse(time.RFC3339, timestampStr)
+	if err != nil {
+		return fmt.Errorf("parse timestamp: %w", err)
+	}
+
+	*ct = cursorTimestamp(t)
+	return nil
+}
+
+type cursor struct {
+	Timestamp cursorTimestamp `json:"timestamp" validate:"required"`
+	ID        string          `json:"id" validate:"required"`
+}
+
+func serializeCursor(cur cursor) (string, error) {
+	cursorJson, err := json.Marshal(cur)
+	if err != nil {
+		return "", fmt.Errorf("marshal cursor: %w", err)
+	}
+
+	return base64.StdEncoding.EncodeToString(cursorJson), nil
+}
+
+func deserializeCursor(input string) (cursor, error) {
+	cursorBytes, err := base64.StdEncoding.DecodeString(input)
+	if err != nil {
+		return cursor{}, fmt.Errorf("decode cursor: %w", err)
+	}
+
+	var cur cursor
+	err = json.Unmarshal(cursorBytes, &cur)
+	if err != nil {
+		return cursor{}, fmt.Errorf("unmarshal cursor: %w", err)
+	}
+
+	err = lib.ValidateStruct(cur)
+	if err != nil {
+		return cursor{}, fmt.Errorf("validate cursor: %w", err)
+	}
+
+	return cur, nil
 }
 
 func activityFromEnt(in *ent.Activity) (*types.DecoratedActivity, error) {

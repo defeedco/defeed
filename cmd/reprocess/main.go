@@ -4,11 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/alitto/pond/v2"
-	"github.com/glanceapp/glance/pkg/sources/activities"
 	"os"
 	"strings"
 	"sync/atomic"
+
+	"github.com/alitto/pond/v2"
+	"github.com/glanceapp/glance/pkg/sources/activities"
 
 	appconfig "github.com/glanceapp/glance/pkg/config"
 	"github.com/glanceapp/glance/pkg/lib"
@@ -121,41 +122,51 @@ func run(ctx context.Context, config Config) error {
 		Str("period", string(config.Period)).
 		Msg("Starting reprocessing")
 
-	// TODO: Fetch and process in batches
-	acts, err := activityRegistry.Search(ctx, searchReq)
-	if err != nil {
-		return fmt.Errorf("search activities: %w", err)
-	}
-
-	logger.Info().Int("total_found", len(acts)).Msg("Starting processing")
-
-	if config.DryRun {
-		return nil
-	}
-
 	// Create a pool with limited concurrency
 	pool := pond.NewPool(config.MaxActivities)
 	skipped := atomic.Int32{}
 	errored := atomic.Int32{}
 
-	for _, act := range acts {
-		pool.Submit(func() {
-			isAdded, err := activityRegistry.Create(ctx, act.Activity, config.ForceReprocess)
-			if err != nil {
-				logger.Error().
-					Err(err).
+	for {
+		result, err := activityRegistry.Search(ctx, searchReq)
+		if err != nil {
+			return fmt.Errorf("search activities: %w", err)
+		}
+		searchReq.Cursor = result.NextCursor
+
+		logger.Info().
+			Int("activities_count", len(result.Activities)).
+			Str("next_cursor", result.NextCursor).
+			Bool("has_more", result.HasMore).
+			Msg("Starting processing")
+
+		if !result.HasMore {
+			break
+		}
+
+		if config.DryRun {
+			continue
+		}
+
+		for _, act := range result.Activities {
+			pool.Submit(func() {
+				isAdded, err := activityRegistry.Create(ctx, act.Activity, config.ForceReprocess)
+				if err != nil {
+					logger.Error().
+						Err(err).
+						Str("activity_id", act.Activity.UID().String()).
+						Msg("Error reprocessing activity")
+					errored.Add(1)
+				}
+				if !isAdded {
+					skipped.Add(1)
+				}
+				logger.Info().
 					Str("activity_id", act.Activity.UID().String()).
-					Msg("Error reprocessing activity")
-				errored.Add(1)
-			}
-			if !isAdded {
-				skipped.Add(1)
-			}
-			logger.Info().
-				Str("activity_id", act.Activity.UID().String()).
-				Bool("is_added", isAdded).
-				Msg("Processed activity")
-		})
+					Bool("is_added", isAdded).
+					Msg("Processed activity")
+			})
+		}
 	}
 
 	pool.StopAndWait()
@@ -170,7 +181,7 @@ func run(ctx context.Context, config Config) error {
 
 func buildSearchRequest(config Config) (activities.SearchRequest, error) {
 	req := activities.SearchRequest{
-		Limit:  10000, // Large limit to get all matching activities
+		Limit:  config.BatchSize,
 		SortBy: types.SortByDate,
 		Period: config.Period,
 	}
@@ -181,11 +192,10 @@ func buildSearchRequest(config Config) (activities.SearchRequest, error) {
 		for i, uid := range config.SourceUIDs {
 			parsedUID, err := lib.NewTypedUIDFromString(uid)
 			if err != nil {
-				// If parsing fails, create a simple UID
-				req.SourceUIDs[i] = lib.NewTypedUID("unknown", uid)
-			} else {
-				req.SourceUIDs[i] = parsedUID
+				return req, fmt.Errorf("new typed source uid: %w", err)
 			}
+
+			req.SourceUIDs[i] = parsedUID
 		}
 	}
 
@@ -202,7 +212,7 @@ func buildSearchRequest(config Config) (activities.SearchRequest, error) {
 		}
 	}
 
-	if config.MaxActivities > 0 {
+	if config.MaxActivities > 0 && config.MaxActivities < config.BatchSize {
 		req.Limit = config.MaxActivities
 	}
 

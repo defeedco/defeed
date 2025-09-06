@@ -1,5 +1,8 @@
 OPENAPI_GENERATOR_CLI_VERSION=7.12.0
 
+# Using args:
+# make my-command ARGS="--some-flag value"
+
 .PHONY: install
 install:
 	@npm install @openapitools/openapi-generator-cli -g

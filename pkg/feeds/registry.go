@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/activities"
 	"sort"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/sources/activities"
 
 	"golang.org/x/sync/errgroup"
 
@@ -313,7 +314,7 @@ func (r *Registry) searchByTopicQueryGroups(
 		actsByGroupByQuery[ti] = make([][]*activitytypes.DecoratedActivity, len(topic.Queries))
 		for qi, query := range topic.Queries {
 			g.Go(func() error {
-				acts, err := r.activityRegistry.Search(gctx, activities.SearchRequest{
+				res, err := r.activityRegistry.Search(gctx, activities.SearchRequest{
 					Query:      query,
 					SourceUIDs: sourceUIDs,
 					// TODO: Set min similarity filter?
@@ -326,7 +327,7 @@ func (r *Registry) searchByTopicQueryGroups(
 					return fmt.Errorf("search activities for topic %s: %w", topic.Topic, err)
 				}
 
-				actsByGroupByQuery[ti][qi] = acts
+				actsByGroupByQuery[ti][qi] = res.Activities
 
 				return nil
 			})

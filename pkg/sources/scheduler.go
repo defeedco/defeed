@@ -68,7 +68,7 @@ func (r *Scheduler) Initialize(ctx context.Context) error {
 			continue
 		}
 
-		acts, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
+		result, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
 			SourceUIDs: []types.TypedUID{source.UID()},
 			Limit:      1,
 			SortBy:     types.SortByDate,
@@ -78,8 +78,8 @@ func (r *Scheduler) Initialize(ctx context.Context) error {
 		}
 
 		var since types.Activity = nil
-		if len(acts) > 0 {
-			since = acts[0].Activity
+		if len(result.Activities) > 0 {
+			since = result.Activities[0].Activity
 		}
 
 		// Do not block the initialization since the result/error reporting is async
@@ -106,7 +106,7 @@ func (r *Scheduler) scheduleSource(source sourcetypes.Source) {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				acts, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
+				result, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
 					SourceUIDs: []types.TypedUID{source.UID()},
 					Limit:      1,
 					SortBy:     types.SortByDate,
@@ -120,8 +120,8 @@ func (r *Scheduler) scheduleSource(source sourcetypes.Source) {
 
 				logEvent := r.logger.Debug()
 				var since types.Activity = nil
-				if len(acts) > 0 {
-					since = acts[0].Activity
+				if len(result.Activities) > 0 {
+					since = result.Activities[0].Activity
 					logEvent.Str("last_activity_uid", since.UID().String())
 				}
 				logEvent.Msg("Polling source")

@@ -41,7 +41,7 @@ type activityStore interface {
 	Upsert(activity *types.DecoratedActivity) error
 	Remove(uid string) error
 	List() ([]*types.DecoratedActivity, error)
-	Search(req types.SearchRequest) ([]*types.DecoratedActivity, error)
+	Search(req types.SearchRequest) (*types.SearchResult, error)
 }
 
 // Create processes a single activity and stores it in the database.
@@ -49,7 +49,7 @@ type activityStore interface {
 func (r *Registry) Create(ctx context.Context, activity types.Activity, upsert bool) (bool, error) {
 	// Check if activity already exists and has been processed
 	if !upsert {
-		existingActivities, err := r.activityRepo.Search(types.SearchRequest{
+		result, err := r.activityRepo.Search(types.SearchRequest{
 			ActivityUIDs: []types.TypedUID{activity.UID()},
 			Limit:        1,
 		})
@@ -58,8 +58,8 @@ func (r *Registry) Create(ctx context.Context, activity types.Activity, upsert b
 		}
 
 		// Skip processing if activity already exists and has been processed
-		if len(existingActivities) > 0 {
-			existing := existingActivities[0]
+		if len(result.Activities) > 0 {
+			existing := result.Activities[0]
 			if existing.Summary != nil && existing.Summary.FullSummary != "" && len(existing.Embedding) > 0 {
 				return false, nil
 			}
@@ -96,12 +96,12 @@ type SearchRequest struct {
 	SourceUIDs    []types.TypedUID
 	MinSimilarity float32
 	Limit         int
+	Cursor        string
 	SortBy        types.SortBy
 	Period        types.Period
 }
 
-func (r *Registry) Search(ctx context.Context, req SearchRequest) ([]*types.DecoratedActivity, error) {
-
+func (r *Registry) Search(ctx context.Context, req SearchRequest) (*types.SearchResult, error) {
 	var queryEmbedding []float32
 	if req.Query != "" {
 		embedding, err := r.embedder.Embed(ctx, &types.ActivitySummary{
@@ -118,6 +118,7 @@ func (r *Registry) Search(ctx context.Context, req SearchRequest) ([]*types.Deco
 		ActivityUIDs:   req.ActivityUIDs,
 		MinSimilarity:  req.MinSimilarity,
 		Limit:          req.Limit,
+		Cursor:         req.Cursor,
 		SortBy:         req.SortBy,
 		Period:         req.Period,
 		QueryEmbedding: queryEmbedding,
