@@ -2,70 +2,15 @@ package nlp
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
-	"github.com/rs/zerolog"
-	"strings"
-	"sync"
-	"time"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/tmc/langchaingo/llms"
 )
 
-type cacheEntry struct {
-	value      any
-	expiration time.Time
-}
-
-type LLMCache struct {
-	logger  *zerolog.Logger
-	entries map[string]cacheEntry
-	mu      sync.RWMutex
-	ttl     time.Duration
-}
-
-func NewLLMCache(ttl time.Duration, logger *zerolog.Logger) *LLMCache {
-	return &LLMCache{
-		logger:  logger,
-		entries: make(map[string]cacheEntry),
-		ttl:     ttl,
-	}
-}
-
-func (c *LLMCache) Get(key string) (any, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	entry, exists := c.entries[key]
-	if !exists {
-		return "", false
-	}
-
-	if time.Now().After(entry.expiration) {
-		return "", false
-	}
-
-	c.logger.Debug().
-		Str("key", key).
-		Any("value", entry.value).
-		Msg("LLM cache hit")
-
-	return entry.value, true
-}
-
-func (c *LLMCache) Set(key string, value any) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.entries[key] = cacheEntry{
-		value:      value,
-		expiration: time.Now().Add(c.ttl),
-	}
-}
-
 type CachedModel struct {
 	model model
-	cache *LLMCache
+	cache *lib.Cache
 }
 
 type model interface {
@@ -73,7 +18,7 @@ type model interface {
 	embedderModel
 }
 
-func NewCachedModel(model model, cache *LLMCache) *CachedModel {
+func NewCachedModel(model model, cache *lib.Cache) *CachedModel {
 	return &CachedModel{
 		model: model,
 		cache: cache,
@@ -88,9 +33,7 @@ func (cm *CachedModel) CreateEmbedding(ctx context.Context, texts []string) ([][
 
 	// Check cache for each text element
 	for i, text := range texts {
-		// TODO: We should include the model ID (and any other params) as well,
-		// 	although there won't be a need to switch between different models for now
-		key := cacheKey("embedding", text)
+		key := embeddingCacheKey(text)
 		if response, found := cm.cache.Get(key); found {
 			if embedding, ok := response.([]float32); ok {
 				results[i] = embedding
@@ -117,9 +60,7 @@ func (cm *CachedModel) CreateEmbedding(ctx context.Context, texts []string) ([][
 		originalIndex := uncachedIndices[i]
 		originalText := uncachedTexts[i]
 
-		// TODO: We should include the model ID (and any other params) as well,
-		// 	although there won't be a need to switch between different models for now
-		key := cacheKey("embedding", originalText)
+		key := embeddingCacheKey(originalText)
 		cm.cache.Set(key, embedding)
 
 		results[originalIndex] = embedding
@@ -129,9 +70,7 @@ func (cm *CachedModel) CreateEmbedding(ctx context.Context, texts []string) ([][
 }
 
 func (cm *CachedModel) Call(ctx context.Context, prompt string, options ...llms.CallOption) (string, error) {
-	// TODO: We should include the model ID (and any other params) as well,
-	// 	although there won't be a need to switch between different models for now
-	key := cacheKey("completion", prompt)
+	key := completionCacheKey(prompt)
 
 	if response, found := cm.cache.Get(key); found {
 		value, ok := response.(string)
@@ -149,7 +88,14 @@ func (cm *CachedModel) Call(ctx context.Context, prompt string, options ...llms.
 	return response, nil
 }
 
-func cacheKey(params ...string) string {
-	hash := sha256.Sum256([]byte(strings.Join(params, ",")))
-	return fmt.Sprintf("%x", hash)
+func embeddingCacheKey(text string) string {
+	// TODO: We should include the model ID (and any other params) as well,
+	// 	although there won't be a need to switch between different models for now
+	return fmt.Sprintf("embedding:%s", lib.HashParams(text))
+}
+
+func completionCacheKey(prompt string) string {
+	// TODO: We should include the model ID (and any other params) as well,
+	// 	although there won't be a need to switch between different models for now
+	return fmt.Sprintf("completion:%s", lib.HashParams(prompt))
 }
