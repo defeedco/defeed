@@ -96,18 +96,23 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 			}
 
 			source := &SourceFeed{
-				Title:   outline.Title,
-				FeedURL: outline.XMLUrl,
-				About:   outline.Text,
+				title:       outline.Title,
+				FeedURL:     outline.XMLUrl,
+				description: outline.Text,
 			}
 
-			// Derive simple topical tags from OPML category and outline metadata
-			if category.Title != "" || category.Text != "" {
-				cat := category.Title
-				if cat == "" {
-					cat = category.Text
+			if outline.Topics != "" {
+				topicStrings := strings.Split(outline.Topics, ",")
+				var topicTags []types.TopicTag
+				for _, topicStr := range topicStrings {
+					tag, ok := types.WordToTopic(topicStr)
+					if !ok {
+						return nil, fmt.Errorf("invalid topic: %s", topicStr)
+					}
+
+					topicTags = append(topicTags, tag)
 				}
-				source.Category = strings.ToLower(cat)
+				source.topics = topicTags
 			}
 
 			if seen[source.UID().String()] {

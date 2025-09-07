@@ -1,7 +1,5 @@
 package types
 
-import "strings"
-
 // TopicTag represents a niche interest category used to personalize sources.
 // Keep values lowercase snake_case to match OpenAPI and external clients.
 type TopicTag string
@@ -76,21 +74,4 @@ func normalize(s string) string {
 		out = append(out, c)
 	}
 	return string(out)
-}
-
-// InferUniqueTopicTags deduplicates and normalizes a list of strings to TopicTags.
-func InferUniqueTopicTags(values ...string) []TopicTag {
-	seen := make(map[TopicTag]bool)
-	out := make([]TopicTag, 0)
-	for _, v := range values {
-		for _, word := range strings.Split(v, " ") {
-			if tag, ok := WordToTopic(word); ok {
-				if !seen[tag] {
-					seen[tag] = true
-					out = append(out, tag)
-				}
-			}
-		}
-	}
-	return out
 }

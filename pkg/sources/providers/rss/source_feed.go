@@ -34,13 +34,13 @@ func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type SourceFeed struct {
-	Title    string
-	About    string
-	Category string
-	FeedURL  string            `json:"url" validate:"required,url"`
-	Headers  map[string]string `json:"headers"`
-	IconURL  string            `json:"icon_url"`
-	logger   *zerolog.Logger
+	title       string
+	description string
+	topics      []sourcetypes.TopicTag
+	FeedURL     string            `json:"url" validate:"required,url"`
+	Headers     map[string]string `json:"headers"`
+	IconURL     string            `json:"icon_url"`
+	logger      *zerolog.Logger
 }
 
 func NewSourceFeed() *SourceFeed {
@@ -52,8 +52,8 @@ func (s *SourceFeed) UID() activitytypes.TypedUID {
 }
 
 func (s *SourceFeed) Name() string {
-	if s.Title != "" {
-		return s.Title
+	if s.title != "" {
+		return s.title
 	}
 
 	hostName, err := lib.StripURLHost(s.FeedURL)
@@ -65,8 +65,8 @@ func (s *SourceFeed) Name() string {
 }
 
 func (s *SourceFeed) Description() string {
-	if s.About != "" {
-		return s.About
+	if s.description != "" {
+		return s.description
 	}
 	return fmt.Sprintf("Updates from %s", lib.StripURL(s.FeedURL))
 }
@@ -80,7 +80,7 @@ func (s *SourceFeed) Icon() string {
 }
 
 func (s *SourceFeed) Topics() []sourcetypes.TopicTag {
-	return sourcetypes.InferUniqueTopicTags(s.Title, s.About, s.Category)
+	return s.topics
 }
 
 func (s *SourceFeed) getWebsiteURL() string {
