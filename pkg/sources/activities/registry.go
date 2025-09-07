@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
@@ -13,6 +14,8 @@ type Registry struct {
 	logger       *zerolog.Logger
 	summarizer   summarizer
 	embedder     embedder
+	// activityLocks provides per-activity ID locking to prevent race conditions
+	activityLocks sync.Map // map[string]*sync.Mutex
 }
 
 func NewRegistry(
@@ -46,6 +49,18 @@ type activityStore interface {
 // Create processes a single activity and stores it in the database.
 // Returns false if activity was skipped.
 func (r *Registry) Create(ctx context.Context, activity types.Activity, upsert bool) (bool, error) {
+
+	// Race conditions can occur if multiple goroutines process the same activity concurrently.
+	lockKey := activity.UID().String()
+	lock, _ := r.activityLocks.LoadOrStore(lockKey, &sync.Mutex{})
+	mu := lock.(*sync.Mutex)
+
+	mu.Lock()
+	defer func() {
+		mu.Unlock()
+		r.activityLocks.Delete(lockKey)
+	}()
+
 	// Check if activity already exists and has been processed
 	if !upsert {
 		result, err := r.activityRepo.Search(ctx, types.SearchRequest{
