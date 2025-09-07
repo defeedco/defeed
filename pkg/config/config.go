@@ -2,8 +2,10 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/glanceapp/glance/pkg/feeds"
 	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/glanceapp/glance/pkg/sources"
 
 	"github.com/glanceapp/glance/pkg/api"
 	"github.com/glanceapp/glance/pkg/lib/log"
@@ -12,10 +14,11 @@ import (
 )
 
 type Config struct {
-	DBConfig    postgres.Config `env:""`
-	APIConfig   api.Config      `env:""`
-	LogConfig   log.Config      `env:""`
-	FeedsConfig feeds.Config    `env:""`
+	DB      postgres.Config `env:""`
+	API     api.Config      `env:""`
+	Log     log.Config      `env:""`
+	Feeds   feeds.Config    `env:""`
+	Sources sources.Config  `env:""`
 }
 
 func Load() (*Config, error) {

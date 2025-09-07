@@ -133,7 +133,7 @@ func (s *SourceFeed) Stream(ctx context.Context, since activitytypes.Activity, f
 
 func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	parser := gofeed.NewParser()
-	parser.UserAgent = lib.PulseUserAgentString
+	parser.UserAgent = lib.DefeedUserAgentString
 
 	if s.Headers != nil {
 		parser.Client = &http.Client{
@@ -146,7 +146,7 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytyp
 
 	rssFeed, err := parser.ParseURLWithContext(s.FeedURL, ctx)
 	if err != nil {
-		errs <- fmt.Errorf("failed to parse RSS feed: %w", err)
+		errs <- fmt.Errorf("fetch rss feed: %w", err)
 		return
 	}
 

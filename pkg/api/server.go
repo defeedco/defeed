@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/lib"
-	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"io"
 	"net/http"
 	"slices"
 	"strings"
+
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
 	"github.com/glanceapp/glance/pkg/sources/providers/github"
@@ -23,11 +23,7 @@ import (
 
 	"github.com/glanceapp/glance/pkg/feeds"
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/sources/nlp"
 	httpswagger "github.com/swaggo/http-swagger"
-
-	"github.com/glanceapp/glance/pkg/storage/postgres"
-	"github.com/tmc/langchaingo/llms/openai"
 
 	"github.com/glanceapp/glance/pkg/sources"
 	"github.com/rs/zerolog"
@@ -41,68 +37,32 @@ type UserIDContextKey string
 const userIDContextKey UserIDContextKey = "userID"
 
 type Server struct {
-	executor     *sources.Executor
-	registry     *sources.Registry
-	feedRegistry *feeds.Registry
-	logger       *zerolog.Logger
-	http         http.Server
+	sourceScheduler *sources.Scheduler
+	sourceRegistry  *sources.Registry
+	feedRegistry    *feeds.Registry
+	logger          *zerolog.Logger
+	http            http.Server
 }
 
 var _ ServerInterface = (*Server)(nil)
 
-func NewServer(logger *zerolog.Logger, apiConfig *Config, feedsConfig *feeds.Config, db *postgres.DB) (*Server, error) {
-	limiter := lib.NewOpenAILimiter(logger)
-
-	// TODO: Move service initialization to main.go
-	summarizerModel, err := openai.New(
-		openai.WithModel("gpt-5-nano-2025-08-07"),
-		openai.WithHTTPClient(limiter),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("create summarizer model: %w", err)
-	}
-
-	embedderModel, err := openai.New(
-		openai.WithEmbeddingModel("text-embedding-3-large"),
-		openai.WithHTTPClient(limiter),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("create embedder model: %w", err)
-	}
-
-	summarizer := nlp.NewSummarizer(summarizerModel, logger)
-	embedder := nlp.NewEmbedder(embedderModel)
-	queryRewriter := nlp.NewQueryRewriter(summarizerModel, logger)
-
-	executor := sources.NewExecutor(
-		logger,
-		summarizer,
-		embedder,
-		postgres.NewActivityRepository(db),
-		postgres.NewSourceRepository(db),
-	)
-	if err := executor.Initialize(); err != nil {
-		return nil, fmt.Errorf("initialize executor: %w", err)
-	}
-
-	registry := sources.NewRegistry(logger)
-	if err := registry.Initialize(); err != nil {
-		return nil, fmt.Errorf("initialize preset registry: %w", err)
-	}
-
-	feedStore := postgres.NewFeedRepository(db)
-	feedRegistry := feeds.NewRegistry(feedStore, executor, registry, summarizer, queryRewriter, feedsConfig)
-
+func NewServer(
+	logger *zerolog.Logger,
+	config *Config,
+	sourceRegistry *sources.Registry,
+	sourceScheduler *sources.Scheduler,
+	feedRegistry *feeds.Registry,
+) (*Server, error) {
 	mux := http.NewServeMux()
 
 	server := &Server{
-		logger:       logger,
-		registry:     registry,
-		executor:     executor,
-		feedRegistry: feedRegistry,
+		logger:          logger,
+		sourceRegistry:  sourceRegistry,
+		sourceScheduler: sourceScheduler,
+		feedRegistry:    feedRegistry,
 		http: http.Server{
-			Addr:    fmt.Sprintf("%s:%d", apiConfig.Host, apiConfig.Port),
-			Handler: authMiddleware(corsMiddleware(mux, apiConfig.CORSOrigin)),
+			Addr:    fmt.Sprintf("%s:%d", config.Host, config.Port),
+			Handler: authMiddleware(corsMiddleware(mux, config.CORSOrigin)),
 		},
 	}
 
@@ -267,18 +227,8 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params List
 		query = *params.Query
 	}
 
-	// Optional personalization via "interests" query params
-	interests := make([]string, 0)
-	if vals, ok := r.URL.Query()["interests"]; ok {
-		for _, v := range vals {
-			v = strings.TrimSpace(v)
-			if v != "" {
-				interests = append(interests, v)
-			}
-		}
-	}
-
-	result, err := s.registry.Search(r.Context(), sources.SearchParams{Query: query, Interests: interests})
+	// TODO(merge): add interest
+	result, err := s.sourceRegistry.Search(r.Context(), query)
 	if err != nil {
 		s.internalError(w, err, "search source presets")
 		return
@@ -300,7 +250,7 @@ func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
 		return
 	}
 
-	out, err := s.registry.FindByUID(r.Context(), typedUID)
+	out, err := s.sourceRegistry.FindByUID(r.Context(), typedUID)
 	if err != nil {
 		s.internalError(w, err, fmt.Sprintf("find source by UID: %s", typedUID.String()))
 		return

@@ -3,5 +3,5 @@
 /playground
 /.idea
 /glance*.yml
-/.env
-log/*.log
+.env
+logs/*.log

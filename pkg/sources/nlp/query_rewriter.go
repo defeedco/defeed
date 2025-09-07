@@ -11,11 +11,11 @@ import (
 )
 
 type QueryRewriter struct {
-	model  llms.Model
+	model  completionModel
 	logger *zerolog.Logger
 }
 
-func NewQueryRewriter(model llms.Model, logger *zerolog.Logger) *QueryRewriter {
+func NewQueryRewriter(model completionModel, logger *zerolog.Logger) *QueryRewriter {
 	return &QueryRewriter{model: model, logger: logger}
 }
 
@@ -76,9 +76,8 @@ Original (user) query: {{.original_query}}
 		return nil, fmt.Errorf("format prompt: %w", err)
 	}
 
-	out, err := llms.GenerateFromSinglePrompt(
+	out, err := qr.model.Call(
 		ctx,
-		qr.model,
 		prompt,
 		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
 		llms.WithTemperature(1.0),
