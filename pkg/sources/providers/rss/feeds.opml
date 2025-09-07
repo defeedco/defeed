@@ -5,183 +5,183 @@
 	</head>
 	<body>
 		<outline text="Learning" title="Learning">
-			<outline text="Behavioral science insights for better decision making" title="The Decision Lab" type="rss" xmlUrl="https://thedecisionlab.com/feed/" />
-			<outline text="Learning science and productivity research" title="Ness Labs" type="rss" xmlUrl="https://nesslabs.com/feed" />
-			<outline text="Mental models and decision making wisdom" title="Farnam Street" type="rss" xmlUrl="https://fs.blog/feed/" />
-			<outline text="Weekly insights on life and learning" title="The Sunday Wisdom" type="rss" xmlUrl="https://coffeeandjunk.substack.com/feed" />
-			<outline text="Business strategy and decision making" title="Commonplace - The Commoncog Blog" type="rss" xmlUrl="https://commoncog.com/blog/rss/" />
-			<outline text="Learning techniques and productivity" title="Scott H Young" type="rss" xmlUrl="https://feeds.feedburner.com/scotthyoung/HAHx" />
-			<outline text="Big ideas and critical thinking" title="Big Think" type="rss" xmlUrl="https://feeds.feedburner.com/bigthink/main" />
+			<outline text="Behavioral science insights for better decision making" title="The Decision Lab" type="rss" xmlUrl="https://thedecisionlab.com/feed/" topics="product_management" />
+			<outline text="Learning science and productivity research" title="Ness Labs" type="rss" xmlUrl="https://nesslabs.com/feed" topics="product_management" />
+			<outline text="Mental models and decision making wisdom" title="Farnam Street" type="rss" xmlUrl="https://fs.blog/feed/" topics="product_management" />
+			<outline text="Weekly insights on life and learning" title="The Sunday Wisdom" type="rss" xmlUrl="https://coffeeandjunk.substack.com/feed" topics="product_management" />
+			<outline text="Business strategy and decision making" title="Commonplace - The Commoncog Blog" type="rss" xmlUrl="https://commoncog.com/blog/rss/" topics="product_management,startups" />
+			<outline text="Learning techniques and productivity" title="Scott H Young" type="rss" xmlUrl="https://feeds.feedburner.com/scotthyoung/HAHx" topics="product_management" />
+			<outline text="Big ideas and critical thinking" title="Big Think" type="rss" xmlUrl="https://feeds.feedburner.com/bigthink/main" topics="product_management" />
 		</outline>
 		<outline text="Startup" title="Startup">
-			<outline text="Startup methodology and entrepreneurship" title="Steve Blank" type="rss" xmlUrl="http://steveblank.com/feed/" />
-			<outline text="AI and technology insights from George Hotz" title="The singularity is nearer" type="rss" xmlUrl="https://geohot.github.io/blog/feed.xml" />
-			<outline text="Tech news and startup discussions" title="Hacker News" type="rss" xmlUrl="http://news.ycombinator.com/rss" />
-			<outline text="Marketing and entrepreneurship advice" title="Guy Kawasaki" type="rss" xmlUrl="http://guykawasaki.com/feed/" />
-			<outline text="Technology strategy and market analysis" title="Essays - Benedict Evans" type="rss" xmlUrl="http://ben-evans.com/benedictevans?format=rss" />
-			<outline text="Startup insights and best practices" title="First Round Review" type="rss" xmlUrl="http://firstround.com/review/feed.xml" />
-			<outline text="AI and startup insights from OpenAI CEO" title="Sam Altman" type="rss" xmlUrl="http://blog.samaltman.com/posts.atom" />
-			<outline text="Growth marketing and product strategy" title="Andrew Chen" type="rss" xmlUrl="http://andrewchen.co/feed/" />
-			<outline text="Venture capital and startup perspectives" title="Both Sides of the Table - Medium" type="rss" xmlUrl="https://bothsidesofthetable.com/feed" />
-			<outline text="Venture capital and startup perspectives" title="Both Sides of the Table" type="rss" xmlUrl="http://feeds.feedburner.com/BothSidesOfTheTable" />
-			<outline text="Product management insights and strategies" title="The Black Box of Product Management - Medium" type="rss" xmlUrl="https://medium.com/feed/the-black-box-of-product-management" />
-			<outline text="Product management and strategy" title="Product Life" type="rss" xmlUrl="https://productlife.to/feed" />
-			<outline text="Engineering leadership and scaling" title="Irrational Exuberance" type="rss" xmlUrl="https://lethain.com/feeds/" />
+			<outline text="Startup methodology and entrepreneurship" title="Steve Blank" type="rss" xmlUrl="http://steveblank.com/feed/" topics="startups" />
+			<outline text="AI and technology insights from George Hotz" title="The singularity is nearer" type="rss" xmlUrl="https://geohot.github.io/blog/feed.xml" topics="startups,ai_research" />
+			<outline text="Tech news and startup discussions" title="Hacker News" type="rss" xmlUrl="http://news.ycombinator.com/rss" topics="startups,devtools" />
+			<outline text="Marketing and entrepreneurship advice" title="Guy Kawasaki" type="rss" xmlUrl="http://guykawasaki.com/feed/" topics="startups,growth_engineering" />
+			<outline text="Technology strategy and market analysis" title="Essays - Benedict Evans" type="rss" xmlUrl="http://ben-evans.com/benedictevans?format=rss" topics="startups,product_management" />
+			<outline text="Startup insights and best practices" title="First Round Review" type="rss" xmlUrl="http://firstround.com/review/feed.xml" topics="startups" />
+			<outline text="AI and startup insights from OpenAI CEO" title="Sam Altman" type="rss" xmlUrl="http://blog.samaltman.com/posts.atom" topics="startups,llms,ai_research" />
+			<outline text="Growth marketing and product strategy" title="Andrew Chen" type="rss" xmlUrl="http://andrewchen.co/feed/" topics="startups,growth_engineering,product_management" />
+			<outline text="Venture capital and startup perspectives" title="Both Sides of the Table - Medium" type="rss" xmlUrl="https://bothsidesofthetable.com/feed" topics="startups" />
+			<outline text="Venture capital and startup perspectives" title="Both Sides of the Table" type="rss" xmlUrl="http://feeds.feedburner.com/BothSidesOfTheTable" topics="startups" />
+			<outline text="Product management insights and strategies" title="The Black Box of Product Management - Medium" type="rss" xmlUrl="https://medium.com/feed/the-black-box-of-product-management" topics="product_management" />
+			<outline text="Product management and strategy" title="Product Life" type="rss" xmlUrl="https://productlife.to/feed" topics="product_management" />
+			<outline text="Engineering leadership and scaling" title="Irrational Exuberance" type="rss" xmlUrl="https://lethain.com/feeds/" topics="devtools,distributed_systems" />
 			<!-- https://www.indiehackers.com/post/an-unofficial-feed-of-indie-hackers-2413a17623 -->
 			<!-- Note: community maintained/hosted, might be unreliable. -->
 			<!-- Another alternative to try if this doesn't work well: https://github.com/ahonn/ihrss -->
-			<outline text="Indie entrepreneur posts and discussions" title="Indie Hackers Posts" type="rss" xmlUrl="https://feed.indiehackers.world/posts.rss" />
+			<outline text="Indie entrepreneur posts and discussions" title="Indie Hackers Posts" type="rss" xmlUrl="https://feed.indiehackers.world/posts.rss" topics="startups" />
 		</outline>
 		<outline text="Tech News" title="Tech News">
-			<outline text="Enterprise technology and business news" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" />
-			<outline text="Technology, science, art, and culture" title="The Verge" type="rss" xmlUrl="http://www.theverge.com/rss/full.xml" />
-			<outline text="Asian technology and startup news" title="Tech in Asia" type="rss" xmlUrl="https://feeds2.feedburner.com/PennOlson" />
-			<outline text="Breaking technology and startup news" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" />
-			<outline text="Design and innovation in business" title="Fast Company " type="rss" xmlUrl="http://www.fastcodesign.com/rss.xml" />
-			<outline text="Startup news and funding updates" title="Startups – TechCrunch" type="rss" xmlUrl="https://techcrunch.com/startups/feed/" />
-			<outline text="Leadership and management insights" title="Forbes - Leadership" type="rss" xmlUrl="https://www.forbes.com/leadership/feed/" />
-			<outline text="Business innovation and design" title="Fast Company" type="rss" xmlUrl="http://feeds.feedburner.com/fastcompany/headlines" />
-			<outline text="Entrepreneurship and business success" title="Forbes - Entrepreneurs" type="rss" xmlUrl="http://www.forbes.com/entrepreneurs/index.xml" />
+			<outline text="Enterprise technology and business news" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" topics="startups,cloud_infrastructure" />
+			<outline text="Technology, science, art, and culture" title="The Verge" type="rss" xmlUrl="http://www.theverge.com/rss/full.xml" topics="devtools" />
+			<outline text="Asian technology and startup news" title="Tech in Asia" type="rss" xmlUrl="https://feeds2.feedburner.com/PennOlson" topics="startups" />
+			<outline text="Breaking technology and startup news" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" topics="startups" />
+			<outline text="Design and innovation in business" title="Fast Company " type="rss" xmlUrl="http://www.fastcodesign.com/rss.xml" topics="product_management" />
+			<outline text="Startup news and funding updates" title="Startups – TechCrunch" type="rss" xmlUrl="https://techcrunch.com/startups/feed/" topics="startups" />
+			<outline text="Leadership and management insights" title="Forbes - Leadership" type="rss" xmlUrl="https://www.forbes.com/leadership/feed/" topics="product_management" />
+			<outline text="Business innovation and design" title="Fast Company" type="rss" xmlUrl="http://feeds.feedburner.com/fastcompany/headlines" topics="product_management" />
+			<outline text="Entrepreneurship and business success" title="Forbes - Entrepreneurs" type="rss" xmlUrl="http://www.forbes.com/entrepreneurs/index.xml" topics="startups" />
 		</outline>
 		<outline text="Products &amp; Ideas" title="Products &amp; Ideas">
-			<outline text="Daily discovery of new products and startups" title="Product Hunt — The best new products, every day" type="rss" xmlUrl="http://www.producthunt.com/feed" />
-			<outline text="Developer projects and demos" title="Hacker News: Show HN" type="rss" xmlUrl="http://hnrss.org/show" />
-			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" />
-			<outline text="Product management and entrepreneurship insights" title="Sachin Rekhi's Blog" type="rss" xmlUrl="http://feeds.feedburner.com/sachinrekhiblog" />
+			<outline text="Daily discovery of new products and startups" title="Product Hunt — The best new products, every day" type="rss" xmlUrl="http://www.producthunt.com/feed" topics="startups,product_management" />
+			<outline text="Developer projects and demos" title="Hacker News: Show HN" type="rss" xmlUrl="http://hnrss.org/show" topics="devtools,open_source" />
+			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" topics="startups,product_management" />
+			<outline text="Product management and entrepreneurship insights" title="Sachin Rekhi's Blog" type="rss" xmlUrl="http://feeds.feedburner.com/sachinrekhiblog" topics="product_management,startups" />
 		</outline>
 		<outline text="Engineering blogs" title="Engineering blogs">
-			<outline text="Database and collaboration platform engineering" title="The Airtable Engineering Blog" type="rss" xmlUrl="https://medium.com/feed/airtable-eng" />
-			<outline text="Platform engineering and scaling challenges" title="Medium Engineering - Medium" type="rss" xmlUrl="https://medium.com/feed/medium-eng" />
-			<outline text="Payment systems and fintech engineering" title="The PayPal Technology Blog - Medium" type="rss" xmlUrl="https://medium.com/feed/paypal-engineering" />
-			<outline text="Visual discovery and recommendation systems" title="Pinterest Engineering Blog - Medium" type="rss" xmlUrl="https://medium.com/feed/pinterest-engineering" />
-			<outline text="Southeast Asian superapp engineering" title="Grab Tech" type="rss" xmlUrl="http://engineering.grab.com/feed.xml" />
-			<outline text="Workplace communication platform engineering" title="Slack Engineering" type="rss" xmlUrl="https://slack.engineering/feed" />
-			<outline text="Git and developer platform engineering" title="Engineering – The GitHub Blog" type="rss" xmlUrl="http://githubengineering.com/atom.xml" />
-			<outline text="Developer tools and collaboration software" title="Atlassian Developer Blog" type="rss" xmlUrl="https://developer.atlassian.com/blog/feed.xml" />
-			<outline text="Social media platform engineering" title="Facebook Engineering" type="rss" xmlUrl="https://code.facebook.com/posts/rss" />
-			<outline text="System design and algorithm insights" title="Grokking Newsletter" type="rss" xmlUrl="http://newsletter.grokking.org/?format=rss" />
-			<outline text="E-commerce platform engineering" title="eBay Tech Blog" type="rss" xmlUrl="http://www.ebaytechblog.com/feed/" />
-			<outline text="Music streaming and recommendation systems" title="Spotify Engineering" type="rss" xmlUrl="http://labs.spotify.com/feed/" />
-			<outline text="Social media platform engineering" title="Twitter Engineering" type="rss" xmlUrl="https://blog.twitter.com/engineering/en_us/blog.rss" />
-			<outline text="Payment infrastructure and fintech" title="Stripe Blog" type="rss" xmlUrl="https://stripe.com/blog/feed.rss" />
-			<outline text="Photo sharing and social media engineering" title="Instagram Engineering - Medium" type="rss" xmlUrl="https://instagram-engineering.com/feed" />
-			<outline text="Internet infrastructure and security" title="The Cloudflare Blog" type="rss" xmlUrl="https://blog.cloudflare.com/rss/" />
-			<outline text="Productivity and collaboration tools" title="Engineering – The Asana Blog" type="rss" xmlUrl="https://blog.asana.com/category/eng/feed/" />
-			<outline text="Design platform and creative tools" title="Canva Engineering Blog - Medium" type="rss" xmlUrl="https://engineering.canva.com/rss" />
-			<outline text="Marketplace and travel platform engineering" title="The Airbnb Tech Blog - Medium" type="rss" xmlUrl="https://medium.com/feed/airbnb-engineering" />
-			<outline text="File storage and collaboration platform" title="Dropbox Tech" type="rss" xmlUrl="https://dropbox.tech/feed" />
-			<outline text="Payment processing and fintech" title="WePay Engineering Blog" type="rss" xmlUrl="https://wecode.wepay.com/feed.xml" />
-			<outline text="Web browser implementation and standards" title="Web Browser Engineering" type="rss" xmlUrl="https://browser.engineering/rss.xml" />
-			<outline text="Music streaming and recommendation systems" title="Spotify Engineering" type="rss" xmlUrl="https://engineering.atspotify.com/feed/" />
-			<outline text="Social media and metaverse engineering" title="Engineering at Meta" type="rss" xmlUrl="https://engineering.fb.com/feed/" />
-			<outline text="Product management and strategy" title="Mind the Product" type="rss" xmlUrl="https://www.mindtheproduct.com/feed/" />
-			<outline text="Systems programming and debugging" title="Julia Evans" type="rss" xmlUrl="https://jvns.ca/atom.xml" />
-			<outline text="Distributed systems and data engineering" title="Martin Kleppmann's blog" type="rss" xmlUrl="https://feeds.feedburner.com/martinkl?format=xml" />
-			<outline text="React and frontend development" title="Dan Abramov's Overreacted Blog RSS Feed" type="rss" xmlUrl="https://overreacted.io/rss.xml" />
-			<outline text="Computer systems and performance" title="Dan Luu" type="rss" xmlUrl="https://danluu.com/atom.xml" />
-			<outline text="E-commerce platform engineering" title="Shopify Engineering - Shopify Engineering" type="rss" xmlUrl="https://shopifyengineering.myshopify.com/blogs/engineering.atom" />
-			<outline text="Southeast Asian superapp engineering" title="Grab Tech" type="rss" xmlUrl="https://engineering.grab.com/feed.xml" />
-			<outline text="CSS and frontend development" title="Josh Comeau's blog" type="rss" xmlUrl="https://joshwcomeau.com/rss.xml" />
-			<outline text="Transportation and marketplace engineering" title="Uber Engineering Blog" type="rss" xmlUrl="https://eng.uber.com/feed/" />
-			<outline text="Engineering leadership and technology strategy" title="Flurries of latent creativity - Stripe CTO blog" type="rss" xmlUrl="https://blog.singleton.io/index.xml" />
-			<outline text="React and frontend engineering" title="Sophie Alpert" type="rss" xmlUrl="https://sophiebits.com/atom.xml" />
-			<outline text="Developer tools and coding platforms" title="Amjad Masad" type="rss" xmlUrl="https://amasad.me/rss" />
-			<outline text="Privacy-focused messaging and security" title="Signal Blog" type="rss" xmlUrl="https://signal.org/blog/rss.xml" />
-			<outline text="Software development and management" title="Joel on Software" type="rss" xmlUrl="https://www.joelonsoftware.com/feed/" />
-			<outline text="Engineering management and career advice" title="The Pragmatic Engineer" type="rss" xmlUrl="https://blog.pragmaticengineer.com/rss/" />
+			<outline text="Database and collaboration platform engineering" title="The Airtable Engineering Blog" type="rss" xmlUrl="https://medium.com/feed/airtable-eng" topics="databases,devtools" />
+			<outline text="Platform engineering and scaling challenges" title="Medium Engineering - Medium" type="rss" xmlUrl="https://medium.com/feed/medium-eng" topics="devtools,distributed_systems" />
+			<outline text="Payment systems and fintech engineering" title="The PayPal Technology Blog - Medium" type="rss" xmlUrl="https://medium.com/feed/paypal-engineering" topics="devtools,security_engineering" />
+			<outline text="Visual discovery and recommendation systems" title="Pinterest Engineering Blog - Medium" type="rss" xmlUrl="https://medium.com/feed/pinterest-engineering" topics="devtools,ai_research" />
+			<outline text="Southeast Asian superapp engineering" title="Grab Tech" type="rss" xmlUrl="http://engineering.grab.com/feed.xml" topics="devtools,distributed_systems" />
+			<outline text="Workplace communication platform engineering" title="Slack Engineering" type="rss" xmlUrl="https://slack.engineering/feed" topics="devtools,distributed_systems" />
+			<outline text="Git and developer platform engineering" title="Engineering – The GitHub Blog" type="rss" xmlUrl="http://githubengineering.com/atom.xml" topics="devtools,open_source" />
+			<outline text="Developer tools and collaboration software" title="Atlassian Developer Blog" type="rss" xmlUrl="https://developer.atlassian.com/blog/feed.xml" topics="devtools" />
+			<outline text="Social media platform engineering" title="Facebook Engineering" type="rss" xmlUrl="https://code.facebook.com/posts/rss" topics="devtools,distributed_systems" />
+			<outline text="System design and algorithm insights" title="Grokking Newsletter" type="rss" xmlUrl="http://newsletter.grokking.org/?format=rss" topics="devtools,distributed_systems" />
+			<outline text="E-commerce platform engineering" title="eBay Tech Blog" type="rss" xmlUrl="http://www.ebaytechblog.com/feed/" topics="devtools,distributed_systems" />
+			<outline text="Music streaming and recommendation systems" title="Spotify Engineering" type="rss" xmlUrl="http://labs.spotify.com/feed/" topics="devtools,ai_research" />
+			<outline text="Social media platform engineering" title="Twitter Engineering" type="rss" xmlUrl="https://blog.twitter.com/engineering/en_us/blog.rss" topics="devtools,distributed_systems" />
+			<outline text="Payment infrastructure and fintech" title="Stripe Blog" type="rss" xmlUrl="https://stripe.com/blog/feed.rss" topics="devtools,security_engineering" />
+			<outline text="Photo sharing and social media engineering" title="Instagram Engineering - Medium" type="rss" xmlUrl="https://instagram-engineering.com/feed" topics="devtools,distributed_systems" />
+			<outline text="Internet infrastructure and security" title="The Cloudflare Blog" type="rss" xmlUrl="https://blog.cloudflare.com/rss/" topics="cloud_infrastructure,security_engineering" />
+			<outline text="Productivity and collaboration tools" title="Engineering – The Asana Blog" type="rss" xmlUrl="https://blog.asana.com/category/eng/feed/" topics="devtools" />
+			<outline text="Design platform and creative tools" title="Canva Engineering Blog - Medium" type="rss" xmlUrl="https://engineering.canva.com/rss" topics="devtools" />
+			<outline text="Marketplace and travel platform engineering" title="The Airbnb Tech Blog - Medium" type="rss" xmlUrl="https://medium.com/feed/airbnb-engineering" topics="devtools,distributed_systems" />
+			<outline text="File storage and collaboration platform" title="Dropbox Tech" type="rss" xmlUrl="https://dropbox.tech/feed" topics="devtools,cloud_infrastructure" />
+			<outline text="Payment processing and fintech" title="WePay Engineering Blog" type="rss" xmlUrl="https://wecode.wepay.com/feed.xml" topics="devtools,security_engineering" />
+			<outline text="Web browser implementation and standards" title="Web Browser Engineering" type="rss" xmlUrl="https://browser.engineering/rss.xml" topics="devtools,systems_programming" />
+			<outline text="Music streaming and recommendation systems" title="Spotify Engineering" type="rss" xmlUrl="https://engineering.atspotify.com/feed/" topics="devtools,ai_research" />
+			<outline text="Social media and metaverse engineering" title="Engineering at Meta" type="rss" xmlUrl="https://engineering.fb.com/feed/" topics="devtools,distributed_systems" />
+			<outline text="Product management and strategy" title="Mind the Product" type="rss" xmlUrl="https://www.mindtheproduct.com/feed/" topics="product_management" />
+			<outline text="Systems programming and debugging" title="Julia Evans" type="rss" xmlUrl="https://jvns.ca/atom.xml" topics="systems_programming" />
+			<outline text="Distributed systems and data engineering" title="Martin Kleppmann's blog" type="rss" xmlUrl="https://feeds.feedburner.com/martinkl?format=xml" topics="distributed_systems,databases" />
+			<outline text="React and frontend development" title="Dan Abramov's Overreacted Blog RSS Feed" type="rss" xmlUrl="https://overreacted.io/rss.xml" topics="devtools,web_performance" />
+			<outline text="Computer systems and performance" title="Dan Luu" type="rss" xmlUrl="https://danluu.com/atom.xml" topics="systems_programming,web_performance" />
+			<outline text="E-commerce platform engineering" title="Shopify Engineering - Shopify Engineering" type="rss" xmlUrl="https://shopifyengineering.myshopify.com/blogs/engineering.atom" topics="devtools,distributed_systems" />
+			<outline text="Southeast Asian superapp engineering" title="Grab Tech" type="rss" xmlUrl="https://engineering.grab.com/feed.xml" topics="devtools,distributed_systems" />
+			<outline text="CSS and frontend development" title="Josh Comeau's blog" type="rss" xmlUrl="https://joshwcomeau.com/rss.xml" topics="devtools,web_performance" />
+			<outline text="Transportation and marketplace engineering" title="Uber Engineering Blog" type="rss" xmlUrl="https://eng.uber.com/feed/" topics="devtools,distributed_systems" />
+			<outline text="Engineering leadership and technology strategy" title="Flurries of latent creativity - Stripe CTO blog" type="rss" xmlUrl="https://blog.singleton.io/index.xml" topics="devtools,product_management" />
+			<outline text="React and frontend engineering" title="Sophie Alpert" type="rss" xmlUrl="https://sophiebits.com/atom.xml" topics="devtools,web_performance" />
+			<outline text="Developer tools and coding platforms" title="Amjad Masad" type="rss" xmlUrl="https://amasad.me/rss" topics="devtools" />
+			<outline text="Privacy-focused messaging and security" title="Signal Blog" type="rss" xmlUrl="https://signal.org/blog/rss.xml" topics="security_engineering" />
+			<outline text="Software development and management" title="Joel on Software" type="rss" xmlUrl="https://www.joelonsoftware.com/feed/" topics="devtools,product_management" />
+			<outline text="Engineering management and career advice" title="The Pragmatic Engineer" type="rss" xmlUrl="https://blog.pragmaticengineer.com/rss/" topics="devtools,product_management" />
 		</outline>
 		<outline text="Machine Learning" title="Machine Learning">
-			<outline text="Academic machine learning research and insights" title="Machine Learning Blog | ML@CMU | Carnegie Mellon University" type="rss" xmlUrl="https://blog.ml.cmu.edu/feed/" />
-			<outline text="AI research and breakthrough discoveries" title="DeepMind " type="rss" xmlUrl="https://deepmind.com/blog/feed/basic/" />
-			<outline text="Visual explanations of machine learning concepts" title="Jay Alammar" type="rss" xmlUrl="https://jalammar.github.io/feed.xml" />
-			<outline text="Interactive machine learning explanations" title="Distill" type="rss" xmlUrl="http://distill.pub/rss.xml" />
-			<outline text="Deep learning and AI research insights" title="Lil'Log" type="rss" xmlUrl="https://lilianweng.github.io/lil-log/feed.xml" />
-			<outline text="AI research news from MIT" title="MIT News - Artificial intelligence" type="rss" xmlUrl="http://news.mit.edu/rss/topic/artificial-intelligence2" />
-			<outline text="AI research and academic insights" title="The Berkeley Artificial Intelligence Research Blog" type="rss" xmlUrl="http://bair.berkeley.edu/blog/feed.xml" />
-			<outline text="Deep learning education and tutorials" title="DeepLearningAI" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCcIXc5mJsHVYTZR1maL5l9w" />
-			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="http://blog.evjang.com/feeds/posts/default?alt=rss" />
-			<outline text="AI research and product updates" title="OpenAI " type="rss" xmlUrl="https://openai.com/news/rss.xml" />
-			<outline text="AI research and academic perspectives" title="The Gradient" type="rss" xmlUrl="https://thegradient.pub/rss/" />
-			<outline text="AI and machine learning for creative applications" title="Magenta" type="rss" xmlUrl="http://magenta.tensorflow.org/feed.xml" />
-			<outline text="Natural language processing research and news" title="NLP News" type="rss" xmlUrl="http://newsletter.ruder.io/?format=rss" />
-			<outline text="Google's AI research and developments" title="Google AI Blog" type="rss" xmlUrl="http://googleresearch.blogspot.com/atom.xml" />
-			<outline text="Data science and machine learning articles" title="Towards Data Science - Medium" type="rss" xmlUrl="https://towardsdatascience.com/feed" />
-			<outline text="AI news and industry insights" title="Unite.AI" type="rss" xmlUrl="https://www.unite.ai/feed/" />
-			<outline text="AI-powered writing and language tools" title="Grammarly Blog" type="rss" xmlUrl="https://www.grammarly.com/blog/feed/" />
-			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="https://evjang.com/feed" />
-			<outline text="Amazon's AI and machine learning research" title="Amazon Science Homepage" type="rss" xmlUrl="https://www.amazon.science/index.rss" />
-			<outline text="Machine learning community discussions" title="Machine Learning" type="rss" xmlUrl="http://www.reddit.com/r/MachineLearning/.rss" />
-			<outline text="AI research paper reviews and explanations" title="Yannic Kilcher" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCCTn7xBfew" />
-			<outline text="AI research paper summaries and insights" title="Two Minute Papers" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7l4upoX8nvctg" />
-			<outline text="Google's AI developments and news" title="Google AI news" type="rss" xmlUrl="https://blog.google/technology/ai/rss" />
+			<outline text="Academic machine learning research and insights" title="Machine Learning Blog | ML@CMU | Carnegie Mellon University" type="rss" xmlUrl="https://blog.ml.cmu.edu/feed/" topics="ai_research" />
+			<outline text="AI research and breakthrough discoveries" title="DeepMind " type="rss" xmlUrl="https://deepmind.com/blog/feed/basic/" topics="ai_research" />
+			<outline text="Visual explanations of machine learning concepts" title="Jay Alammar" type="rss" xmlUrl="https://jalammar.github.io/feed.xml" topics="ai_research" />
+			<outline text="Interactive machine learning explanations" title="Distill" type="rss" xmlUrl="http://distill.pub/rss.xml" topics="ai_research" />
+			<outline text="Deep learning and AI research insights" title="Lil'Log" type="rss" xmlUrl="https://lilianweng.github.io/lil-log/feed.xml" topics="ai_research" />
+			<outline text="AI research news from MIT" title="MIT News - Artificial intelligence" type="rss" xmlUrl="http://news.mit.edu/rss/topic/artificial-intelligence2" topics="ai_research" />
+			<outline text="AI research and academic insights" title="The Berkeley Artificial Intelligence Research Blog" type="rss" xmlUrl="http://bair.berkeley.edu/blog/feed.xml" topics="ai_research" />
+			<outline text="Deep learning education and tutorials" title="DeepLearningAI" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCcIXc5mJsHVYTZR1maL5l9w" topics="ai_research" />
+			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="http://blog.evjang.com/feeds/posts/default?alt=rss" topics="ai_research" />
+			<outline text="AI research and product updates" title="OpenAI " type="rss" xmlUrl="https://openai.com/news/rss.xml" topics="ai_research,llms" />
+			<outline text="AI research and academic perspectives" title="The Gradient" type="rss" xmlUrl="https://thegradient.pub/rss/" topics="ai_research" />
+			<outline text="AI and machine learning for creative applications" title="Magenta" type="rss" xmlUrl="http://magenta.tensorflow.org/feed.xml" topics="ai_research" />
+			<outline text="Natural language processing research and news" title="NLP News" type="rss" xmlUrl="http://newsletter.ruder.io/?format=rss" topics="ai_research,llms" />
+			<outline text="Google's AI research and developments" title="Google AI Blog" type="rss" xmlUrl="http://googleresearch.blogspot.com/atom.xml" topics="ai_research" />
+			<outline text="Data science and machine learning articles" title="Towards Data Science - Medium" type="rss" xmlUrl="https://towardsdatascience.com/feed" topics="ai_research" />
+			<outline text="AI news and industry insights" title="Unite.AI" type="rss" xmlUrl="https://www.unite.ai/feed/" topics="ai_research" />
+			<outline text="AI-powered writing and language tools" title="Grammarly Blog" type="rss" xmlUrl="https://www.grammarly.com/blog/feed/" topics="ai_research,llms" />
+			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="https://evjang.com/feed" topics="ai_research" />
+			<outline text="Amazon's AI and machine learning research" title="Amazon Science Homepage" type="rss" xmlUrl="https://www.amazon.science/index.rss" topics="ai_research" />
+			<outline text="Machine learning community discussions" title="Machine Learning" type="rss" xmlUrl="http://www.reddit.com/r/MachineLearning/.rss" topics="ai_research" />
+			<outline text="AI research paper reviews and explanations" title="Yannic Kilcher" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCCTn7xBfew" topics="ai_research" />
+			<outline text="AI research paper summaries and insights" title="Two Minute Papers" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7l4upoX8nvctg" topics="ai_research" />
+			<outline text="Google's AI developments and news" title="Google AI news" type="rss" xmlUrl="https://blog.google/technology/ai/rss" topics="ai_research" />
 		</outline>
 		<outline text="Design" title="Design">
-			<outline text="User experience design insights and trends" title="UX Planet" type="rss" xmlUrl="https://uxplanet.org/feed" />
-			<outline text="User research and usability insights" title="NN/g latest articles and announcements" type="rss" xmlUrl="https://www.nngroup.com/feed/rss/" />
-			<outline text="UX design patterns and best practices" title="UX Movement" type="rss" xmlUrl="http://feeds.feedburner.com/uxmovement" />
-			<outline text="User experience strategy and design" title="UXmatters" type="rss" xmlUrl="https://uxmatters.com/index.xml" />
-			<outline text="Web design and development articles" title="Articles on Smashing Magazine — For Web Designers And Developers" type="rss" xmlUrl="https://www.smashingmagazine.com/feed/" />
-			<outline text="User experience design community" title="UX Collective - Medium" type="rss" xmlUrl="https://uxdesign.cc/feed" />
-			<outline text="Web development best practices and guides" title="web.dev" type="rss" xmlUrl="https://web.dev/feed.xml" />
-			<outline text="Design systems and workplace communication" title="Slack Design" type="rss" xmlUrl="https://slack.design/feed/" />
-			<outline text="CSS techniques and web development" title="CSS-Tricks" type="rss" xmlUrl="https://feeds.feedburner.com/CssTricks" />
-			<outline text="Daily user experience insights" title="UX Daily - User Experience Daily" type="rss" xmlUrl="https://interaction-design.org/rss/site_news.xml" />
+			<outline text="User experience design insights and trends" title="UX Planet" type="rss" xmlUrl="https://uxplanet.org/feed" topics="product_management" />
+			<outline text="User research and usability insights" title="NN/g latest articles and announcements" type="rss" xmlUrl="https://www.nngroup.com/feed/rss/" topics="product_management" />
+			<outline text="UX design patterns and best practices" title="UX Movement" type="rss" xmlUrl="http://feeds.feedburner.com/uxmovement" topics="product_management" />
+			<outline text="User experience strategy and design" title="UXmatters" type="rss" xmlUrl="https://uxmatters.com/index.xml" topics="product_management" />
+			<outline text="Web design and development articles" title="Articles on Smashing Magazine — For Web Designers And Developers" type="rss" xmlUrl="https://www.smashingmagazine.com/feed/" topics="devtools,web_performance" />
+			<outline text="User experience design community" title="UX Collective - Medium" type="rss" xmlUrl="https://uxdesign.cc/feed" topics="product_management" />
+			<outline text="Web development best practices and guides" title="web.dev" type="rss" xmlUrl="https://web.dev/feed.xml" topics="devtools,web_performance" />
+			<outline text="Design systems and workplace communication" title="Slack Design" type="rss" xmlUrl="https://slack.design/feed/" topics="product_management" />
+			<outline text="CSS techniques and web development" title="CSS-Tricks" type="rss" xmlUrl="https://feeds.feedburner.com/CssTricks" topics="devtools,web_performance" />
+			<outline text="Daily user experience insights" title="UX Daily - User Experience Daily" type="rss" xmlUrl="https://interaction-design.org/rss/site_news.xml" topics="product_management" />
 		</outline>
 		<outline text="Psychology" title="Psychology">
-			<outline text="Psychology research and insights" title="PsyBlog" type="rss" xmlUrl="http://feeds.feedburner.com/PsychologyBlog" />
-			<outline text="Psychology education and resources" title="Psychology Blog" type="rss" xmlUrl="http://www.all-about-psychology.com/psychology.xml" />
-			<outline text="Global psychology news and research" title="Psychology Headlines Around the World" type="rss" xmlUrl="http://www.socialpsychology.org/headlines.rss" />
-			<outline text="Science, culture, and philosophy" title="Nautilus" type="rss" xmlUrl="https://nautil.us/rss/all" />
-			<outline text="Economics and human behavior" title="Freakonomics" type="rss" xmlUrl="http://freakonomics.blogs.nytimes.com/feed/" />
-			<outline text="Mental health and psychology articles" title="Psychology Today" type="rss" xmlUrl="https://www.psychologytoday.com/intl/rss.xml" />
+			<outline text="Psychology research and insights" title="PsyBlog" type="rss" xmlUrl="http://feeds.feedburner.com/PsychologyBlog" topics="product_management" />
+			<outline text="Psychology education and resources" title="Psychology Blog" type="rss" xmlUrl="http://www.all-about-psychology.com/psychology.xml" topics="product_management" />
+			<outline text="Global psychology news and research" title="Psychology Headlines Around the World" type="rss" xmlUrl="http://www.socialpsychology.org/headlines.rss" topics="product_management" />
+			<outline text="Science, culture, and philosophy" title="Nautilus" type="rss" xmlUrl="https://nautil.us/rss/all" topics="product_management" />
+			<outline text="Economics and human behavior" title="Freakonomics" type="rss" xmlUrl="http://freakonomics.blogs.nytimes.com/feed/" topics="product_management" />
+			<outline text="Mental health and psychology articles" title="Psychology Today" type="rss" xmlUrl="https://www.psychologytoday.com/intl/rss.xml" topics="product_management" />
 		</outline>
 		<outline text="Neuroscience" title="Neuroscience">
-			<outline text="Brain research and neuroscience discoveries" title="Neuroscience News" type="rss" xmlUrl="http://neurosciencenews.com/feed/" />
-			<outline text="Neuroscience research and brain science" title="Neuroscience News -- ScienceDaily" type="rss" xmlUrl="https://sciencedaily.com/rss/mind_brain/neuroscience.xml" />
-			<outline text="Brain health and cognitive enhancement" title="SharpBrains" type="rss" xmlUrl="http://www.sharpbrains.com/feed/" />
+			<outline text="Brain research and neuroscience discoveries" title="Neuroscience News" type="rss" xmlUrl="http://neurosciencenews.com/feed/" topics="ai_research" />
+			<outline text="Neuroscience research and brain science" title="Neuroscience News -- ScienceDaily" type="rss" xmlUrl="https://sciencedaily.com/rss/mind_brain/neuroscience.xml" topics="ai_research" />
+			<outline text="Brain health and cognitive enhancement" title="SharpBrains" type="rss" xmlUrl="http://www.sharpbrains.com/feed/" topics="ai_research" />
 		</outline>
 		<outline text="Science" title="Science">
-			<outline text="Science, culture, and philosophy" title="Nautilus" type="rss" xmlUrl="http://nautil.us/rss/all" />
-			<outline text="Mathematics and physics research" title="Quanta Magazine" type="rss" xmlUrl="http://www.quantamagazine.org/feed/" />
-			<outline text="Scientific research and discoveries" title="Nature" type="rss" xmlUrl="http://www.nature.com/nature/current_issue/rss" />
-			<outline text="Science, technology, and society research" title="MIT News - Science, Technology, and Society | Technology and society | Program in STS | History of science | History of MIT" type="rss" xmlUrl="https://news.mit.edu/rss/topic/science-technology-and-society" />
-			<outline text="MIT research news and discoveries" title="MIT News" type="rss" xmlUrl="https://news.mit.edu/rss/research" />
-			<outline text="Science news and discoveries" title="ScienceAlert" type="rss" xmlUrl="https://www.sciencealert.com/rss" />
-			<outline text="Future technology and innovation" title="Singularity Hub" type="rss" xmlUrl="https://singularityhub.com/feed/" />
-			<outline text="Engineering and technology explanations" title="Lesics" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCqZQJ4600a9wIfMPbYc60OQ" />
+			<outline text="Science, culture, and philosophy" title="Nautilus" type="rss" xmlUrl="http://nautil.us/rss/all" topics="ai_research" />
+			<outline text="Mathematics and physics research" title="Quanta Magazine" type="rss" xmlUrl="http://www.quantamagazine.org/feed/" topics="ai_research" />
+			<outline text="Scientific research and discoveries" title="Nature" type="rss" xmlUrl="http://www.nature.com/nature/current_issue/rss" topics="ai_research" />
+			<outline text="Science, technology, and society research" title="MIT News - Science, Technology, and Society | Technology and society | Program in STS | History of science | History of MIT" type="rss" xmlUrl="https://news.mit.edu/rss/topic/science-technology-and-society" topics="ai_research" />
+			<outline text="MIT research news and discoveries" title="MIT News" type="rss" xmlUrl="https://news.mit.edu/rss/research" topics="ai_research" />
+			<outline text="Science news and discoveries" title="ScienceAlert" type="rss" xmlUrl="https://www.sciencealert.com/rss" topics="ai_research" />
+			<outline text="Future technology and innovation" title="Singularity Hub" type="rss" xmlUrl="https://singularityhub.com/feed/" topics="ai_research,robotics" />
+			<outline text="Engineering and technology explanations" title="Lesics" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCqZQJ4600a9wIfMPbYc60OQ" topics="devtools" />
 		</outline>
 		<outline text="Marketing" title="Marketing">
-			<outline text="SEO and digital marketing insights" title="Moz" type="rss" xmlUrl="http://feeds.feedburner.com/seomoz" />
-			<outline text="Content marketing strategies and best practices" title="Content Marketing Institute" type="rss" xmlUrl="http://feeds.feedburner.com/cmi-content-marketing" />
-			<outline text="Digital marketing and growth strategies" title="Neil Patel" type="rss" xmlUrl="http://feeds.feedburner.com/KISSmetrics" />
-			<outline text="Marketing education and insights" title="MarketingProfs " type="rss" xmlUrl="http://rss.marketingprofs.com/marketingprofs/daily" />
-			<outline text="B2B marketing strategies and tactics" title="Marketo Marketing blog " type="rss" xmlUrl="http://feeds.feedburner.com/modernb2bmarketing" />
-			<outline text="Digital marketing and SEO insights" title="Quick Sprout" type="rss" xmlUrl="http://www.quicksprout.com/feed/" />
-			<outline text="Social media marketing strategies" title="Social Media Examiner | Social Media Marketing" type="rss" xmlUrl="http://www.socialmediaexaminer.com/feed/" />
-			<outline text="Marketing and business insights" title="John Egan" type="rss" xmlUrl="http://jwegan.com/feed/rss/" />
-			<outline text="Digital marketing and customer experience" title="Convince and Convert " type="rss" xmlUrl="http://www.convinceandconvert.com/feed/" />
-			<outline text="Inbound marketing and sales strategies" title="Hubspot" type="rss" xmlUrl="http://blog.hubspot.com/CMS/UI/Modules/BizBlogger/rss.aspx?tabid=6307&amp;moduleid=8441&amp;maxcount=25" />
-			<outline text="Marketing philosophy and business insights" title="Seth Godin's Blog " type="rss" xmlUrl="http://sethgodin.typepad.com/seths_blog/atom.xml" />
-			<outline text="SEO strategies and link building" title="Backlinko" type="rss" xmlUrl="http://backlinko.com/feed" />
+			<outline text="SEO and digital marketing insights" title="Moz" type="rss" xmlUrl="http://feeds.feedburner.com/seomoz" topics="growth_engineering" />
+			<outline text="Content marketing strategies and best practices" title="Content Marketing Institute" type="rss" xmlUrl="http://feeds.feedburner.com/cmi-content-marketing" topics="growth_engineering" />
+			<outline text="Digital marketing and growth strategies" title="Neil Patel" type="rss" xmlUrl="http://feeds.feedburner.com/KISSmetrics" topics="growth_engineering" />
+			<outline text="Marketing education and insights" title="MarketingProfs " type="rss" xmlUrl="http://rss.marketingprofs.com/marketingprofs/daily" topics="growth_engineering" />
+			<outline text="B2B marketing strategies and tactics" title="Marketo Marketing blog " type="rss" xmlUrl="http://feeds.feedburner.com/modernb2bmarketing" topics="growth_engineering" />
+			<outline text="Digital marketing and SEO insights" title="Quick Sprout" type="rss" xmlUrl="http://www.quicksprout.com/feed/" topics="growth_engineering" />
+			<outline text="Social media marketing strategies" title="Social Media Examiner | Social Media Marketing" type="rss" xmlUrl="http://www.socialmediaexaminer.com/feed/" topics="growth_engineering" />
+			<outline text="Marketing and business insights" title="John Egan" type="rss" xmlUrl="http://jwegan.com/feed/rss/" topics="growth_engineering" />
+			<outline text="Digital marketing and customer experience" title="Convince and Convert " type="rss" xmlUrl="http://www.convinceandconvert.com/feed/" topics="growth_engineering" />
+			<outline text="Inbound marketing and sales strategies" title="Hubspot" type="rss" xmlUrl="http://blog.hubspot.com/CMS/UI/Modules/BizBlogger/rss.aspx?tabid=6307&amp;moduleid=8441&amp;maxcount=25" topics="growth_engineering" />
+			<outline text="Marketing philosophy and business insights" title="Seth Godin's Blog " type="rss" xmlUrl="http://sethgodin.typepad.com/seths_blog/atom.xml" topics="growth_engineering" />
+			<outline text="SEO strategies and link building" title="Backlinko" type="rss" xmlUrl="http://backlinko.com/feed" topics="growth_engineering" />
 		</outline>
 		<outline text="Scientific Research" title="Scientific Research">
-			<outline text="AI research papers and publications" title="ArXiv AI" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.AI" />
-			<outline text="Machine learning research and papers" title="ArXiv Machine Learning" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.LG" />
-			<outline text="Computer vision and image processing research" title="ArXiv Computer Vision" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CV" />
-			<outline text="Natural language processing research" title="ArXiv Natural Language Processing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CL" />
-			<outline text="Cryptography and security research" title="ArXiv Cryptography &amp; Security" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CR" />
-			<outline text="Distributed computing and algorithms" title="ArXiv Distributed Computing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DC" />
-			<outline text="Database and data mining research" title="ArXiv Databases" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DB" />
-			<outline text="Software engineering research" title="ArXiv Software Engineering" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.SE" />
-			<outline text="Human-computer interaction research" title="ArXiv Human-Computer Interaction" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.HC" />
-			<outline text="Information retrieval and search research" title="ArXiv Information Retrieval" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.IR" />
+			<outline text="AI research papers and publications" title="ArXiv AI" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.AI" topics="ai_research" />
+			<outline text="Machine learning research and papers" title="ArXiv Machine Learning" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.LG" topics="ai_research" />
+			<outline text="Computer vision and image processing research" title="ArXiv Computer Vision" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CV" topics="ai_research" />
+			<outline text="Natural language processing research" title="ArXiv Natural Language Processing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CL" topics="ai_research,llms" />
+			<outline text="Cryptography and security research" title="ArXiv Cryptography &amp; Security" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CR" topics="security_engineering" />
+			<outline text="Distributed computing and algorithms" title="ArXiv Distributed Computing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DC" topics="distributed_systems" />
+			<outline text="Database and data mining research" title="ArXiv Databases" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DB" topics="databases" />
+			<outline text="Software engineering research" title="ArXiv Software Engineering" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.SE" topics="devtools" />
+			<outline text="Human-computer interaction research" title="ArXiv Human-Computer Interaction" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.HC" topics="product_management" />
+			<outline text="Information retrieval and search research" title="ArXiv Information Retrieval" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.IR" topics="ai_research" />
 			<!-- https://huggingface.co/posts/takarajordan/806643001426071 -->
 			<!-- Note: community maintained/hosted, might be unreliable. -->
-			<outline text="Daily AI research papers and summaries" title="HuggingFace Daily Papers" type="rss" xmlUrl="https://papers.takara.ai/api/feed" />
+			<outline text="Daily AI research papers and summaries" title="HuggingFace Daily Papers" type="rss" xmlUrl="https://papers.takara.ai/api/feed" topics="llms,ai_research" />
 		</outline>
 		<outline text="Others" title="Others">
-			<outline text="Ideas worth spreading and inspiring talks" title="TED Talks Daily" type="rss" xmlUrl="http://feeds.feedburner.com/tedtalks_video" />
-			<outline text="Business strategy and management insights" title="HBR.org" type="rss" xmlUrl="http://feeds.harvardbusiness.org/harvardbusiness/" />
+			<outline text="Ideas worth spreading and inspiring talks" title="TED Talks Daily" type="rss" xmlUrl="http://feeds.feedburner.com/tedtalks_video" topics="product_management" />
+			<outline text="Business strategy and management insights" title="HBR.org" type="rss" xmlUrl="http://feeds.harvardbusiness.org/harvardbusiness/" topics="product_management" />
 		</outline>
 	</body>
 </opml>

@@ -80,8 +80,14 @@ func (r *Registry) FindByUID(ctx context.Context, uid activitytypes.TypedUID) (t
 	return source, nil
 }
 
+// SearchRequest configures how sources are searched and ranked.
+type SearchRequest struct {
+	Query  string
+	Topics []types.TopicTag
+}
+
 // Search searches for sources from available fetchers
-func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, error) {
+func (r *Registry) Search(ctx context.Context, params SearchRequest) ([]types.Source, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.SetLimit(len(r.fetchers))
@@ -89,7 +95,7 @@ func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, er
 	results := make([]types.Source, 0)
 	for _, f := range r.fetchers {
 		g.Go(func() error {
-			res, err := f.Search(gctx, query)
+			res, err := f.Search(gctx, params.Query)
 			if err != nil {
 				return fmt.Errorf("fetcher search: %w", err)
 			}
@@ -103,18 +109,43 @@ func (r *Registry) Search(ctx context.Context, query string) ([]types.Source, er
 	}
 
 	r.logger.Debug().
-		Str("query", query).
+		Str("query", params.Query).
 		Int("count", len(results)).
 		Msg("searched sources")
 
-	var filtered []types.Source
-	if query == "" {
-		filtered = alphabeticalSort(results)
-	} else {
-		filtered = fuzzyReRank(results, query)
+	if len(params.Topics) > 0 {
+		results = filterByTopics(results, params.Topics)
 	}
 
-	return filtered, nil
+	switch {
+	case params.Query != "":
+		results = fuzzyReRank(results, params.Query)
+	default:
+		results = curatedDefaultSort(results)
+	}
+
+	return results, nil
+}
+
+func filterByTopics(input []types.Source, topics []types.TopicTag) []types.Source {
+	result := make([]types.Source, 0)
+
+	lookup := make(map[types.TopicTag]bool)
+	for _, topic := range topics {
+		lookup[topic] = true
+	}
+
+	for _, source := range input {
+	topics:
+		for _, topic := range source.Topics() {
+			if lookup[topic] {
+				result = append(result, source)
+				break topics
+			}
+		}
+	}
+
+	return result
 }
 
 // sourceWithScore holds a source and its calculated relevance score
@@ -206,20 +237,38 @@ func calculateRelevanceScore(source types.Source, query string) float64 {
 	return score
 }
 
-// max returns the maximum of two integers
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-// alphabeticalSort sorts sources alphabetically by name (case-insensitive)
-func alphabeticalSort(input []types.Source) []types.Source {
+// curatedDefaultSort provides a non-personalized default ordering prioritizing
+// familiar, high-signal sources first so the UI feels less overwhelming.
+func curatedDefaultSort(input []types.Source) []types.Source {
 	sorted := make([]types.Source, len(input))
 	copy(sorted, input)
+
+	baseWeight := func(s types.Source) int {
+		switch s.UID().Type() {
+		case reddit.TypeRedditSubreddit:
+			return 100
+		case hackernews.TypeHackerNewsPosts:
+			return 95
+		case lobsters.TypeLobstersTag, lobsters.TypeLobstersFeed:
+			return 90
+		case github.TypeGithubIssues, github.TypeGithubReleases:
+			return 80
+		case rss.TypeRSSFeed:
+			return 70
+		case mastodon.TypeMastodonAccount, mastodon.TypeMastodonTag:
+			return 65
+		default:
+			return 50
+		}
+	}
+
 	sort.Slice(sorted, func(i, j int) bool {
-		return strings.ToLower(sorted[i].Name()) < strings.ToLower(sorted[j].Name())
+		wi := baseWeight(sorted[i])
+		wj := baseWeight(sorted[j])
+		if wi == wj {
+			return strings.ToLower(sorted[i].Name()) < strings.ToLower(sorted[j].Name())
+		}
+		return wi > wj
 	})
 	return sorted
 }

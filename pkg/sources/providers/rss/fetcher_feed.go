@@ -4,9 +4,10 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"strings"
 	"time"
 
-	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
@@ -47,7 +48,7 @@ func (f *FeedFetcher) SourceType() string {
 	return TypeRSSFeed
 }
 
-func (f *FeedFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
+func (f *FeedFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID) (types.Source, error) {
 	for _, source := range f.Feeds {
 		if lib.Equals(source.UID(), id) {
 			return source, nil
@@ -95,9 +96,23 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 			}
 
 			source := &SourceFeed{
-				Title:     outline.Title,
-				FeedURL:   outline.XMLUrl,
-				AboutFeed: outline.Text,
+				title:       outline.Title,
+				FeedURL:     outline.XMLUrl,
+				description: outline.Text,
+			}
+
+			if outline.Topics != "" {
+				topicStrings := strings.Split(outline.Topics, ",")
+				var topicTags []types.TopicTag
+				for _, topicStr := range topicStrings {
+					tag, ok := types.WordToTopic(topicStr)
+					if !ok {
+						return nil, fmt.Errorf("invalid topic: %s", topicStr)
+					}
+
+					topicTags = append(topicTags, tag)
+				}
+				source.topics = topicTags
 			}
 
 			if seen[source.UID().String()] {

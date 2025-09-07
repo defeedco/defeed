@@ -23,6 +23,15 @@ paths:
           description: Filter sources by name or description.
           schema:
             type: string
+        - name: topics
+          in: query
+          description: "Optional list of user interests to personalize results. Example: interests=llms&interests=startups"
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TopicTag'
       security:
         - bearerAuth: []
       responses:
@@ -284,6 +293,7 @@ components:
         - description
         - url
         - iconUrl
+        - topicTags
       properties:
         uid:
           type: string
@@ -297,6 +307,30 @@ components:
           type: string
         iconUrl:
           type: string
+        topicTags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicTag'
+
+    TopicTag:
+      type: string
+      description: Specific niche technology/startup interests
+      enum:
+        - llms
+        - startups
+        - agentic_systems
+        - devtools
+        - web_performance
+        - distributed_systems
+        - databases
+        - security_engineering
+        - systems_programming
+        - product_management
+        - growth_engineering
+        - ai_research
+        - robotics
+        - open_source
+        - cloud_infrastructure
 
     SourceType:
       type: string

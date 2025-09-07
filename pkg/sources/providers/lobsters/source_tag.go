@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/rs/zerolog"
 )
 
@@ -27,7 +28,7 @@ func NewSourceTag() *SourceTag {
 	}
 }
 
-func (s *SourceTag) UID() types.TypedUID {
+func (s *SourceTag) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeLobstersTag, lib.StripURL(s.InstanceURL), s.Tag)
 }
 
@@ -55,11 +56,30 @@ func (s *SourceTag) Icon() string {
 	return "https://lobste.rs/favicon.ico"
 }
 
-func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceTag) Topics() []sourcetypes.TopicTag {
+	base := []sourcetypes.TopicTag{sourcetypes.TopicDevTools, sourcetypes.TopicOpenSource}
+	switch s.Tag {
+	case "ai", "ml", "compsci":
+		base = append(base, sourcetypes.TopicAIResearch)
+	case "web", "performance":
+		base = append(base, sourcetypes.TopicWebPerformance)
+	case "kubernetes", "cloud":
+		base = append(base, sourcetypes.TopicCloudInfrastructure)
+	case "security":
+		base = append(base, sourcetypes.TopicSecurityEngineering)
+	case "linux", "rust", "wasm", "compilers", "plt":
+		base = append(base, sourcetypes.TopicSystemsProgramming)
+	case "databases":
+		base = append(base, sourcetypes.TopicDatabases)
+	}
+	return base
+}
+
+func (s *SourceTag) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	s.fetchAndSendNewStories(ctx, since, feed, errs)
 }
 
-func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	stories, err := s.client.GetStoriesByTag(ctx, s.Tag)
 
 	if err != nil {

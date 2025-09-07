@@ -46,6 +46,25 @@ const (
 	RssFeed                SourceType = "rssFeed"
 )
 
+// Defines values for TopicTag.
+const (
+	AgenticSystems      TopicTag = "agentic_systems"
+	AiResearch          TopicTag = "ai_research"
+	CloudInfrastructure TopicTag = "cloud_infrastructure"
+	Databases           TopicTag = "databases"
+	Devtools            TopicTag = "devtools"
+	DistributedSystems  TopicTag = "distributed_systems"
+	GrowthEngineering   TopicTag = "growth_engineering"
+	Llms                TopicTag = "llms"
+	OpenSource          TopicTag = "open_source"
+	ProductManagement   TopicTag = "product_management"
+	Robotics            TopicTag = "robotics"
+	SecurityEngineering TopicTag = "security_engineering"
+	Startups            TopicTag = "startups"
+	SystemsProgramming  TopicTag = "systems_programming"
+	WebPerformance      TopicTag = "web_performance"
+)
+
 // ActivitiesListResponse defines model for ActivitiesListResponse.
 type ActivitiesListResponse struct {
 	// HasMore Whether there are more results available
@@ -126,6 +145,7 @@ type Source struct {
 	Description string     `json:"description"`
 	IconUrl     string     `json:"iconUrl"`
 	Name        string     `json:"name"`
+	TopicTags   []TopicTag `json:"topicTags"`
 	Type        SourceType `json:"type"`
 	Uid         string     `json:"uid"`
 	Url         string     `json:"url"`
@@ -133,6 +153,9 @@ type Source struct {
 
 // SourceType defines model for SourceType.
 type SourceType string
+
+// TopicTag Specific niche technology/startup interests
+type TopicTag string
 
 // UpdateFeedRequest defines model for UpdateFeedRequest.
 type UpdateFeedRequest = CreateFeedRequest
@@ -156,6 +179,9 @@ type ListFeedActivitiesParams struct {
 type ListSourcesParams struct {
 	// Query Filter sources by name or description.
 	Query *string `form:"query,omitempty" json:"query,omitempty"`
+
+	// Topics Optional list of user interests to personalize results. Example: interests=llms&interests=startups
+	Topics *[]TopicTag `form:"topics,omitempty" json:"topics,omitempty"`
 }
 
 // CreateOwnFeedJSONRequestBody defines body for CreateOwnFeed for application/json ContentType.
@@ -385,6 +411,14 @@ func (siw *ServerInterfaceWrapper) ListSources(w http.ResponseWriter, r *http.Re
 	err = runtime.BindQueryParameter("form", true, false, "query", r.URL.Query(), &params.Query)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "topics" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "topics", r.URL.Query(), &params.Topics)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "topics", Err: err})
 		return
 	}
 

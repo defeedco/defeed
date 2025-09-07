@@ -6,7 +6,8 @@ import (
 	"fmt"
 
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/mattn/go-mastodon"
 	"github.com/rs/zerolog"
 )
@@ -27,7 +28,7 @@ func NewSourceTag() *SourceTag {
 	}
 }
 
-func (s *SourceTag) UID() types.TypedUID {
+func (s *SourceTag) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeMastodonTag, lib.StripURL(s.InstanceURL), s.Tag)
 }
 
@@ -57,6 +58,13 @@ func (s *SourceTag) Icon() string {
 	return fmt.Sprintf("%s/packs/assets/favicon-48x48-DMnduFKh.png", s.InstanceURL)
 }
 
+func (s *SourceTag) Topics() []sourcetypes.TopicTag {
+	if tag, ok := sourcetypes.WordToTopic(s.Tag); ok {
+		return []sourcetypes.TopicTag{tag}
+	}
+	return []sourcetypes.TopicTag{sourcetypes.TopicOpenSource}
+}
+
 func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
@@ -73,11 +81,11 @@ func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
 	return nil
 }
 
-func (s *SourceTag) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceTag) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	s.fetchHashtagPosts(ctx, since, feed, errs)
 }
 
-func (s *SourceTag) fetchHashtagPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceTag) fetchHashtagPosts(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	var sinceID mastodon.ID
 	if since != nil {
 		sincePost := since.(*Post)
@@ -125,7 +133,7 @@ outer:
 	}
 }
 
-func (s *SourceTag) fetchLatestPosts(ctx context.Context, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceTag) fetchLatestPosts(ctx context.Context, feed chan<- activitytypes.Activity, errs chan<- error) {
 	tagLogger := s.logger.With().
 		Str("tag", s.Tag).
 		Logger()

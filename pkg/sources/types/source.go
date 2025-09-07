@@ -22,6 +22,8 @@ type Source interface {
 	URL() string
 	// Icon returns the favicon URL for the source.
 	Icon() string
+	// Topics returns the niche topic tags this source is relevant for.
+	Topics() []TopicTag
 	// Initialize initializes the internal state and prepares the logger.
 	Initialize(logger *zerolog.Logger) error
 	// Stream performs a one-time fetch of new activities from the source.
