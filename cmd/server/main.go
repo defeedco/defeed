@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/glanceapp/glance/pkg/feeds"
 	"github.com/glanceapp/glance/pkg/lib"
@@ -65,7 +66,7 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 	usageTracker := lib.NewUsageTracker(logger)
 	limiter := lib.NewOpenAILimiterWithTracker(logger, usageTracker)
 
-	summarizerModel, err := openai.New(
+	completionModel, err := openai.New(
 		openai.WithModel("gpt-5-nano-2025-08-07"),
 		openai.WithHTTPClient(limiter),
 	)
@@ -73,7 +74,7 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 		return nil, fmt.Errorf("create summarizer model: %w", err)
 	}
 
-	embedderModel, err := openai.New(
+	embeddingModel, err := openai.New(
 		openai.WithEmbeddingModel("text-embedding-3-small"),
 		openai.WithHTTPClient(limiter),
 	)
@@ -81,9 +82,14 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 		return nil, fmt.Errorf("create embedder model: %w", err)
 	}
 
-	summarizer := nlp.NewSummarizer(summarizerModel, logger)
-	embedder := nlp.NewEmbedder(embedderModel)
-	queryRewriter := nlp.NewQueryRewriter(summarizerModel, logger)
+	llmCache := nlp.NewLLMCache(2*time.Hour, logger)
+	cachedEmbeddingModel := nlp.NewCachedModel(embeddingModel, llmCache)
+	cachedCompletionModel := nlp.NewCachedModel(completionModel, llmCache)
+
+	// Cache will help mostly with request-time LLM computations like query-rewrites
+	summarizer := nlp.NewSummarizer(cachedCompletionModel, logger)
+	queryRewriter := nlp.NewQueryRewriter(cachedCompletionModel, logger)
+	embedder := nlp.NewEmbedder(cachedEmbeddingModel)
 
 	activityRepo := postgres.NewActivityRepository(db)
 	sourceRepo := postgres.NewSourceRepository(db)

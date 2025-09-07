@@ -2,14 +2,11 @@ package nlp
 
 import (
 	"context"
-	_ "embed"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/tmc/langchaingo/prompts"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
@@ -18,21 +15,21 @@ import (
 	"github.com/tmc/langchaingo/outputparser"
 )
 
-//go:embed summarize-activity.md
-var summarizeActivityPrompt string
-
-type ActivitySummarizer struct {
-	model  llms.Model
+type Summarizer struct {
+	model  completionModel
+	cache  *LLMCache
 	logger *zerolog.Logger
 }
 
-func NewSummarizer(model llms.Model, logger *zerolog.Logger) *ActivitySummarizer {
-	return &ActivitySummarizer{model: model, logger: logger}
+func NewSummarizer(model completionModel, logger *zerolog.Logger) *Summarizer {
+	return &Summarizer{
+		model:  model,
+		logger: logger,
+	}
 }
 
-type summarizeActivityOutput struct {
-	FullSummary  string `json:"full_summary" describe:"An extensive one-paragraph Markdown summary"`
-	ShortSummary string `json:"short_summary" describe:"A concise one-line plain-text summary"`
+type completionModel interface {
+	Call(ctx context.Context, prompt string, options ...llms.CallOption) (string, error)
 }
 
 type summarizeActivityInput struct {
@@ -42,64 +39,123 @@ type summarizeActivityInput struct {
 	CreatedAt string `json:"created_at"`
 }
 
-func (sum *ActivitySummarizer) SummarizeActivity(
+func (sum *Summarizer) SummarizeActivity(
 	ctx context.Context,
 	activity types.Activity,
 ) (*types.ActivitySummary, error) {
-	template := prompts.NewPromptTemplate(summarizeActivityPrompt, []string{
-		"output_format_instructions",
-		"activity",
-	})
+	// Preprocess input to reduce token count
+	processedInput := sum.activityToInput(activity)
 
-	parser, err := outputparser.NewDefined(summarizeActivityOutput{})
-	if err != nil {
-		return nil, fmt.Errorf("creating parser: %w", err)
+	type result struct {
+		summary string
+		err     error
+	}
+	fullChan := make(chan result, 1)
+	shortChan := make(chan result, 1)
+
+	// Generate full and short summary in parallel
+	go func() {
+		fullSummary, err := sum.generateFullSummary(ctx, processedInput)
+		fullChan <- result{summary: fullSummary, err: err}
+	}()
+	go func() {
+		shortSummary, err := sum.generateShortSummary(ctx, processedInput)
+		shortChan <- result{summary: shortSummary, err: err}
+	}()
+
+	// Wait for both results
+	fullResult := <-fullChan
+	shortResult := <-shortChan
+
+	// Check for errors
+	if fullResult.err != nil {
+		return nil, fmt.Errorf("generate full summary: %w", fullResult.err)
+	}
+	if shortResult.err != nil {
+		return nil, fmt.Errorf("generate short summary: %w", shortResult.err)
 	}
 
-	activityInput, err := json.MarshalIndent(summarizeActivityInput{
+	return &types.ActivitySummary{
+		FullSummary:  fullResult.summary,
+		ShortSummary: shortResult.summary,
+	}, nil
+}
+
+func (sum *Summarizer) generateFullSummary(ctx context.Context, input summarizeActivityInput) (string, error) {
+	prompt := fmt.Sprintf(`You are a summarizer. Summarize the provided JSON faithfully and concisely.
+
+Rules:
+- Use only title, body, created_at.
+- Use **bold** for key terms, `+"`code`"+` for identifiers, hyperlinks for URLs.
+- Include date only if relevant.
+- Max 80 words.
+- Format as Markdown with Context/Key Points/Why it matters structure.
+
+Input:
+%s
+
+Output only the summary text, no JSON formatting.`, sum.formatActivityInput(input))
+
+	out, err := sum.model.Call(
+		ctx,
+		prompt,
+		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
+		llms.WithTemperature(1.0),
+		llms.WithMaxTokens(180), // Limit output tokens
+	)
+	if err != nil {
+		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating full summary completion")
+		return "", fmt.Errorf("generate full summary completion: %w", err)
+	}
+
+	return strings.TrimSpace(out), nil
+}
+
+func (sum *Summarizer) generateShortSummary(ctx context.Context, input summarizeActivityInput) (string, error) {
+	prompt := fmt.Sprintf(`You are a summarizer. Create a concise summary of the provided JSON.
+
+Rules:
+- Use only title, body, created_at.
+- Max 20 words.
+- Plain text, no Markdown.
+- Capture the essence.
+
+Input:
+%s
+
+Output only the summary text, no JSON formatting.`, sum.formatActivityInput(input))
+
+	out, err := sum.model.Call(
+		ctx,
+		prompt,
+		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
+		llms.WithTemperature(1.0),
+		llms.WithMaxTokens(50), // Limit output tokens for short summary
+	)
+	if err != nil {
+		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating short summary completion")
+		return "", fmt.Errorf("generate short summary completion: %w", err)
+	}
+
+	return strings.TrimSpace(out), nil
+}
+
+func (sum *Summarizer) formatActivityInput(input summarizeActivityInput) string {
+	inputJSON, err := json.MarshalIndent(input, "", "  ")
+	if err != nil {
+		return fmt.Sprintf(`{"title": "%s", "body": "%s", "url": "%s", "created_at": "%s"}`,
+			input.Title, input.Body, input.URL, input.CreatedAt)
+	}
+	return string(inputJSON)
+}
+
+func (sum *Summarizer) activityToInput(activity types.Activity) summarizeActivityInput {
+	return summarizeActivityInput{
 		Title:     activity.Title(),
 		Body:      activity.Body(),
 		URL:       activity.URL(),
 		CreatedAt: activity.CreatedAt().Format(time.RFC3339) + "Z",
-	}, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("marshal activity input: %w", err)
 	}
-
-	prompt, err := template.Format(map[string]any{
-		"output_format_instructions": parser.GetFormatInstructions(),
-		"activity":                   string(activityInput),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("format prompt: %w", err)
-	}
-
-	out, err := llms.GenerateFromSinglePrompt(
-		ctx,
-		sum.model,
-		prompt,
-		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
-		llms.WithTemperature(1.0),
-	)
-	if err != nil {
-		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating activity summary completion")
-		return nil, fmt.Errorf("generate activity summary completion: %w", err)
-	}
-
-	response, err := parseResponse(parser, out)
-	if err != nil {
-		sum.logger.Error().
-			Err(err).
-			Str("prompt", prompt).
-			Str("output", out).
-			Msg("Error parsing activity summary response")
-		return nil, fmt.Errorf("parse response: %w", err)
-	}
-
-	return &types.ActivitySummary{
-		FullSummary:  response.FullSummary,
-		ShortSummary: response.ShortSummary,
-	}, nil
 }
 
 type topicSummaryActivityInput struct {
@@ -112,25 +168,10 @@ type topicSummaryActivitiesInput struct {
 	Activities []topicSummaryActivityInput `json:"activities"`
 }
 
-func (sum *ActivitySummarizer) SummarizeTopic(ctx context.Context, topic *TopicQueryGroup, activities []*types.DecoratedActivity) (string, error) {
+func (sum *Summarizer) SummarizeTopic(ctx context.Context, topic *TopicQueryGroup, activities []*types.DecoratedActivity) (string, error) {
 	if len(activities) == 0 {
 		return "", nil
 	}
-
-	template := prompts.NewPromptTemplate(`You are an expert at analyzing and summarizing online activity information. 
-Given a list of activities, generate the summary of key insights that are relevant for the given topic.
-
-Guidelines:
-1. Summaries should be 1-3 sentences that capture the main high-level themes
-2. Focus on the most important insights that are shared by the activities 
-3. Be direct and informative in your summaries
-
-Topic name: {{.topic_name}}
-Topic description: {{.topic_description}}
-Topic activities: {{.topic_activities}}
-
-Activity summary:
-`, []string{"topic_name", "topic_description", "topic_activities"})
 
 	activitiesInput := topicSummaryActivitiesInput{}
 	for _, activity := range activities {
@@ -146,28 +187,32 @@ Activity summary:
 		return "", fmt.Errorf("marshal activities: %w", err)
 	}
 
-	prompt, err := template.Format(map[string]any{
-		"topic_name":        topic.Topic,
-		"topic_description": topic.Description,
-		"topic_activities":  string(activitiesJSON),
-	})
-	if err != nil {
-		return "", fmt.Errorf("format prompt: %w", err)
-	}
+	prompt := fmt.Sprintf(`You are an expert at analyzing and summarizing online activity information. 
+Given a list of activities, generate the summary of key insights that are relevant for the given topic.
 
-	out, err := llms.GenerateFromSinglePrompt(
+Guidelines:
+1. Summaries should be 1-3 sentences that capture the main high-level themes
+2. Focus on the most important insights that are shared by the activities 
+3. Be direct and informative in your summaries
+
+Topic name: %s
+Topic description: %s
+Topic activities: %s
+
+Activity summary:`, topic.Topic, topic.Description, string(activitiesJSON))
+
+	out, err := sum.model.Call(
 		ctx,
-		sum.model,
 		prompt,
-		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
 		llms.WithTemperature(1.0),
+		llms.WithMaxTokens(200), // Limit output tokens for topic summary
 	)
 	if err != nil {
 		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating topic summary completion")
 		return "", fmt.Errorf("generate topic summary completion: %w", err)
 	}
 
-	return out, nil
+	return strings.TrimSpace(out), nil
 }
 
 func parseResponse[T any](parser outputparser.Defined[T], response string) (*T, error) {

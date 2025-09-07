@@ -4,12 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/alitto/pond/v2"
+	"github.com/glanceapp/glance/pkg/sources/activities"
 	"os"
 	"strings"
 	"sync/atomic"
-
-	"github.com/alitto/pond/v2"
-	"github.com/glanceapp/glance/pkg/sources/activities"
 
 	appconfig "github.com/glanceapp/glance/pkg/config"
 	"github.com/glanceapp/glance/pkg/lib"
@@ -86,7 +85,7 @@ func run(ctx context.Context, config Config) error {
 	usageTracker := lib.NewUsageTracker(logger)
 	limiter := lib.NewOpenAILimiterWithTracker(logger, usageTracker)
 
-	summarizerModel, err := openai.New(
+	completionModel, err := openai.New(
 		openai.WithModel("gpt-5-nano-2025-08-07"),
 		openai.WithHTTPClient(limiter),
 	)
@@ -94,7 +93,7 @@ func run(ctx context.Context, config Config) error {
 		return fmt.Errorf("create summarizer model: %w", err)
 	}
 
-	embedderModel, err := openai.New(
+	embeddingModel, err := openai.New(
 		openai.WithEmbeddingModel("text-embedding-3-small"),
 		openai.WithHTTPClient(limiter),
 	)
@@ -102,8 +101,9 @@ func run(ctx context.Context, config Config) error {
 		return fmt.Errorf("create embedder model: %w", err)
 	}
 
-	summarizer := nlp.NewSummarizer(summarizerModel, logger)
-	embedder := nlp.NewEmbedder(embedderModel)
+	summarizer := nlp.NewSummarizer(completionModel, logger)
+
+	embedder := nlp.NewEmbedder(embeddingModel)
 
 	activityRepo := postgres.NewActivityRepository(db)
 	activityRegistry := activities.NewRegistry(logger, activityRepo, summarizer, embedder)

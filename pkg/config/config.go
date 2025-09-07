@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/glanceapp/glance/pkg/feeds"
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources"
