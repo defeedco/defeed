@@ -17,7 +17,6 @@ import (
 
 type Summarizer struct {
 	model  completionModel
-	cache  *LLMCache
 	logger *zerolog.Logger
 }
 
@@ -89,7 +88,7 @@ Rules:
 - Use **bold** for key terms, `+"`code`"+` for identifiers, hyperlinks for URLs.
 - Include date only if relevant.
 - Max 80 words.
-- Format as Markdown with Context/Key Points/Why it matters structure.
+- Format as Markdown with Context/Key Points/Why it matters structure (titles formatted with ###).
 
 Input:
 %s
@@ -101,7 +100,6 @@ Output only the summary text, no JSON formatting.`, sum.formatActivityInput(inpu
 		prompt,
 		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
 		llms.WithTemperature(1.0),
-		llms.WithMaxTokens(180), // Limit output tokens
 	)
 	if err != nil {
 		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating full summary completion")
@@ -130,7 +128,6 @@ Output only the summary text, no JSON formatting.`, sum.formatActivityInput(inpu
 		prompt,
 		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
 		llms.WithTemperature(1.0),
-		llms.WithMaxTokens(50), // Limit output tokens for short summary
 	)
 	if err != nil {
 		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating short summary completion")
@@ -204,8 +201,8 @@ Activity summary:`, topic.Topic, topic.Description, string(activitiesJSON))
 	out, err := sum.model.Call(
 		ctx,
 		prompt,
+		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
 		llms.WithTemperature(1.0),
-		llms.WithMaxTokens(200), // Limit output tokens for topic summary
 	)
 	if err != nil {
 		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating topic summary completion")

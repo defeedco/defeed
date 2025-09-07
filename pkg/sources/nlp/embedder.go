@@ -23,10 +23,19 @@ func NewEmbedder(model embedderModel) *ActivityEmbedder {
 	}
 }
 
-func (e *ActivityEmbedder) Embed(ctx context.Context, summary *types.ActivitySummary) ([]float32, error) {
+func (e *ActivityEmbedder) EmbedActivity(ctx context.Context, summary *types.ActivitySummary) ([]float32, error) {
 	out, err := e.embedder.EmbedQuery(ctx, summary.FullSummary)
 	if err != nil {
-		return nil, fmt.Errorf("embed query: %w", err)
+		return nil, fmt.Errorf("embed activity: %w", err)
+	}
+
+	return out, nil
+}
+
+func (e *ActivityEmbedder) EmbedActivityQuery(ctx context.Context, query string) ([]float32, error) {
+	out, err := e.embedder.EmbedQuery(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("embed activity query: %w", err)
 	}
 
 	return out, nil

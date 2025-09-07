@@ -77,9 +77,8 @@ func (ut *UsageTracker) TrackUsage(resp *http.Response) (*UsageMetrics, error) {
 	// Read the response body for usage tracking
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, fmt.Errorf("read response body: %w", err)
 	}
-
 	// Replace the response body with a new reader containing the same data
 	// so the caller can still read it (otherwise we'll get EOF errors)
 	resp.Body = io.NopCloser(bytes.NewReader(body))

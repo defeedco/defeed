@@ -34,7 +34,8 @@ type summarizer interface {
 }
 
 type embedder interface {
-	Embed(ctx context.Context, sum *types.ActivitySummary) ([]float32, error)
+	EmbedActivity(ctx context.Context, sum *types.ActivitySummary) ([]float32, error)
+	EmbedActivityQuery(ctx context.Context, query string) ([]float32, error)
 }
 
 type activityStore interface {
@@ -71,8 +72,13 @@ func (r *Registry) Create(ctx context.Context, activity types.Activity, upsert b
 	}
 
 	// Compute embedding for the summary
-	embedding, err := r.embedder.Embed(ctx, summary)
+	embedding, err := r.embedder.EmbedActivity(ctx, summary)
 	if err != nil {
+		r.logger.Error().
+			Err(err).
+			Any("activity", activity).
+			Any("summary", summary).
+			Msg("compute embedding")
 		return false, fmt.Errorf("compute embedding: %w", err)
 	}
 
@@ -106,9 +112,7 @@ type SearchRequest struct {
 func (r *Registry) Search(ctx context.Context, req SearchRequest) (*types.SearchResult, error) {
 	var queryEmbedding []float32
 	if req.Query != "" {
-		embedding, err := r.embedder.Embed(ctx, &types.ActivitySummary{
-			FullSummary: req.Query,
-		})
+		embedding, err := r.embedder.EmbedActivityQuery(ctx, req.Query)
 		if err != nil {
 			return nil, fmt.Errorf("compute query embedding: %w", err)
 		}
