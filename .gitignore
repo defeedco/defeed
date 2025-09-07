@@ -4,4 +4,4 @@
 /.idea
 /glance*.yml
 .env
-log/*.log
+logs/*.log

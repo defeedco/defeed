@@ -300,9 +300,15 @@ func activityFromEnt(in *ent.Activity, similarity float32) (*types.DecoratedActi
 		return nil, fmt.Errorf("unmarshal activity: %w", err)
 	}
 
+	// Embeddings can be null if we clear them for reprocessing
+	var embedding []float32
+	if in.Embedding != nil {
+		embedding = in.Embedding.Slice()
+	}
+
 	return &types.DecoratedActivity{
 		Activity:   act,
-		Embedding:  in.Embedding.Slice(),
+		Embedding:  embedding,
 		Similarity: similarity,
 		Summary: &types.ActivitySummary{
 			ShortSummary: in.ShortSummary,
