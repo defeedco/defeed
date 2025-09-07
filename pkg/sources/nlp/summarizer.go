@@ -82,8 +82,8 @@ func (sum *ActivitySummarizer) SummarizeActivity(
 		llms.WithTemperature(1.0),
 	)
 	if err != nil {
-		logGenerateCompletionError(sum.logger, prompt, err)
-		return nil, fmt.Errorf("generate completion: %w", err)
+		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating activity summary completion")
+		return nil, fmt.Errorf("generate activity summary completion: %w", err)
 	}
 
 	response, err := parseResponse(parser, out)
@@ -163,7 +163,8 @@ Activity summary:
 		llms.WithTemperature(1.0),
 	)
 	if err != nil {
-		return "", fmt.Errorf("generate completion: %w", err)
+		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating topic summary completion")
+		return "", fmt.Errorf("generate topic summary completion: %w", err)
 	}
 
 	return out, nil
@@ -183,11 +184,13 @@ func parseResponse[T any](parser outputparser.Defined[T], response string) (*T, 
 	return &out, nil
 }
 
-func logGenerateCompletionError(logger *zerolog.Logger, prompt string, err error) {
+func logGenerateCompletionError(logger *zerolog.Logger, err error, prompt, out, msg string) {
 	logger.Error().
 		Err(err).
 		// Log in base64 for a more compact representation
 		Str("prompt_base64", base64.StdEncoding.EncodeToString([]byte(prompt))).
 		Int("prompt_bytes", len(prompt)).
-		Msg("Error generating completion")
+		Str("output_base64", base64.StdEncoding.EncodeToString([]byte(out))).
+		Int("output_bytes", len(out)).
+		Msg(msg)
 }

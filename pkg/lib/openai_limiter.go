@@ -16,8 +16,9 @@ import (
 // OpenAILimiter is rate limiter for OpenAI API.
 // It implements an openaiclient.Doer.
 type OpenAILimiter struct {
-	client *http.Client
-	logger *zerolog.Logger
+	client       *http.Client
+	logger       *zerolog.Logger
+	usageTracker *UsageTracker
 }
 
 func NewOpenAILimiter(logger *zerolog.Logger) *OpenAILimiter {
@@ -25,7 +26,19 @@ func NewOpenAILimiter(logger *zerolog.Logger) *OpenAILimiter {
 		client: &http.Client{
 			Timeout: 60 * time.Second,
 		},
-		logger: logger,
+		logger:       logger,
+		usageTracker: nil,
+	}
+}
+
+// NewOpenAILimiterWithTracker creates a limiter with usage tracker
+func NewOpenAILimiterWithTracker(logger *zerolog.Logger, usageTracker *UsageTracker) *OpenAILimiter {
+	return &OpenAILimiter{
+		client: &http.Client{
+			Timeout: 60 * time.Second,
+		},
+		logger:       logger,
+		usageTracker: usageTracker,
 	}
 }
 
@@ -105,6 +118,15 @@ func (r *OpenAILimiter) Do(req *http.Request) (*http.Response, error) {
 
 		attemptEvent.
 			Msg("OpenAI request successful")
+
+		// Track usage for successful requests
+		if r.usageTracker != nil {
+			if _, err := r.usageTracker.TrackUsage(resp); err != nil {
+				r.logger.Warn().
+					Err(err).
+					Msg("Failed to track OpenAI usage")
+			}
+		}
 
 		return resp, nil
 	}
@@ -198,4 +220,9 @@ func parseReset(s string) time.Duration {
 	}
 
 	return 0
+}
+
+// UsageTracker returns the usage tracker instance
+func (r *OpenAILimiter) UsageTracker() *UsageTracker {
+	return r.usageTracker
 }

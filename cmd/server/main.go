@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/glanceapp/glance/pkg/feeds"
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources"
@@ -61,7 +62,8 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 		return nil, fmt.Errorf("connect to database: %w", err)
 	}
 
-	limiter := lib.NewOpenAILimiter(logger)
+	usageTracker := lib.NewUsageTracker(logger)
+	limiter := lib.NewOpenAILimiterWithTracker(logger, usageTracker)
 
 	summarizerModel, err := openai.New(
 		openai.WithModel("gpt-5-nano-2025-08-07"),

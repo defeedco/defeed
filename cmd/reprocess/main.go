@@ -83,7 +83,8 @@ func run(ctx context.Context, config Config) error {
 	}
 
 	// Initialize OpenAI models
-	limiter := lib.NewOpenAILimiter(logger)
+	usageTracker := lib.NewUsageTracker(logger)
+	limiter := lib.NewOpenAILimiterWithTracker(logger, usageTracker)
 
 	summarizerModel, err := openai.New(
 		openai.WithModel("gpt-5-nano-2025-08-07"),
