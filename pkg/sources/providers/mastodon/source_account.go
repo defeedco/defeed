@@ -59,7 +59,7 @@ func (s *SourceAccount) Icon() string {
 }
 
 func (s *SourceAccount) Topics() []sourcetypes.TopicTag {
-	if tag, ok := sourcetypes.ParseTopicTag(s.AccountBio); ok {
+	if tag, ok := sourcetypes.InferTopicTag(s.AccountBio); ok {
 		return []sourcetypes.TopicTag{tag}
 	}
 	return []sourcetypes.TopicTag{sourcetypes.TopicOpenSource}

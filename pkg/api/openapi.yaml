@@ -23,7 +23,7 @@ paths:
           description: Filter sources by name or description.
           schema:
             type: string
-        - name: interests
+        - name: topics
           in: query
           description: "Optional list of user interests to personalize results. Example: interests=llms&interests=startups"
           style: form

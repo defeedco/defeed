@@ -227,8 +227,20 @@ func (s *Server) ListSources(w http.ResponseWriter, r *http.Request, params List
 		query = *params.Query
 	}
 
-	// TODO(merge): add interest
-	result, err := s.sourceRegistry.Search(r.Context(), query)
+	var topics []sourcetypes.TopicTag
+	if params.Topics != nil {
+		res, err := deserializeTopicTags(*params.Topics)
+		if err != nil {
+			s.badRequest(w, err, "deserialize topics")
+			return
+		}
+		topics = res
+	}
+
+	result, err := s.sourceRegistry.Search(r.Context(), sources.SearchRequest{
+		Query:  query,
+		Topics: topics,
+	})
 	if err != nil {
 		s.internalError(w, err, "search source presets")
 		return
@@ -542,6 +554,55 @@ func serializeSourceType(in string) (SourceType, error) {
 	}
 
 	return "", fmt.Errorf("unknown source type: %s", in)
+}
+
+func deserializeTopicTags(in []TopicTag) ([]sourcetypes.TopicTag, error) {
+	out := make([]sourcetypes.TopicTag, len(in))
+	for i, t := range in {
+		des, err := deserializeTopicTag(t)
+		if err != nil {
+			return nil, fmt.Errorf("deserialize topic tag: %w", err)
+		}
+		out[i] = des
+	}
+	return out, nil
+}
+
+func deserializeTopicTag(in TopicTag) (sourcetypes.TopicTag, error) {
+	switch in {
+	case AgenticSystems:
+		return sourcetypes.TopicAgenticSystems, nil
+	case Llms:
+		return sourcetypes.TopicLLMs, nil
+	case Startups:
+		return sourcetypes.TopicStartups, nil
+	case Devtools:
+		return sourcetypes.TopicDevTools, nil
+	case WebPerformance:
+		return sourcetypes.TopicWebPerformance, nil
+	case DistributedSystems:
+		return sourcetypes.TopicDistributedSystems, nil
+	case Databases:
+		return sourcetypes.TopicDatabases, nil
+	case SecurityEngineering:
+		return sourcetypes.TopicSecurityEngineering, nil
+	case SystemsProgramming:
+		return sourcetypes.TopicSystemsProgramming, nil
+	case ProductManagement:
+		return sourcetypes.TopicProductManagement, nil
+	case GrowthEngineering:
+		return sourcetypes.TopicGrowthEngineering, nil
+	case AiResearch:
+		return sourcetypes.TopicAIResearch, nil
+	case Robotics:
+		return sourcetypes.TopicRobotics, nil
+	case OpenSource:
+		return sourcetypes.TopicOpenSource, nil
+	case CloudInfrastructure:
+		return sourcetypes.TopicCloudInfrastructure, nil
+	default:
+		return "", fmt.Errorf("unknown topic tag: %s", in)
+	}
 }
 
 func deserializeSourceUIDs(in []string) ([]activitytypes.TypedUID, error) {

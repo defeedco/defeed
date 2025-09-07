@@ -83,14 +83,14 @@ func (s *SourceFeed) Topics() []sourcetypes.TopicTag {
 	if len(s.Tags) > 0 {
 		out := make([]sourcetypes.TopicTag, 0, len(s.Tags))
 		for _, t := range s.Tags {
-			if tag, ok := sourcetypes.ParseTopicTag(t); ok {
+			if tag, ok := sourcetypes.InferTopicTag(t); ok {
 				out = append(out, tag)
 			}
 		}
 		return out
 	}
 
-	candidates := sourcetypes.UniqueTopicTags(s.Title, s.AboutFeed)
+	candidates := sourcetypes.InferUniqueTopicTags(s.Title, s.AboutFeed)
 	if len(candidates) > 0 {
 		return candidates
 	}
@@ -188,10 +188,10 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytyp
 }
 
 type FeedItem struct {
-	Item      *gofeed.Item   `json:"item"`
-	FeedURL   string         `json:"feed_url"`
+	Item      *gofeed.Item           `json:"item"`
+	FeedURL   string                 `json:"feed_url"`
 	SourceID  activitytypes.TypedUID `json:"source_id"`
-	SourceTyp string         `json:"source_type"`
+	SourceTyp string                 `json:"source_type"`
 }
 
 func NewFeedItem() *FeedItem {
