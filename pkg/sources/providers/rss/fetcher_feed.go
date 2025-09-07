@@ -4,10 +4,10 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"time"
 	"strings"
+	"time"
 
-	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
@@ -48,7 +48,7 @@ func (f *FeedFetcher) SourceType() string {
 	return TypeRSSFeed
 }
 
-func (f *FeedFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
+func (f *FeedFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID) (types.Source, error) {
 	for _, source := range f.Feeds {
 		if lib.Equals(source.UID(), id) {
 			return source, nil
@@ -96,9 +96,9 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 			}
 
 			source := &SourceFeed{
-				Title:     outline.Title,
-				FeedURL:   outline.XMLUrl,
-				AboutFeed: outline.Text,
+				Title:   outline.Title,
+				FeedURL: outline.XMLUrl,
+				About:   outline.Text,
 			}
 
 			// Derive simple topical tags from OPML category and outline metadata
@@ -107,13 +107,7 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 				if cat == "" {
 					cat = category.Text
 				}
-				source.Tags = append(source.Tags, strings.ToLower(cat))
-			}
-			if outline.Title != "" {
-				source.Tags = append(source.Tags, strings.ToLower(outline.Title))
-			}
-			if outline.Text != "" {
-				source.Tags = append(source.Tags, strings.ToLower(outline.Text))
+				source.Category = strings.ToLower(cat)
 			}
 
 			if seen[source.UID().String()] {

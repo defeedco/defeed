@@ -1,5 +1,7 @@
 package types
 
+import "strings"
+
 // TopicTag represents a niche interest category used to personalize sources.
 // Keep values lowercase snake_case to match OpenAPI and external clients.
 type TopicTag string
@@ -22,9 +24,9 @@ const (
 	TopicCloudInfrastructure TopicTag = "cloud_infrastructure"
 )
 
-// InferTopicTag maps a free-form string to a TopicTag when possible.
+// WordToTopic maps a free-form string to a TopicTag when possible.
 // It supports a small set of synonyms to avoid duplicating logic in providers.
-func InferTopicTag(s string) (TopicTag, bool) {
+func WordToTopic(s string) (TopicTag, bool) {
 	switch normalize(s) {
 	case "llm", "llms", "large_language_models", "chatgpt", "gpt", "local_llm", "local_llms":
 		return TopicLLMs, true
@@ -81,10 +83,12 @@ func InferUniqueTopicTags(values ...string) []TopicTag {
 	seen := make(map[TopicTag]bool)
 	out := make([]TopicTag, 0)
 	for _, v := range values {
-		if tag, ok := InferTopicTag(v); ok {
-			if !seen[tag] {
-				seen[tag] = true
-				out = append(out, tag)
+		for _, word := range strings.Split(v, " ") {
+			if tag, ok := WordToTopic(word); ok {
+				if !seen[tag] {
+					seen[tag] = true
+					out = append(out, tag)
+				}
 			}
 		}
 	}

@@ -34,13 +34,13 @@ func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type SourceFeed struct {
-	Title     string
-	AboutFeed string
-	Tags      []string
-	FeedURL   string            `json:"url" validate:"required,url"`
-	Headers   map[string]string `json:"headers"`
-	IconURL   string            `json:"icon_url"`
-	logger    *zerolog.Logger
+	Title    string
+	About    string
+	Category string
+	FeedURL  string            `json:"url" validate:"required,url"`
+	Headers  map[string]string `json:"headers"`
+	IconURL  string            `json:"icon_url"`
+	logger   *zerolog.Logger
 }
 
 func NewSourceFeed() *SourceFeed {
@@ -65,8 +65,8 @@ func (s *SourceFeed) Name() string {
 }
 
 func (s *SourceFeed) Description() string {
-	if s.AboutFeed != "" {
-		return s.AboutFeed
+	if s.About != "" {
+		return s.About
 	}
 	return fmt.Sprintf("Updates from %s", lib.StripURL(s.FeedURL))
 }
@@ -80,21 +80,7 @@ func (s *SourceFeed) Icon() string {
 }
 
 func (s *SourceFeed) Topics() []sourcetypes.TopicTag {
-	if len(s.Tags) > 0 {
-		out := make([]sourcetypes.TopicTag, 0, len(s.Tags))
-		for _, t := range s.Tags {
-			if tag, ok := sourcetypes.InferTopicTag(t); ok {
-				out = append(out, tag)
-			}
-		}
-		return out
-	}
-
-	candidates := sourcetypes.InferUniqueTopicTags(s.Title, s.AboutFeed)
-	if len(candidates) > 0 {
-		return candidates
-	}
-	return []sourcetypes.TopicTag{sourcetypes.TopicOpenSource}
+	return sourcetypes.InferUniqueTopicTags(s.Title, s.About, s.Category)
 }
 
 func (s *SourceFeed) getWebsiteURL() string {
