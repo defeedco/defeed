@@ -9,7 +9,8 @@ import (
 
 	"github.com/alexferrari88/gohn/pkg/gohn"
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/rs/zerolog"
 )
 
@@ -28,7 +29,7 @@ func NewSourcePosts() *SourcePosts {
 	}
 }
 
-func (s *SourcePosts) UID() types.TypedUID {
+func (s *SourcePosts) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeHackerNewsPosts, s.FeedName)
 }
 
@@ -57,12 +58,16 @@ func (s *SourcePosts) Icon() string {
 	return "https://news.ycombinator.com/favicon.ico"
 }
 
+func (s *SourcePosts) Topics() []sourcetypes.TopicTag {
+	return []sourcetypes.TopicTag{sourcetypes.TopicStartups, sourcetypes.TopicDevTools, sourcetypes.TopicOpenSource}
+}
+
 func (s *SourcePosts) Validate() error { return lib.ValidateStruct(s) }
 
 type Post struct {
 	Post            *gohn.Item     `json:"post"`
 	ArticleTextBody string         `json:"article_text_body"`
-	SourceID        types.TypedUID `json:"source_id"`
+	SourceID        activitytypes.TypedUID `json:"source_id"`
 }
 
 func NewPost() *Post {
@@ -102,11 +107,11 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (p *Post) UID() types.TypedUID {
+func (p *Post) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeHackerNewsPosts, fmt.Sprintf("%d", *p.Post.ID))
 }
 
-func (p *Post) SourceUID() types.TypedUID {
+func (p *Post) SourceUID() activitytypes.TypedUID {
 	return p.SourceID
 }
 
@@ -164,11 +169,11 @@ func (s *SourcePosts) Initialize(logger *zerolog.Logger) error {
 	return nil
 }
 
-func (s *SourcePosts) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourcePosts) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	s.fetchHackerNewsPosts(ctx, since, feed, errs)
 }
 
-func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	storyIDs, err := s.fetchStoryIDs(ctx)
 
 	if err != nil {

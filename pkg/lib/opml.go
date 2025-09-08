@@ -29,6 +29,10 @@ type OPMLOutline struct {
 	Type     string        `xml:"type,attr"`
 	XMLUrl   string        `xml:"xmlUrl,attr"`
 	Outlines []OPMLOutline `xml:"outline"`
+
+	// Optional custom attributes
+	Topics     string `xml:"topics,attr"`
+	FaviconUrl string `xml:"faviconUrl,attr"`
 }
 
 // ParseOPML parses OPML data and returns sources

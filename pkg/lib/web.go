@@ -3,6 +3,7 @@ package lib
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -183,19 +184,25 @@ func findFaviconInHTML(ctx context.Context, logger *zerolog.Logger, websiteURL s
 		return ""
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; DefeedBot/1.0)")
+	req.Header.Set("User-Agent", DefeedUserAgentString)
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	// Skip certificate verification to avoid occasional "failed to verify certificate" errors
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Warn().Str("url", websiteURL).Msg("failed to fetch HTML for favicon")
+		logger.Error().Err(err).Str("url", websiteURL).Msg("failed to fetch HTML for favicon")
 		return ""
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		logger.Warn().Str("url", websiteURL).Int("status", resp.StatusCode).Msg("failed to fetch HTML for favicon")
-		return ""
+		logger.Warn().Str("url", websiteURL).Int("status", resp.StatusCode).Msg("Non 200 status code for favicon request")
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)

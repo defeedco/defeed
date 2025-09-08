@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
@@ -30,7 +31,7 @@ func NewReleaseSource() *SourceRelease {
 	}
 }
 
-func (s *SourceRelease) UID() types.TypedUID {
+func (s *SourceRelease) UID() activitytypes.TypedUID {
 	return &TypedUID{
 		Typ:   TypeGithubReleases,
 		Owner: s.Owner,
@@ -57,7 +58,11 @@ func (s *SourceRelease) Icon() string {
 	return "https://github.com/favicon.ico"
 }
 
-func (s *SourceRelease) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceRelease) Topics() []sourcetypes.TopicTag {
+	return []sourcetypes.TopicTag{sourcetypes.TopicDevTools, sourcetypes.TopicOpenSource}
+}
+
+func (s *SourceRelease) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	s.fetchGithubReleases(ctx, since, feed, errs)
 }
 
@@ -151,11 +156,11 @@ func (r *Release) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (r *Release) UID() types.TypedUID {
+func (r *Release) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeGithubReleases, fmt.Sprintf("%d", r.Release.GetID()))
 }
 
-func (r *Release) SourceUID() types.TypedUID {
+func (r *Release) SourceUID() activitytypes.TypedUID {
 	return r.SourceID
 }
 
@@ -185,7 +190,7 @@ func (r *Release) CreatedAt() time.Time {
 	return r.Release.GetPublishedAt().Time
 }
 
-func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	sinceTime := time.Now().Add(-1 * time.Hour)
 	if since != nil {
 		sinceTime = since.CreatedAt()

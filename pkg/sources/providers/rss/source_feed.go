@@ -12,7 +12,8 @@ import (
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 	"github.com/mmcdole/gofeed"
 	gofeedext "github.com/mmcdole/gofeed/extensions"
 	"github.com/rs/zerolog"
@@ -33,26 +34,26 @@ func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type SourceFeed struct {
-	Title     string
-	AboutFeed string
-	Tags      []string
-	FeedURL   string            `json:"url" validate:"required,url"`
-	Headers   map[string]string `json:"headers"`
-	IconURL   string            `json:"icon_url"`
-	logger    *zerolog.Logger
+	title       string
+	description string
+	topics      []sourcetypes.TopicTag
+	FeedURL     string            `json:"url" validate:"required,url"`
+	Headers     map[string]string `json:"headers"`
+	IconURL     string            `json:"icon_url"`
+	logger      *zerolog.Logger
 }
 
 func NewSourceFeed() *SourceFeed {
 	return &SourceFeed{}
 }
 
-func (s *SourceFeed) UID() types.TypedUID {
+func (s *SourceFeed) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeRSSFeed, lib.StripURL(s.FeedURL))
 }
 
 func (s *SourceFeed) Name() string {
-	if s.Title != "" {
-		return s.Title
+	if s.title != "" {
+		return s.title
 	}
 
 	hostName, err := lib.StripURLHost(s.FeedURL)
@@ -64,8 +65,8 @@ func (s *SourceFeed) Name() string {
 }
 
 func (s *SourceFeed) Description() string {
-	if s.AboutFeed != "" {
-		return s.AboutFeed
+	if s.description != "" {
+		return s.description
 	}
 	return fmt.Sprintf("Updates from %s", lib.StripURL(s.FeedURL))
 }
@@ -76,6 +77,10 @@ func (s *SourceFeed) URL() string {
 
 func (s *SourceFeed) Icon() string {
 	return s.IconURL
+}
+
+func (s *SourceFeed) Topics() []sourcetypes.TopicTag {
+	return s.topics
 }
 
 func (s *SourceFeed) getWebsiteURL() string {
@@ -101,6 +106,12 @@ func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 }
 
 func (s *SourceFeed) fetchIcon(ctx context.Context, logger *zerolog.Logger) error {
+	// If favicon URL is already set (from OPML), use it
+	if s.IconURL != "" {
+		return nil
+	}
+
+	// Otherwise, try to fetch it automatically
 	websiteURL := s.getWebsiteURL()
 	if websiteURL != "" {
 		s.IconURL = lib.FetchFaviconURL(ctx, logger, websiteURL)
@@ -108,13 +119,13 @@ func (s *SourceFeed) fetchIcon(ctx context.Context, logger *zerolog.Logger) erro
 	return nil
 }
 
-func (s *SourceFeed) Stream(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceFeed) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	s.fetchAndSendNewItems(ctx, since, feed, errs)
 }
 
-func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activity, feed chan<- types.Activity, errs chan<- error) {
+func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	parser := gofeed.NewParser()
-	parser.UserAgent = lib.PulseUserAgentString
+	parser.UserAgent = lib.DefeedUserAgentString
 
 	if s.Headers != nil {
 		parser.Client = &http.Client{
@@ -127,7 +138,7 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activ
 
 	rssFeed, err := parser.ParseURLWithContext(s.FeedURL, ctx)
 	if err != nil {
-		errs <- fmt.Errorf("failed to parse RSS feed: %w", err)
+		errs <- fmt.Errorf("fetch rss feed: %w", err)
 		return
 	}
 
@@ -169,10 +180,10 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since types.Activ
 }
 
 type FeedItem struct {
-	Item      *gofeed.Item   `json:"item"`
-	FeedURL   string         `json:"feed_url"`
-	SourceID  types.TypedUID `json:"source_id"`
-	SourceTyp string         `json:"source_type"`
+	Item      *gofeed.Item           `json:"item"`
+	FeedURL   string                 `json:"feed_url"`
+	SourceID  activitytypes.TypedUID `json:"source_id"`
+	SourceTyp string                 `json:"source_type"`
 }
 
 func NewFeedItem() *FeedItem {
@@ -208,7 +219,7 @@ func (e *FeedItem) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (e *FeedItem) UID() types.TypedUID {
+func (e *FeedItem) UID() activitytypes.TypedUID {
 	id := e.Item.GUID
 	if id == "" {
 		id = lib.StripURL(e.URL())
@@ -216,7 +227,7 @@ func (e *FeedItem) UID() types.TypedUID {
 	return lib.NewTypedUID(e.SourceTyp, id)
 }
 
-func (e *FeedItem) SourceUID() types.TypedUID {
+func (e *FeedItem) SourceUID() activitytypes.TypedUID {
 	return e.SourceID
 }
 

@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math/rand"
@@ -16,8 +17,9 @@ import (
 // OpenAILimiter is rate limiter for OpenAI API.
 // It implements an openaiclient.Doer.
 type OpenAILimiter struct {
-	client *http.Client
-	logger *zerolog.Logger
+	client       *http.Client
+	logger       *zerolog.Logger
+	usageTracker *UsageTracker
 }
 
 func NewOpenAILimiter(logger *zerolog.Logger) *OpenAILimiter {
@@ -25,7 +27,19 @@ func NewOpenAILimiter(logger *zerolog.Logger) *OpenAILimiter {
 		client: &http.Client{
 			Timeout: 60 * time.Second,
 		},
-		logger: logger,
+		logger:       logger,
+		usageTracker: nil,
+	}
+}
+
+// NewOpenAILimiterWithTracker creates a limiter with usage tracker
+func NewOpenAILimiterWithTracker(logger *zerolog.Logger, usageTracker *UsageTracker) *OpenAILimiter {
+	return &OpenAILimiter{
+		client: &http.Client{
+			Timeout: 60 * time.Second,
+		},
+		logger:       logger,
+		usageTracker: usageTracker,
 	}
 }
 
@@ -43,34 +57,25 @@ func (r *OpenAILimiter) Do(req *http.Request) (*http.Response, error) {
 
 		resp, err := r.client.Do(req)
 
-		errBody := ""
-		errStatusCode := 0
-		if resp != nil && resp.StatusCode != 200 {
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				return nil, fmt.Errorf("read response body: %w", err)
-			}
-			errBody = string(body)
-			errStatusCode = resp.StatusCode
-		}
-
 		if err != nil {
-			r.logger.Error().
-				Err(err).
-				Int("status_code", errStatusCode).
-				Str("body", errBody).
-				Msg("OpenAI returned error")
-			return nil, err
+			return nil, fmt.Errorf("OpenAI client do: %w", err)
 		}
 
-		rateLimitHeaders := parseRateLimitHeaders(resp)
-		attemptEvent := r.attemptEvent(rateLimitHeaders, errBody, resp.StatusCode, attempt)
+		// Read the response body for error reporting
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("read response body: %w", err)
+		}
+		// Replace the response body with a new reader containing the same data
+		// so the caller can still read it (otherwise we'll get EOF errors)
+		resp.Body = io.NopCloser(bytes.NewReader(body))
+
+		rlHeaders := parseRateLimitHeaders(resp)
+		attemptEvent := r.attemptEvent(rlHeaders, body, resp.StatusCode, attempt)
 
 		// See: https://platform.openai.com/docs/guides/error-codes#api-errors
 		if resp.StatusCode == 429 {
-			resp.Body.Close()
-
-			delay := backoffWithJitter(rateLimitHeaders)
+			delay := backoffWithJitter(rlHeaders)
 			attemptEvent.
 				Dur("delay", delay).
 				Msg("OpenAI rate limit reached, retrying with backoff")
@@ -81,9 +86,7 @@ func (r *OpenAILimiter) Do(req *http.Request) (*http.Response, error) {
 
 		// See: https://platform.openai.com/docs/guides/error-codes#api-errors
 		if resp.StatusCode == 503 {
-			resp.Body.Close()
-
-			delay := backoffWithJitter(rateLimitHeaders)
+			delay := backoffWithJitter(rlHeaders)
 			attemptEvent.
 				Dur("delay", delay).
 				Msg("OpenAI service overloaded, retrying with backoff")
@@ -94,8 +97,6 @@ func (r *OpenAILimiter) Do(req *http.Request) (*http.Response, error) {
 
 		// See: https://platform.openai.com/docs/guides/error-codes#api-errors
 		if resp.StatusCode != 200 {
-			resp.Body.Close()
-
 			// API sometimes returns 400 response, log the body for debugging.
 			attemptEvent.
 				Msg("OpenAI returned non-ok response")
@@ -105,6 +106,15 @@ func (r *OpenAILimiter) Do(req *http.Request) (*http.Response, error) {
 
 		attemptEvent.
 			Msg("OpenAI request successful")
+
+		// Track usage for successful requests
+		if r.usageTracker != nil {
+			if _, err := r.usageTracker.TrackUsage(resp); err != nil {
+				r.logger.Warn().
+					Err(err).
+					Msg("Failed to track OpenAI usage")
+			}
+		}
 
 		return resp, nil
 	}
@@ -157,15 +167,22 @@ func parseRateLimitHeaders(resp *http.Response) *rateLimitHeaders {
 	}
 }
 
-func (r *OpenAILimiter) attemptEvent(headers *rateLimitHeaders, errBody string, statusCode int, attempt int) *zerolog.Event {
-	return r.logger.Debug().
+func (r *OpenAILimiter) attemptEvent(headers *rateLimitHeaders, body []byte, statusCode int, attempt int) *zerolog.Event {
+	event := r.logger.Debug().
 		Int("remaining_requests", headers.RemainingRequests).
 		Dur("reset_requests", headers.ResetRequests).
 		Int("remaining_tokens", headers.RemainingTokens).
 		Dur("reset_tokens", headers.ResetTokens).
 		Int("status_code", statusCode).
-		Str("body", errBody).
 		Int("attempt", attempt)
+
+	// Omit embedding response body, since it's very large and not useful for debugging
+	isEmbeddingRes := strings.Contains(string(body), "\"object\": \"embedding\"")
+	if !isEmbeddingRes {
+		event.Str("body_base64", base64.StdEncoding.EncodeToString(body))
+	}
+
+	return event
 }
 
 // parseInt converts a numeric header string to int; returns -1 on failure.
@@ -198,4 +215,9 @@ func parseReset(s string) time.Duration {
 	}
 
 	return 0
+}
+
+// UsageTracker returns the usage tracker instance
+func (r *OpenAILimiter) UsageTracker() *UsageTracker {
+	return r.usageTracker
 }

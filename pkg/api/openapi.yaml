@@ -23,6 +23,15 @@ paths:
           description: Filter sources by name or description.
           schema:
             type: string
+        - name: topics
+          in: query
+          description: "Optional list of user interests to personalize results. Example: interests=llms&interests=startups"
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TopicTag'
       security:
         - bearerAuth: []
       responses:
@@ -284,6 +293,7 @@ components:
         - description
         - url
         - iconUrl
+        - topicTags
       properties:
         uid:
           type: string
@@ -297,6 +307,30 @@ components:
           type: string
         iconUrl:
           type: string
+        topicTags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicTag'
+
+    TopicTag:
+      type: string
+      description: Specific niche technology/startup interests
+      enum:
+        - llms
+        - startups
+        - agentic_systems
+        - devtools
+        - web_performance
+        - distributed_systems
+        - databases
+        - security_engineering
+        - systems_programming
+        - product_management
+        - growth_engineering
+        - ai_research
+        - robotics
+        - open_source
+        - cloud_infrastructure
 
     SourceType:
       type: string
@@ -359,6 +393,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ActivityTopic'
+        nextCursor:
+          type: string
+          description: Cursor to use for fetching the next page of results
+        hasMore:
+          type: boolean
+          description: Whether there are more results available
         results:
           type: array
           items:
@@ -368,6 +408,7 @@ components:
       type: object
       required:
         - title
+        - emoji
         - summary
         - queries
         - activityIds
@@ -375,6 +416,9 @@ components:
         title:
           type: string
           description: Title of the topic.
+        emoji:
+          type: string
+          description: Emoji character for the topic.
         summary:
           type: string
           description: Summary of the activities in this topic.

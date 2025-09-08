@@ -36,6 +36,18 @@ export interface ActivitiesListResponse {
      */
     'topics': Array<ActivityTopic>;
     /**
+     * Cursor to use for fetching the next page of results
+     * @type {string}
+     * @memberof ActivitiesListResponse
+     */
+    'nextCursor'?: string;
+    /**
+     * Whether there are more results available
+     * @type {boolean}
+     * @memberof ActivitiesListResponse
+     */
+    'hasMore'?: boolean;
+    /**
      * 
      * @type {Array<Activity>}
      * @memberof ActivitiesListResponse
@@ -159,6 +171,12 @@ export interface ActivityTopic {
      * @memberof ActivityTopic
      */
     'title': string;
+    /**
+     * Emoji character for the topic.
+     * @type {string}
+     * @memberof ActivityTopic
+     */
+    'emoji': string;
     /**
      * Summary of the activities in this topic.
      * @type {string}
@@ -338,6 +356,12 @@ export interface Source {
      * @memberof Source
      */
     'iconUrl': string;
+    /**
+     * 
+     * @type {Array<TopicTag>}
+     * @memberof Source
+     */
+    'topicTags': Array<TopicTag>;
 }
 
 
@@ -361,6 +385,33 @@ export const SourceType = {
 } as const;
 
 export type SourceType = typeof SourceType[keyof typeof SourceType];
+
+
+/**
+ * Specific niche technology/startup interests
+ * @export
+ * @enum {string}
+ */
+
+export const TopicTag = {
+    Llms: 'llms',
+    Startups: 'startups',
+    AgenticSystems: 'agentic_systems',
+    Devtools: 'devtools',
+    WebPerformance: 'web_performance',
+    DistributedSystems: 'distributed_systems',
+    Databases: 'databases',
+    SecurityEngineering: 'security_engineering',
+    SystemsProgramming: 'systems_programming',
+    ProductManagement: 'product_management',
+    GrowthEngineering: 'growth_engineering',
+    AiResearch: 'ai_research',
+    Robotics: 'robotics',
+    OpenSource: 'open_source',
+    CloudInfrastructure: 'cloud_infrastructure'
+} as const;
+
+export type TopicTag = typeof TopicTag[keyof typeof TopicTag];
 
 
 /**
@@ -883,10 +934,11 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
          * 
          * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
+         * @param {Array<TopicTag>} [topics] Optional list of user interests to personalize results. Example: interests&#x3D;llms&amp;interests&#x3D;startups
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listSources: async (query?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        listSources: async (query?: string, topics?: Array<TopicTag>, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/sources`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -905,6 +957,10 @@ export const SourcesApiAxiosParamCreator = function (configuration?: Configurati
 
             if (query !== undefined) {
                 localVarQueryParameter['query'] = query;
+            }
+
+            if (topics) {
+                localVarQueryParameter['topics'] = topics;
             }
 
 
@@ -945,11 +1001,12 @@ export const SourcesApiFp = function(configuration?: Configuration) {
          * 
          * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
+         * @param {Array<TopicTag>} [topics] Optional list of user interests to personalize results. Example: interests&#x3D;llms&amp;interests&#x3D;startups
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listSources(query?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Source>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listSources(query, options);
+        async listSources(query?: string, topics?: Array<TopicTag>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Source>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listSources(query, topics, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['SourcesApi.listSources']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -978,11 +1035,12 @@ export const SourcesApiFactory = function (configuration?: Configuration, basePa
          * 
          * @summary List available sources
          * @param {string} [query] Filter sources by name or description.
+         * @param {Array<TopicTag>} [topics] Optional list of user interests to personalize results. Example: interests&#x3D;llms&amp;interests&#x3D;startups
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listSources(query?: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<Source>> {
-            return localVarFp.listSources(query, options).then((request) => request(axios, basePath));
+        listSources(query?: string, topics?: Array<TopicTag>, options?: RawAxiosRequestConfig): AxiosPromise<Array<Source>> {
+            return localVarFp.listSources(query, topics, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1010,12 +1068,13 @@ export class SourcesApi extends BaseAPI {
      * 
      * @summary List available sources
      * @param {string} [query] Filter sources by name or description.
+     * @param {Array<TopicTag>} [topics] Optional list of user interests to personalize results. Example: interests&#x3D;llms&amp;interests&#x3D;startups
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SourcesApi
      */
-    public listSources(query?: string, options?: RawAxiosRequestConfig) {
-        return SourcesApiFp(this.configuration).listSources(query, options).then((request) => request(this.axios, this.basePath));
+    public listSources(query?: string, topics?: Array<TopicTag>, options?: RawAxiosRequestConfig) {
+        return SourcesApiFp(this.configuration).listSources(query, topics, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
