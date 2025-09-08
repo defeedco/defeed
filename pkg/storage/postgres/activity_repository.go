@@ -113,6 +113,12 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		query = query.Where(entactivity.CreatedAtGTE(since))
 	}
 
+	// There might be some unprocessed activities with empty embeddings from incomplete data migrations.
+	// Filter them out, or we'll get invalid similarity scores.
+	if len(req.QueryEmbedding) > 0 {
+		query = query.Where(entactivity.EmbeddingNotNil())
+	}
+
 	query = query.Order(func(s *sql.Selector) {
 		var simExpr string
 		if len(req.QueryEmbedding) > 0 {
