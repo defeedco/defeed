@@ -89,8 +89,6 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 
 	// Cache will help mostly with request-time LLM computations like query-rewrites
 	summarizer := nlp.NewSummarizer(cachedCompletionModel, logger)
-	// TODO: be smarter about when to revalidate summaries and or queries (e.g. when the activities are sufficiently different)
-	cachedSummarizer := nlp.NewCachedSummarizer(summarizer, 2*time.Hour, logger)
 	queryRewriter := nlp.NewQueryRewriter(cachedCompletionModel, logger)
 	embedder := nlp.NewEmbedder(cachedEmbeddingModel)
 
@@ -112,7 +110,7 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 	}
 
 	feedStore := postgres.NewFeedRepository(db)
-	feedRegistry := feeds.NewRegistry(feedStore, sourceScheduler, sourceRegistry, activityRegistry, cachedSummarizer, queryRewriter, &config.Feeds)
+	feedRegistry := feeds.NewRegistry(feedStore, sourceScheduler, sourceRegistry, activityRegistry, summarizer, queryRewriter, &config.Feeds, logger)
 
 	server, err := api.NewServer(logger, &config.API, sourceRegistry, sourceScheduler, feedRegistry)
 	if err != nil {

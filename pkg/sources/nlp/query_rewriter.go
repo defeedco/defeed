@@ -42,10 +42,10 @@ Guidelines:
 1. Break down the original query into 2-5 distinct and diverse topics
 2. Each topic should have a clear, descriptive name
 3. Each topic should have 1-3 specific queries as an array
-4. Each query should include representative emoji
-5. Focus on different aspects or angles of the original query
-6. Make queries more specific than the original to get better retrieval results
-7. If the original query is already very specific, create related topics that would be of interest
+	1.1. Make queries more specific than the original to get better retrieval results
+	1.2 Focus on different aspects or angles of the original query
+	1.3 The queries should be plain text, optimised for RAG retrieval of the full activity summary embeddings
+4. Each topic should include representative emoji
 
 ## Output format
 

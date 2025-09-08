@@ -45,7 +45,6 @@ func (c *Cache) Get(key string) (any, bool) {
 
 	c.logger.Debug().
 		Str("key", key).
-		Any("value", entry.value).
 		Msg("cache hit")
 
 	return entry.value, true

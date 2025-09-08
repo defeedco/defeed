@@ -7,6 +7,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/activities"
 
 	"golang.org/x/sync/errgroup"
@@ -15,6 +16,7 @@ import (
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/glanceapp/glance/pkg/sources/nlp"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 )
 
 // ErrAuthUsersOnly is used when an action can't be performed without authentication.
@@ -29,6 +31,8 @@ type Registry struct {
 	summarizer       summarizer
 	queryRewriter    *nlp.QueryRewriter
 	config           *Config
+	cache            *lib.Cache
+	logger           *zerolog.Logger
 }
 
 type feedStore interface {
@@ -50,6 +54,7 @@ func NewRegistry(
 	summarizer summarizer,
 	queryRewriter *nlp.QueryRewriter,
 	config *Config,
+	logger *zerolog.Logger,
 ) *Registry {
 	return &Registry{
 		feedRepository:   feedRepository,
@@ -59,6 +64,9 @@ func NewRegistry(
 		summarizer:       summarizer,
 		queryRewriter:    queryRewriter,
 		config:           config,
+		// TODO: be smarter about when to revalidate summaries and or queries (e.g. when the activities are sufficiently different)
+		cache:  lib.NewCache(2*time.Hour, logger),
+		logger: logger,
 	}
 }
 
@@ -265,7 +273,7 @@ func (r *Registry) Activities(
 
 	var topicToSummary map[string]string
 	if r.config.SummarizeTopics {
-		topicToSummary, err = r.summarizeTopics(ctx, topicQueryGroups, acts, activityToTopic)
+		topicToSummary, err = r.summarizeTopics(ctx, period, topicQueryGroups, acts, activityToTopic)
 		if err != nil {
 			return nil, fmt.Errorf("summarize topics: %w", err)
 		}
@@ -371,6 +379,7 @@ func (r *Registry) searchByTopicQueryGroups(
 
 func (r *Registry) summarizeTopics(
 	ctx context.Context,
+	period activitytypes.Period,
 	topics []*nlp.TopicQueryGroup,
 	allActivities []*activitytypes.DecoratedActivity,
 	activityToTopic map[string]string,
@@ -393,8 +402,7 @@ func (r *Registry) summarizeTopics(
 			}
 		}
 		g.Go(func() error {
-			// TODO: Add period key
-			summary, err := r.summarizer.SummarizeTopic(gctx, topic, topicActs)
+			summary, err := r.summarizeTopicWithCache(gctx, period, topic, topicActs)
 			if err != nil {
 				return fmt.Errorf("summarize topic activities: %w", err)
 			}
@@ -416,4 +424,40 @@ func (r *Registry) summarizeTopics(
 	}
 
 	return topicToSummary, nil
+}
+
+func (r *Registry) summarizeTopicWithCache(
+	ctx context.Context,
+	period activitytypes.Period,
+	topic *nlp.TopicQueryGroup,
+	activities []*activitytypes.DecoratedActivity,
+) (string, error) {
+	if len(activities) == 0 {
+		return "", nil
+	}
+
+	cacheKey := fmt.Sprintf("topic_summary:%s:%s", period, topic.Name)
+
+	if cached, found := r.cache.Get(cacheKey); found {
+		if summary, ok := cached.(string); ok {
+			r.logger.Debug().
+				Str("topic", topic.Name).
+				Int("activity_count", len(activities)).
+				Msg("topic summary cache hit")
+			return summary, nil
+		}
+	}
+
+	summary, err := r.summarizer.SummarizeTopic(ctx, topic, activities)
+	if err != nil {
+		return "", err
+	}
+
+	r.cache.Set(cacheKey, summary)
+	r.logger.Debug().
+		Str("topic", topic.Name).
+		Int("activity_count", len(activities)).
+		Msg("topic summary cached")
+
+	return summary, nil
 }
