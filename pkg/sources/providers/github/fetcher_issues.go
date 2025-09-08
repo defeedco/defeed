@@ -3,9 +3,9 @@ package github
 import (
 	"context"
 	"fmt"
-	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
-	"os"
 	"time"
+
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/sources/types"
 
@@ -28,12 +28,10 @@ func (f *IssuesFetcher) SourceType() string {
 	return TypeGithubIssues
 }
 
-func (f *IssuesFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
-	// TODO: Move to Initialize() func and read from Config struct (add to providers/config.go)
-	token := os.Getenv("GITHUB_TOKEN")
+func (f *IssuesFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID, config *types.ProviderConfig) (types.Source, error) {
 	var client *github.Client
-	if token != "" {
-		client = github.NewClient(nil).WithAuthToken(token)
+	if config.GithubAPIToken != "" {
+		client = github.NewClient(nil).WithAuthToken(config.GithubAPIToken)
 	} else {
 		client = github.NewClient(nil)
 	}
@@ -54,12 +52,10 @@ func (f *IssuesFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types
 	}, nil
 }
 
-func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	// TODO: Move to Initialize() func and read from Config struct (add to providers/config.go)
-	token := os.Getenv("GITHUB_TOKEN")
+func (f *IssuesFetcher) Search(ctx context.Context, query string, config *types.ProviderConfig) ([]types.Source, error) {
 	var client *github.Client
-	if token != "" {
-		client = github.NewClient(nil).WithAuthToken(token)
+	if config.GithubAPIToken != "" {
+		client = github.NewClient(nil).WithAuthToken(config.GithubAPIToken)
 	} else {
 		client = github.NewClient(nil)
 	}

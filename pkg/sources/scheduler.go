@@ -3,10 +3,11 @@ package sources
 import (
 	"context"
 	"fmt"
-	"github.com/alitto/pond/v2"
-	"github.com/glanceapp/glance/pkg/sources/activities"
 	"sync"
 	"time"
+
+	"github.com/alitto/pond/v2"
+	"github.com/glanceapp/glance/pkg/sources/activities"
 
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
@@ -27,6 +28,7 @@ type Scheduler struct {
 	cancelBySourceID   sync.Map
 	cancelByActivityID sync.Map
 	logger             *zerolog.Logger
+	sourceConfig       *sourcetypes.ProviderConfig
 }
 
 type sourceStore interface {
@@ -41,12 +43,14 @@ func NewScheduler(
 	sourceRepo sourceStore,
 	activityRegistry *activities.Registry,
 	config *Config,
+	sourceConfig *sourcetypes.ProviderConfig,
 ) *Scheduler {
 	return &Scheduler{
 		activeSourceRepo:   sourceRepo,
 		activityRegistry:   activityRegistry,
 		logger:             logger,
 		activityWorkerPool: pond.NewPool(config.MaxActivityProcessorConcurrency),
+		sourceConfig:       sourceConfig,
 	}
 }
 
@@ -60,7 +64,7 @@ func (r *Scheduler) Initialize(ctx context.Context) error {
 
 	for _, source := range sources {
 		sLogger := sourceLogger(source, r.logger)
-		if err := source.Initialize(sLogger); err != nil {
+		if err := source.Initialize(sLogger, r.sourceConfig); err != nil {
 			sLogger.Error().
 				Err(err).
 				Msg("Failed to initialize source")
@@ -201,7 +205,7 @@ func (r *Scheduler) Add(source sourcetypes.Source) error {
 		return nil
 	}
 
-	if err := source.Initialize(sourceLogger(source, r.logger)); err != nil {
+	if err := source.Initialize(sourceLogger(source, r.logger), r.sourceConfig); err != nil {
 		return fmt.Errorf("initialize source: %w", err)
 	}
 

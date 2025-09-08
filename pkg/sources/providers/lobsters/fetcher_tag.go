@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
@@ -207,7 +207,7 @@ var tagSources = []types.Source{
 	},
 }
 
-func (f *TagFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
+func (f *TagFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID, config *types.ProviderConfig) (types.Source, error) {
 	for _, source := range tagSources {
 		if lib.Equals(source.UID(), id) {
 			return source, nil
@@ -216,7 +216,7 @@ func (f *TagFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.So
 	return nil, fmt.Errorf("source not found")
 }
 
-func (f *TagFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
+func (f *TagFetcher) Search(ctx context.Context, query string, config *types.ProviderConfig) ([]types.Source, error) {
 	// TODO(sources): Support searching custom tags
 	// Ignore the query, since the set of all available sources is small
 	return tagSources, nil

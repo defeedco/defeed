@@ -95,7 +95,7 @@ func (s *SourceFeed) getWebsiteURL() string {
 	return parsedURL.Scheme + "://" + parsedURL.Host
 }
 
-func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
+func (s *SourceFeed) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

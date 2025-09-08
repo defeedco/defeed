@@ -3,11 +3,11 @@ package github
 import (
 	"context"
 	"fmt"
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
+
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
@@ -28,7 +28,7 @@ func (f *TopicFetcher) SourceType() string {
 	return TypeGithubTopic
 }
 
-func (f *TopicFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID) (types.Source, error) {
+func (f *TopicFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID, config *types.ProviderConfig) (types.Source, error) {
 	typedUID, ok := id.(*lib.TypedUID)
 	if !ok {
 		return nil, fmt.Errorf("not a typed UID: %s", id.String())
@@ -40,14 +40,14 @@ func (f *TopicFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID) 
 	}, nil
 }
 
-func (f *TopicFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
+func (f *TopicFetcher) Search(ctx context.Context, query string, config *types.ProviderConfig) ([]types.Source, error) {
 	query = strings.TrimSpace(query)
 	if query == "" {
 		// Cannot enumerate all topics; return empty
 		return []types.Source{}, nil
 	}
 
-	suggestions, err := f.searchTopics(ctx, query)
+	suggestions, err := f.searchTopics(ctx, query, config)
 	if err != nil {
 		f.Logger.Debug().Err(err).Str("query", query).Msg("GitHub topic suggestions failed; falling back to existence check")
 		return nil, fmt.Errorf("search topics: %w", err)
@@ -68,7 +68,7 @@ func (f *TopicFetcher) Search(ctx context.Context, query string) ([]types.Source
 	}
 
 	// Fallback: validate that the exact topic exists by checking for at least one repository
-	exists, err := f.topicExistsByRepositorySearch(ctx, query)
+	exists, err := f.topicExistsByRepositorySearch(ctx, query, config)
 	if err != nil {
 		return nil, fmt.Errorf("check topic existence: %w", err)
 	}
@@ -83,8 +83,8 @@ func (f *TopicFetcher) Search(ctx context.Context, query string) ([]types.Source
 }
 
 // topicExistsByRepositorySearch checks if there is at least one repository for the given topic
-func (f *TopicFetcher) topicExistsByRepositorySearch(ctx context.Context, topic string) (bool, error) {
-	token := os.Getenv("GITHUB_TOKEN")
+func (f *TopicFetcher) topicExistsByRepositorySearch(ctx context.Context, topic string, config *types.ProviderConfig) (bool, error) {
+	token := config.GithubAPIToken
 	var client *github.Client
 	if token != "" {
 		client = github.NewClient(nil).WithAuthToken(token)
@@ -101,7 +101,7 @@ func (f *TopicFetcher) topicExistsByRepositorySearch(ctx context.Context, topic 
 }
 
 // searchTopics queries the GitHub Topics search API to get topic suggestions
-func (f *TopicFetcher) searchTopics(ctx context.Context, query string) ([]string, error) {
+func (f *TopicFetcher) searchTopics(ctx context.Context, query string, config *types.ProviderConfig) ([]string, error) {
 	// Build request
 	base, _ := url.Parse("https://api.github.com/search/topics")
 	q := base.Query()
@@ -117,8 +117,8 @@ func (f *TopicFetcher) searchTopics(ctx context.Context, query string) ([]string
 	// Required preview header for topics API
 	req.Header.Set("Accept", "application/vnd.github.mercy-preview+json")
 
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
+	if config.GithubAPIToken != "" {
+		req.Header.Set("Authorization", "Bearer "+config.GithubAPIToken)
 	}
 
 	type topicItem struct {

@@ -48,7 +48,7 @@ func (f *FeedFetcher) SourceType() string {
 	return TypeRSSFeed
 }
 
-func (f *FeedFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID) (types.Source, error) {
+func (f *FeedFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID, config *types.ProviderConfig) (types.Source, error) {
 	for _, source := range f.Feeds {
 		if lib.Equals(source.UID(), id) {
 			return source, nil
@@ -57,7 +57,7 @@ func (f *FeedFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID) (
 	return nil, fmt.Errorf("source not found")
 }
 
-func (f *FeedFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
+func (f *FeedFetcher) Search(ctx context.Context, query string, config *types.ProviderConfig) ([]types.Source, error) {
 	// TODO(sources): Support adding custom feed URL?
 	// Ignore the query, since the set of all available sources is small
 	return f.Feeds, nil

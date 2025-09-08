@@ -100,7 +100,7 @@ func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since activityty
 	}
 }
 
-func (s *SourceTag) Initialize(logger *zerolog.Logger) error {
+func (s *SourceTag) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

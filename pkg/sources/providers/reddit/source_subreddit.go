@@ -25,12 +25,7 @@ type SourceSubreddit struct {
 	TopPeriod        string `json:"topPeriod" validate:"required,oneof=hour day week month year all"`
 	Search           string `json:"search"`
 	client           *reddit.Client
-	AppAuth          struct {
-		Name   string `json:"name"`
-		ID     string `json:"ID"`
-		Secret string `json:"secret" validate:"required_with=ID"`
-	} `json:"auth"`
-	logger *zerolog.Logger
+	logger           *zerolog.Logger
 }
 
 func NewSourceSubreddit() *SourceSubreddit {
@@ -169,14 +164,14 @@ func (p *Post) CreatedAt() time.Time {
 	return p.Post.Created.Time
 }
 
-func (s *SourceSubreddit) Initialize(logger *zerolog.Logger) error {
+func (s *SourceSubreddit) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	var client *reddit.Client
 	var err error
 
-	if s.AppAuth.ID != "" && s.AppAuth.Secret != "" {
+	if config.RedditClientID != "" && config.RedditClientSecret != "" {
 		client, err = reddit.NewClient(reddit.Credentials{
-			ID:     s.AppAuth.ID,
-			Secret: s.AppAuth.Secret,
+			ID:     config.RedditClientID,
+			Secret: config.RedditClientSecret,
 		})
 	} else {
 		client, err = reddit.NewReadonlyClient()

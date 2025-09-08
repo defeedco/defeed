@@ -97,14 +97,14 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 
 	activityRegistry := activities.NewRegistry(logger, activityRepo, summarizer, embedder)
 
-	sourceScheduler := sources.NewScheduler(logger, sourceRepo, activityRegistry, &config.Sources)
+	sourceScheduler := sources.NewScheduler(logger, sourceRepo, activityRegistry, &config.Sources, &config.SourceProviders)
 	if config.SourceInitialization {
 		if err := sourceScheduler.Initialize(ctx); err != nil {
 			return nil, fmt.Errorf("initialize source scheduler: %w", err)
 		}
 	}
 
-	sourceRegistry := sources.NewRegistry(logger)
+	sourceRegistry := sources.NewRegistry(logger, &config.SourceProviders)
 	if err := sourceRegistry.Initialize(); err != nil {
 		return nil, fmt.Errorf("initialize source registry: %w", err)
 	}

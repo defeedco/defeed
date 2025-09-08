@@ -3,6 +3,7 @@ package mastodon
 import (
 	"context"
 	"fmt"
+
 	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -70,7 +71,7 @@ var popularTechAccountSources = []types.Source{
 	},
 }
 
-func (f *AccountFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
+func (f *AccountFetcher) FindByID(ctx context.Context, id types2.TypedUID, config *types.ProviderConfig) (types.Source, error) {
 	for _, source := range popularTechAccountSources {
 		if lib.Equals(source.UID(), id) {
 			return source, nil
@@ -79,7 +80,7 @@ func (f *AccountFetcher) FindByID(ctx context.Context, id types2.TypedUID) (type
 	return nil, fmt.Errorf("source not found")
 }
 
-func (f *AccountFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
+func (f *AccountFetcher) Search(ctx context.Context, query string, config *types.ProviderConfig) ([]types.Source, error) {
 	// TODO(sources): Support searching custom accounts
 	// Ignore the query, since the set of all available sources is small
 	return popularTechAccountSources, nil

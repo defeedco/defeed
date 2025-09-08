@@ -68,7 +68,7 @@ func (s *SourceFeed) Topics() []sourcetypes.TopicTag {
 	return []sourcetypes.TopicTag{sourcetypes.TopicDevTools}
 }
 
-func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
+func (s *SourceFeed) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}

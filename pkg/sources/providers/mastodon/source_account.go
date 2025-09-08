@@ -65,15 +65,15 @@ func (s *SourceAccount) Topics() []sourcetypes.TopicTag {
 	return []sourcetypes.TopicTag{sourcetypes.TopicOpenSource}
 }
 
-func (s *SourceAccount) Initialize(logger *zerolog.Logger) error {
+func (s *SourceAccount) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
 
 	s.client = mastodon.NewClient(&mastodon.Config{
 		Server:       s.InstanceURL,
-		ClientID:     "pulse-feed-aggregation",
-		ClientSecret: "pulse-feed-aggregation",
+		ClientID:     config.MastodonClientID,
+		ClientSecret: config.MastodonClientSecret,
 	})
 
 	s.logger = logger

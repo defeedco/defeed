@@ -6,6 +6,7 @@ import (
 	"github.com/glanceapp/glance/pkg/feeds"
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/api"
 	"github.com/glanceapp/glance/pkg/lib/log"
@@ -14,14 +15,15 @@ import (
 )
 
 type Config struct {
-	DB      postgres.Config `env:""`
-	API     api.Config      `env:""`
-	Log     log.Config      `env:""`
-	Feeds   feeds.Config    `env:""`
-	Sources sources.Config  `env:""`
+	DB              postgres.Config            `env:""`
+	API             api.Config                 `env:""`
+	Log             log.Config                 `env:""`
+	Feeds           feeds.Config               `env:""`
+	Sources         sources.Config             `env:""`
+	SourceProviders sourcetypes.ProviderConfig `env:""`
 
 	// Dev-only variables
-	
+
 	// SourceInitialization true if the scheduler should not be initialized to process existing sources.
 	SourceInitialization bool `env:"SOURCE_INITIALIZATION,default=true"`
 }

@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"encoding/json"
+
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
@@ -22,10 +23,11 @@ type Source interface {
 	URL() string
 	// Icon returns the favicon URL for the source.
 	Icon() string
-	// Topics returns the niche topic tags this source is relevant for.
+	// Topics return the niche topic tags this source is relevant for.
 	Topics() []TopicTag
-	// Initialize initializes the internal state and prepares the logger.
-	Initialize(logger *zerolog.Logger) error
+	// Initialize stores the logger and initializes the internal state given config.
+	// The caller should validate the config before usage.
+	Initialize(logger *zerolog.Logger, config *ProviderConfig) error
 	// Stream performs a one-time fetch of new activities from the source.
 	// Since is the last activity emitted by the source.
 	// Feed is a channel to send activities to. Already seen activities are permitted.

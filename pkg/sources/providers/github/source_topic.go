@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/types"
-	"os"
 	"strings"
 	"time"
+
+	"github.com/glanceapp/glance/pkg/sources/types"
 
 	"github.com/glanceapp/glance/pkg/lib"
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
@@ -21,7 +21,6 @@ const TypeGithubTopic = "githubtopic"
 // It can return either trending repositories (by stars) or newly created repositories.
 type SourceTopic struct {
 	Topic string `json:"topic" validate:"required"`
-	Token string `json:"token"`
 
 	client *github.Client
 	logger *zerolog.Logger
@@ -58,18 +57,13 @@ func (s *SourceTopic) Icon() string {
 	return "https://github.com/favicon.ico"
 }
 
-func (s *SourceTopic) Initialize(logger *zerolog.Logger) error {
+func (s *SourceTopic) Initialize(logger *zerolog.Logger, config *types.ProviderConfig) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
 
-	token := s.Token
-	if token == "" {
-		token = os.Getenv("GITHUB_TOKEN")
-	}
-
-	if token != "" {
-		s.client = github.NewClient(nil).WithAuthToken(token)
+	if config.GithubAPIToken != "" {
+		s.client = github.NewClient(nil).WithAuthToken(config.GithubAPIToken)
 	} else {
 		s.client = github.NewClient(nil)
 	}
