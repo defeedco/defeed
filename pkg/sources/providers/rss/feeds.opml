@@ -165,16 +165,16 @@
 			<outline text="SEO strategies and link building" title="Backlinko" type="rss" xmlUrl="http://backlinko.com/feed" topics="growth_engineering" />
 		</outline>
 		<outline text="Scientific Research" title="Scientific Research">
-			<outline text="AI research papers and publications" title="ArXiv AI" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.AI" topics="ai_research" />
-			<outline text="Machine learning research and papers" title="ArXiv Machine Learning" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.LG" topics="ai_research" />
-			<outline text="Computer vision and image processing research" title="ArXiv Computer Vision" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CV" topics="ai_research" />
-			<outline text="Natural language processing research" title="ArXiv Natural Language Processing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CL" topics="ai_research,llms" />
-			<outline text="Cryptography and security research" title="ArXiv Cryptography &amp; Security" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CR" topics="security_engineering" />
-			<outline text="Distributed computing and algorithms" title="ArXiv Distributed Computing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DC" topics="distributed_systems" />
-			<outline text="Database and data mining research" title="ArXiv Databases" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DB" topics="databases" />
-			<outline text="Software engineering research" title="ArXiv Software Engineering" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.SE" topics="devtools" />
-			<outline text="Human-computer interaction research" title="ArXiv Human-Computer Interaction" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.HC" topics="product_management" />
-			<outline text="Information retrieval and search research" title="ArXiv Information Retrieval" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.IR" topics="ai_research" />
+			<outline text="AI research papers and publications" title="ArXiv AI" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.AI" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Machine learning research and papers" title="ArXiv Machine Learning" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.LG" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Computer vision and image processing research" title="ArXiv Computer Vision" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CV" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Natural language processing research" title="ArXiv Natural Language Processing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CL" topics="ai_research,llms" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Cryptography and security research" title="ArXiv Cryptography &amp; Security" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CR" topics="security_engineering" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Distributed computing and algorithms" title="ArXiv Distributed Computing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DC" topics="distributed_systems" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Database and data mining research" title="ArXiv Databases" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DB" topics="databases" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Software engineering research" title="ArXiv Software Engineering" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.SE" topics="devtools" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Human-computer interaction research" title="ArXiv Human-Computer Interaction" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.HC" topics="product_management" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Information retrieval and search research" title="ArXiv Information Retrieval" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.IR" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
 			<!-- https://huggingface.co/posts/takarajordan/806643001426071 -->
 			<!-- Note: community maintained/hosted, might be unreliable. -->
 			<outline text="Daily AI research papers and summaries" title="HuggingFace Daily Papers" type="rss" xmlUrl="https://papers.takara.ai/api/feed" topics="llms,ai_research" faviconUrl="https://huggingface.co/favicon.ico" />
