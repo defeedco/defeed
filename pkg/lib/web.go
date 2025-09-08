@@ -31,8 +31,7 @@ func FetchTextFromURL(ctx context.Context, logger *zerolog.Logger, url string) (
 		return "", fmt.Errorf("create request: %w", err)
 	}
 
-	// TODO(config): Make this configurable
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; DefeedBot/1.0)")
+	req.Header.Set("User-Agent", DefeedUserAgentString)
 
 	resp, err := client.Do(req)
 	if err != nil {
