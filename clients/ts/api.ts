@@ -172,6 +172,12 @@ export interface ActivityTopic {
      */
     'title': string;
     /**
+     * Emoji character for the topic.
+     * @type {string}
+     * @memberof ActivityTopic
+     */
+    'emoji': string;
+    /**
      * Summary of the activities in this topic.
      * @type {string}
      * @memberof ActivityTopic

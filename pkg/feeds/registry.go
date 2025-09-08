@@ -21,21 +21,14 @@ import (
 // TODO(subscription): Change to "ErrPayingUsersOnly" once we have subscription plans.
 var ErrAuthUsersOnly = errors.New("query override supported for authenticated users only")
 
-// ErrInsufficientActivity indicates there is not enough activity to create a summary.
-var ErrInsufficientActivity = errors.New("insufficient activity to summarize")
-
 type Registry struct {
 	feedRepository   feedStore
-	sourceExecutor   *sources.Scheduler
+	sourceScheduler  *sources.Scheduler
 	sourceRegistry   *sources.Registry
 	activityRegistry *activities.Registry
 	summarizer       summarizer
-	queryRewriter    queryRewriter
+	queryRewriter    *nlp.QueryRewriter
 	config           *Config
-}
-
-type queryRewriter interface {
-	RewriteToTopics(ctx context.Context, originalQuery string) ([]*nlp.TopicQueryGroup, error)
 }
 
 type feedStore interface {
@@ -51,16 +44,16 @@ type summarizer interface {
 
 func NewRegistry(
 	feedRepository feedStore,
-	sourceExecutor *sources.Scheduler,
+	sourceScheduler *sources.Scheduler,
 	sourceRegistry *sources.Registry,
 	activityRegistry *activities.Registry,
 	summarizer summarizer,
-	queryRewriter queryRewriter,
+	queryRewriter *nlp.QueryRewriter,
 	config *Config,
 ) *Registry {
 	return &Registry{
 		feedRepository:   feedRepository,
-		sourceExecutor:   sourceExecutor,
+		sourceScheduler:  sourceScheduler,
 		sourceRegistry:   sourceRegistry,
 		activityRegistry: activityRegistry,
 		summarizer:       summarizer,
@@ -171,7 +164,7 @@ func (r *Registry) executeAndUpsert(ctx context.Context, feed Feed) error {
 			return fmt.Errorf("find source %s: %w", sourceUID, err)
 		}
 
-		err = r.sourceExecutor.Add(source)
+		err = r.sourceScheduler.Add(source)
 		if err != nil {
 			return fmt.Errorf("add source to executor: %w", err)
 		}
@@ -214,10 +207,11 @@ type ActivitiesResponse struct {
 }
 
 type Topic struct {
-	Title       string   `json:"title"`
-	Summary     string   `json:"summary"`
-	Queries     []string `json:"queries"`
-	ActivityIDs []string `json:"activityIds"`
+	Title       string
+	Emoji       string
+	Summary     string
+	Queries     []string
+	ActivityIDs []string
 }
 
 func (r *Registry) Activities(
@@ -234,6 +228,15 @@ func (r *Registry) Activities(
 		return nil, fmt.Errorf("get feed: %w", err)
 	}
 
+	// For now list active sources from the scheduler instead of the source registry,
+	// since the source registry is fetching some sources from the 3rd party APIs and may hit rate limits.
+	feedSources, err := r.sourceScheduler.List(sources.ListRequest{
+		SourceUIDs: feed.SourceUIDs,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list sources: %w", err)
+	}
+
 	// Public feeds can be accessed by anyone (even non-authenticated user)
 	if feed.UserID != userID && !feed.Public {
 		return nil, errors.New("feed not found")
@@ -247,7 +250,10 @@ func (r *Registry) Activities(
 		query = queryOverride
 	}
 
-	topicQueryGroups, err := r.queryRewriter.RewriteToTopics(ctx, query)
+	topicQueryGroups, err := r.queryRewriter.RewriteToTopics(ctx, nlp.RewriteRequest{
+		Query:   query,
+		Sources: feedSources,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("rewrite query to topics: %w", err)
 	}
@@ -269,16 +275,17 @@ func (r *Registry) Activities(
 	for i, topicGroup := range topicQueryGroups {
 		activityIDs := make([]string, 0)
 		for actID, topic := range activityToTopic {
-			if topic == topicGroup.Topic {
+			if topic == topicGroup.Name {
 				activityIDs = append(activityIDs, actID)
 			}
 		}
 
 		// Allow empty summary
-		summary := topicToSummary[topicGroup.Topic]
+		summary := topicToSummary[topicGroup.Name]
 
 		topics[i] = &Topic{
-			Title:       topicGroup.Topic,
+			Title:       topicGroup.Name,
+			Emoji:       topicGroup.Emoji,
 			Queries:     topicGroup.Queries,
 			ActivityIDs: activityIDs,
 			Summary:     summary,
@@ -324,7 +331,7 @@ func (r *Registry) searchByTopicQueryGroups(
 					Period:        period,
 				})
 				if err != nil {
-					return fmt.Errorf("search activities for topic %s: %w", topic.Topic, err)
+					return fmt.Errorf("search activities for topic %s: %w", topic.Name, err)
 				}
 
 				actsByGroupByQuery[ti][qi] = res.Activities
@@ -348,7 +355,7 @@ func (r *Registry) searchByTopicQueryGroups(
 					continue
 				}
 
-				activityToTopic[act.Activity.UID().String()] = topics[ti].Topic
+				activityToTopic[act.Activity.UID().String()] = topics[ti].Name
 				seenActs[act.Activity.UID().String()] = true
 				acts = append(acts, act)
 			}
@@ -375,7 +382,7 @@ func (r *Registry) summarizeTopics(
 	for ti, topic := range topics {
 		topicActs := make([]*activitytypes.DecoratedActivity, 0)
 		for actID, actTopic := range activityToTopic {
-			if topic.Topic == actTopic {
+			if topic.Name == actTopic {
 			actLoop:
 				for _, act := range allActivities {
 					if act.Activity.UID().String() == actID {
@@ -386,6 +393,7 @@ func (r *Registry) summarizeTopics(
 			}
 		}
 		g.Go(func() error {
+			// TODO: Add period key
 			summary, err := r.summarizer.SummarizeTopic(gctx, topic, topicActs)
 			if err != nil {
 				return fmt.Errorf("summarize topic activities: %w", err)
@@ -404,7 +412,7 @@ func (r *Registry) summarizeTopics(
 
 	topicToSummary := make(map[string]string)
 	for ti, summary := range indexedSummaries {
-		topicToSummary[topics[ti].Topic] = summary
+		topicToSummary[topics[ti].Name] = summary
 	}
 
 	return topicToSummary, nil

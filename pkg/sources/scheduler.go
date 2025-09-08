@@ -8,9 +8,8 @@ import (
 	"sync"
 	"time"
 
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
-
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/rs/zerolog"
 )
@@ -69,15 +68,15 @@ func (r *Scheduler) Initialize(ctx context.Context) error {
 		}
 
 		result, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
-			SourceUIDs: []types.TypedUID{source.UID()},
+			SourceUIDs: []activitytypes.TypedUID{source.UID()},
 			Limit:      1,
-			SortBy:     types.SortByDate,
+			SortBy:     activitytypes.SortByDate,
 		})
 		if err != nil {
 			return fmt.Errorf("search existing activities: %w", err)
 		}
 
-		var since types.Activity = nil
+		var since activitytypes.Activity = nil
 		if len(result.Activities) > 0 {
 			since = result.Activities[0].Activity
 		}
@@ -107,9 +106,9 @@ func (r *Scheduler) scheduleSource(source sourcetypes.Source) {
 				return
 			case <-ticker.C:
 				result, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
-					SourceUIDs: []types.TypedUID{source.UID()},
+					SourceUIDs: []activitytypes.TypedUID{source.UID()},
 					Limit:      1,
-					SortBy:     types.SortByDate,
+					SortBy:     activitytypes.SortByDate,
 				})
 				if err != nil {
 					r.logger.Error().
@@ -119,7 +118,7 @@ func (r *Scheduler) scheduleSource(source sourcetypes.Source) {
 				}
 
 				logEvent := r.logger.Debug()
-				var since types.Activity = nil
+				var since activitytypes.Activity = nil
 				if len(result.Activities) > 0 {
 					since = result.Activities[0].Activity
 					logEvent.Str("last_activity_uid", since.UID().String())
@@ -132,11 +131,11 @@ func (r *Scheduler) scheduleSource(source sourcetypes.Source) {
 	}()
 }
 
-func (r *Scheduler) executeSourceOnce(source sourcetypes.Source, since types.Activity) {
+func (r *Scheduler) executeSourceOnce(source sourcetypes.Source, since activitytypes.Activity) {
 	ctx, cancel := context.WithCancel(context.Background())
 	r.cancelBySourceID.Store(source.UID(), cancel)
 
-	activityChan := make(chan types.Activity, 100)
+	activityChan := make(chan activitytypes.Activity, 100)
 	errorChan := make(chan error, 100)
 
 	go func() {
@@ -164,7 +163,7 @@ func (r *Scheduler) executeSourceOnce(source sourcetypes.Source, since types.Act
 	}
 }
 
-func (r *Scheduler) processActivity(activity types.Activity) {
+func (r *Scheduler) processActivity(activity activitytypes.Activity) {
 	ctx, cancel := context.WithCancel(context.Background())
 	r.cancelByActivityID.Store(activity.UID(), cancel)
 
@@ -212,7 +211,7 @@ func (r *Scheduler) Add(source sourcetypes.Source) error {
 	}
 
 	// Set to nil since there are no previous activities for this source yet.
-	var since types.Activity = nil
+	var since activitytypes.Activity = nil
 	go r.executeSourceOnce(source, since)
 	r.scheduleSource(source)
 
@@ -258,6 +257,36 @@ func (r *Scheduler) Shutdown() {
 		return true
 	})
 	r.cancelByActivityID.Clear()
+}
+
+type ListRequest struct {
+	SourceUIDs []activitytypes.TypedUID
+}
+
+func (r *Scheduler) List(req ListRequest) ([]sourcetypes.Source, error) {
+	result, err := r.activeSourceRepo.List()
+	if err != nil {
+		return nil, fmt.Errorf("list sources: %w", err)
+	}
+
+	includeSourceUIDs := make(map[string]bool)
+	for _, uid := range req.SourceUIDs {
+		includeSourceUIDs[uid.String()] = true
+	}
+
+	var filtered []sourcetypes.Source
+	if len(includeSourceUIDs) == 0 {
+		for _, source := range result {
+			if includeSourceUIDs[source.UID().String()] {
+				filtered = append(filtered, source)
+				break
+			}
+		}
+	} else {
+		filtered = result
+	}
+
+	return filtered, nil
 }
 
 func sourceLogger(source sourcetypes.Source, logger *zerolog.Logger) *zerolog.Logger {

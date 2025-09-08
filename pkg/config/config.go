@@ -19,6 +19,11 @@ type Config struct {
 	Log     log.Config      `env:""`
 	Feeds   feeds.Config    `env:""`
 	Sources sources.Config  `env:""`
+
+	// Dev-only variables
+	
+	// SourceInitialization true if the scheduler should not be initialized to process existing sources.
+	SourceInitialization bool `env:"SOURCE_INITIALIZATION,default=true"`
 }
 
 func Load() (*Config, error) {

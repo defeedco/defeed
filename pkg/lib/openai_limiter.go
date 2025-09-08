@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math/rand"
@@ -167,14 +168,21 @@ func parseRateLimitHeaders(resp *http.Response) *rateLimitHeaders {
 }
 
 func (r *OpenAILimiter) attemptEvent(headers *rateLimitHeaders, body []byte, statusCode int, attempt int) *zerolog.Event {
-	return r.logger.Debug().
+	event := r.logger.Debug().
 		Int("remaining_requests", headers.RemainingRequests).
 		Dur("reset_requests", headers.ResetRequests).
 		Int("remaining_tokens", headers.RemainingTokens).
 		Dur("reset_tokens", headers.ResetTokens).
 		Int("status_code", statusCode).
-		Str("body", string(body)).
 		Int("attempt", attempt)
+
+	// Omit embedding response body, since it's very large and not useful for debugging
+	isEmbeddingRes := strings.Contains(string(body), "\"object\": \"embedding\"")
+	if !isEmbeddingRes {
+		event.Str("body_base64", base64.StdEncoding.EncodeToString(body))
+	}
+
+	return event
 }
 
 // parseInt converts a numeric header string to int; returns -1 on failure.

@@ -108,6 +108,9 @@ type ActivityTopic struct {
 	// ActivityIds List of activity IDs in this topic.
 	ActivityIds []string `json:"activityIds"`
 
+	// Emoji Emoji character for the topic.
+	Emoji string `json:"emoji"`
+
 	// Queries LLM generated sub-queries used to filter activities for this topic.
 	Queries []string `json:"queries"`
 

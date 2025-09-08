@@ -193,10 +193,9 @@ Guidelines:
 3. Be direct and informative in your summaries
 
 Topic name: %s
-Topic description: %s
 Topic activities: %s
 
-Activity summary:`, topic.Topic, topic.Description, string(activitiesJSON))
+Activity summary:`, topic.Name, string(activitiesJSON))
 
 	out, err := sum.model.Call(
 		ctx,

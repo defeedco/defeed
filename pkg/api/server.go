@@ -461,6 +461,7 @@ func serializeTopics(in []*feeds.Topic) (*[]ActivityTopic, error) {
 	for _, topic := range in {
 		serializedTopic := &ActivityTopic{
 			Title:       topic.Title,
+			Emoji:       topic.Emoji,
 			Summary:     topic.Summary,
 			Queries:     topic.Queries,
 			ActivityIds: topic.ActivityIDs,

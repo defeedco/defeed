@@ -75,6 +75,7 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 	}
 
 	embeddingModel, err := openai.New(
+		// TODO: Switch batch to large embedding model, since it doesn't cost much more
 		openai.WithEmbeddingModel("text-embedding-3-small"),
 		openai.WithHTTPClient(limiter),
 	)
@@ -99,8 +100,10 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 	activityRegistry := activities.NewRegistry(logger, activityRepo, summarizer, embedder)
 
 	sourceScheduler := sources.NewScheduler(logger, sourceRepo, activityRegistry, &config.Sources)
-	if err := sourceScheduler.Initialize(ctx); err != nil {
-		return nil, fmt.Errorf("initialize sourceScheduler: %w", err)
+	if config.SourceInitialization {
+		if err := sourceScheduler.Initialize(ctx); err != nil {
+			return nil, fmt.Errorf("initialize source scheduler: %w", err)
+		}
 	}
 
 	sourceRegistry := sources.NewRegistry(logger)

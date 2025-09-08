@@ -408,6 +408,7 @@ components:
       type: object
       required:
         - title
+        - emoji
         - summary
         - queries
         - activityIds
@@ -415,6 +416,9 @@ components:
         title:
           type: string
           description: Title of the topic.
+        emoji:
+          type: string
+          description: Emoji character for the topic.
         summary:
           type: string
           description: Summary of the activities in this topic.

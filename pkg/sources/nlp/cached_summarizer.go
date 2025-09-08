@@ -33,12 +33,12 @@ func (cs *CachedSummarizer) SummarizeTopic(ctx context.Context, topic *TopicQuer
 		return "", nil
 	}
 
-	key := fmt.Sprintf("topic_summary:%s", topic.Topic)
+	key := fmt.Sprintf("topic_summary:%s", topic.Name)
 
 	if cached, found := cs.cache.Get(key); found {
 		if summary, ok := cached.(string); ok {
 			cs.logger.Debug().
-				Str("topic", topic.Topic).
+				Str("topic", topic.Name).
 				Int("activity_count", len(activities)).
 				Msg("topic summary cache hit")
 			return summary, nil
@@ -52,7 +52,7 @@ func (cs *CachedSummarizer) SummarizeTopic(ctx context.Context, topic *TopicQuer
 
 	cs.cache.Set(key, summary)
 	cs.logger.Debug().
-		Str("topic", topic.Topic).
+		Str("topic", topic.Name).
 		Int("activity_count", len(activities)).
 		Msg("topic summary cached")
 
