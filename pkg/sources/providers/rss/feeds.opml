@@ -36,7 +36,7 @@
 			<outline text="Enterprise technology and business news" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" topics="startups,cloud_infrastructure" faviconUrl="https://venturebeat.com/favicon.ico" />
 			<outline text="Technology, science, art, and culture" title="The Verge" type="rss" xmlUrl="http://www.theverge.com/rss/full.xml" topics="devtools" />
 			<outline text="Asian technology and startup news" title="Tech in Asia" type="rss" xmlUrl="https://feeds2.feedburner.com/PennOlson" topics="startups" />
-			<outline text="Breaking technology and startup news" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" topics="startups" />
+			<outline text="Breaking technology and startup news" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" topics="startups" faviconUrl="https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png?w=32" />
 			<outline text="Design and innovation in business" title="Fast Company " type="rss" xmlUrl="http://www.fastcodesign.com/rss.xml" topics="product_management" faviconUrl="https://www.fastcompany.com/favicon.ico" />
 			<outline text="Startup news and funding updates" title="Startups – TechCrunch" type="rss" xmlUrl="https://techcrunch.com/startups/feed/" topics="startups" />
 			<outline text="Leadership and management insights" title="Forbes - Leadership" type="rss" xmlUrl="https://www.forbes.com/leadership/feed/" topics="product_management" />
@@ -45,8 +45,8 @@
 		</outline>
 		<outline text="Products &amp; Ideas" title="Products &amp; Ideas">
 			<outline text="Daily discovery of new products and startups" title="Product Hunt — The best new products, every day" type="rss" xmlUrl="http://www.producthunt.com/feed" topics="startups,product_management" faviconUrl="https://www.producthunt.com/favicon.ico" />
-			<outline text="Developer projects and demos" title="Hacker News: Show HN" type="rss" xmlUrl="http://hnrss.org/show" topics="devtools,open_source" />
-			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" topics="startups,product_management" />
+			<outline text="Developer projects and demos" title="Hacker News: Show HN" type="rss" xmlUrl="http://hnrss.org/show" topics="devtools,open_source" faviconUrl="https://news.ycombinator.com/favicon.ico" />
+			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" topics="startups,product_management" faviconUrl="https://news.ycombinator.com/favicon.ico" />
 			<outline text="Product management and entrepreneurship insights" title="Sachin Rekhi's Blog" type="rss" xmlUrl="http://feeds.feedburner.com/sachinrekhiblog" topics="product_management,startups" />
 		</outline>
 		<outline text="Engineering blogs" title="Engineering blogs">
