@@ -381,6 +381,7 @@ export const SourceType = {
     RssFeed: 'rssFeed',
     GithubReleases: 'githubReleases',
     GithubIssues: 'githubIssues',
+    GithubTopics: 'githubTopics',
     ChangedetectionWebsite: 'changedetectionWebsite'
 } as const;
 

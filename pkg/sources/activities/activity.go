@@ -34,6 +34,8 @@ func NewActivity(sourceType string) (types.Activity, error) {
 		a = github.NewRelease()
 	case github.TypeGithubIssues:
 		a = github.NewIssue()
+	case github.TypeGithubTopic:
+		a = github.NewRepository()
 	case changedetection.TypeChangedetectionWebsite:
 		a = changedetection.NewWebsiteChange()
 	default:

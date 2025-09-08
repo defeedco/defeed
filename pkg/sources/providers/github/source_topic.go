@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/glanceapp/glance/pkg/sources/types"
 	"os"
 	"strings"
 	"time"
@@ -20,23 +21,25 @@ const TypeGithubTopic = "githubtopic"
 // It can return either trending repositories (by stars) or newly created repositories.
 type SourceTopic struct {
 	Topic string `json:"topic" validate:"required"`
-	// Mode controls how repositories are selected: "trending" or "new"
-	// Defaults to "trending" when empty
-	Mode  string `json:"mode" validate:"omitempty,oneof=new trending"`
 	Token string `json:"token"`
 
 	client *github.Client
 	logger *zerolog.Logger
 }
 
-func NewSourceTopic() *SourceTopic {
-	return &SourceTopic{
-		Mode: "trending",
+func (s *SourceTopic) Topics() []types.TopicTag {
+	return []types.TopicTag{
+		types.TopicOpenSource,
+		types.TopicDevTools,
 	}
 }
 
+func NewSourceTopic() *SourceTopic {
+	return &SourceTopic{}
+}
+
 func (s *SourceTopic) UID() activitytypes.TypedUID {
-	return lib.NewTypedUID(TypeGithubTopic, s.Topic, s.Mode)
+	return lib.NewTypedUID(TypeGithubTopic, s.Topic)
 }
 
 func (s *SourceTopic) Name() string {
@@ -44,12 +47,7 @@ func (s *SourceTopic) Name() string {
 }
 
 func (s *SourceTopic) Description() string {
-	switch s.Mode {
-	case "new":
-		return fmt.Sprintf("New repositories tagged #%s", s.Topic)
-	default:
-		return fmt.Sprintf("Trending repositories tagged #%s", s.Topic)
-	}
+	return fmt.Sprintf("Trending repositories tagged #%s", s.Topic)
 }
 
 func (s *SourceTopic) URL() string {
@@ -85,17 +83,18 @@ func (s *SourceTopic) Stream(ctx context.Context, since activitytypes.Activity, 
 }
 
 func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
-	// Hyperparameters
+	// Hyperparameters - adjust according to the rate limits available
 	minTrendingStars := 1000
 	perPage := 100
 	pageLimit := 1
+	mode := "trending"
 
 	var sinceDate string
 	if since != nil {
 		sinceDate = since.CreatedAt().Format(time.DateOnly)
 	} else {
 		// Default look-back window
-		switch s.Mode {
+		switch mode {
 		case "new":
 			sinceDate = time.Now().AddDate(0, 0, -14).Format(time.DateOnly)
 		default:
@@ -106,6 +105,9 @@ func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, since activity
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString("topic:")
 	queryBuilder.WriteString(s.Topic)
+	queryBuilder.WriteString(" ")
+	queryBuilder.WriteString("stars:>")
+	queryBuilder.WriteString(fmt.Sprintf("%d", minTrendingStars))
 
 	if sinceDate != "" {
 		queryBuilder.WriteString(" ")
@@ -113,37 +115,23 @@ func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, since activity
 		queryBuilder.WriteString(sinceDate)
 	}
 
-	if s.Mode == "trending" {
-		queryBuilder.WriteString(" ")
-		queryBuilder.WriteString("stars:>")
-		queryBuilder.WriteString(fmt.Sprintf("%d", minTrendingStars))
-	}
-
 	searchQuery := queryBuilder.String()
-
-	opts := &github.SearchOptions{
-		ListOptions: github.ListOptions{
-			PerPage: perPage,
-		},
-		Order: "desc",
-	}
-	switch s.Mode {
-	case "new":
-		opts.Sort = "created"
-	case "trending":
-		opts.Sort = "stars"
-	}
 
 	s.logger.Debug().
 		Str("topic", s.Topic).
-		Str("mode", s.Mode).
 		Str("query", searchQuery).
 		Msg("Searching GitHub repositories by topic")
 
 	page := 1
 	for {
-		opts.Page = page
-		result, _, err := s.client.Search.Repositories(ctx, searchQuery, opts)
+		result, _, err := s.client.Search.Repositories(ctx, searchQuery, &github.SearchOptions{
+			ListOptions: github.ListOptions{
+				PerPage: perPage,
+				Page:    page,
+			},
+			Order: "desc",
+			Sort:  "created",
+		})
 		if err != nil {
 			errs <- fmt.Errorf("search repositories: %w", err)
 			return
@@ -165,7 +153,6 @@ func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, since activity
 			}
 			activity := &Repository{
 				Repository: repo,
-				SourceTyp:  TypeGithubTopic,
 				SourceID:   s.UID(),
 			}
 			feed <- activity
@@ -204,11 +191,14 @@ func (s *SourceTopic) UnmarshalJSON(data []byte) error {
 type Repository struct {
 	Repository *github.Repository     `json:"repository"`
 	SourceID   activitytypes.TypedUID `json:"source_id"`
-	SourceTyp  string                 `json:"source_type"`
+}
+
+func NewRepository() *Repository {
+	return &Repository{}
 }
 
 func (a *Repository) SourceType() string {
-	return a.SourceTyp
+	return a.SourceID.Type()
 }
 
 func (a *Repository) MarshalJSON() ([]byte, error) {

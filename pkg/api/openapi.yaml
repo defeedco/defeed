@@ -344,6 +344,7 @@ components:
         - rssFeed
         - githubReleases
         - githubIssues
+        - githubTopics
         - changedetectionWebsite
 
     ActivitySortBy:

@@ -37,6 +37,7 @@ const (
 	ChangedetectionWebsite SourceType = "changedetectionWebsite"
 	GithubIssues           SourceType = "githubIssues"
 	GithubReleases         SourceType = "githubReleases"
+	GithubTopics           SourceType = "githubTopics"
 	HackernewsPosts        SourceType = "hackernewsPosts"
 	LobstersFeed           SourceType = "lobstersFeed"
 	LobstersTag            SourceType = "lobstersTag"
