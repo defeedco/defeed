@@ -191,6 +191,7 @@ Guidelines:
 1. Summaries should be 1-3 sentences that capture the main high-level themes
 2. Focus on the most important insights that are shared by the activities 
 3. Be direct and informative in your summaries
+4. Output plain text, no Markdown or formatting.
 
 Topic name: %s
 Topic activities: %s

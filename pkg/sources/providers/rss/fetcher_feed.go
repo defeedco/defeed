@@ -99,6 +99,7 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 				title:       outline.Title,
 				FeedURL:     outline.XMLUrl,
 				description: outline.Text,
+				IconURL:     outline.FaviconUrl,
 			}
 
 			if outline.Topics != "" {

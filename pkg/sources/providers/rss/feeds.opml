@@ -15,7 +15,7 @@
 		</outline>
 		<outline text="Startup" title="Startup">
 			<outline text="Startup methodology and entrepreneurship" title="Steve Blank" type="rss" xmlUrl="http://steveblank.com/feed/" topics="startups" />
-			<outline text="AI and technology insights from George Hotz" title="The singularity is nearer" type="rss" xmlUrl="https://geohot.github.io/blog/feed.xml" topics="startups,ai_research" />
+			<outline text="AI and technology insights from George Hotz" title="The singularity is nearer" type="rss" xmlUrl="https://geohot.github.io/blog/feed.xml" topics="startups,ai_research" faviconUrl="https://avatars.githubusercontent.com/u/72895?v=4" />
 			<outline text="Tech news and startup discussions" title="Hacker News" type="rss" xmlUrl="http://news.ycombinator.com/rss" topics="startups,devtools" />
 			<outline text="Marketing and entrepreneurship advice" title="Guy Kawasaki" type="rss" xmlUrl="http://guykawasaki.com/feed/" topics="startups,growth_engineering" />
 			<outline text="Technology strategy and market analysis" title="Essays - Benedict Evans" type="rss" xmlUrl="http://ben-evans.com/benedictevans?format=rss" topics="startups,product_management" />
@@ -33,18 +33,18 @@
 			<outline text="Indie entrepreneur posts and discussions" title="Indie Hackers Posts" type="rss" xmlUrl="https://feed.indiehackers.world/posts.rss" topics="startups" />
 		</outline>
 		<outline text="Tech News" title="Tech News">
-			<outline text="Enterprise technology and business news" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" topics="startups,cloud_infrastructure" />
+			<outline text="Enterprise technology and business news" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" topics="startups,cloud_infrastructure" faviconUrl="https://venturebeat.com/favicon.ico" />
 			<outline text="Technology, science, art, and culture" title="The Verge" type="rss" xmlUrl="http://www.theverge.com/rss/full.xml" topics="devtools" />
 			<outline text="Asian technology and startup news" title="Tech in Asia" type="rss" xmlUrl="https://feeds2.feedburner.com/PennOlson" topics="startups" />
 			<outline text="Breaking technology and startup news" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" topics="startups" />
-			<outline text="Design and innovation in business" title="Fast Company " type="rss" xmlUrl="http://www.fastcodesign.com/rss.xml" topics="product_management" />
+			<outline text="Design and innovation in business" title="Fast Company " type="rss" xmlUrl="http://www.fastcodesign.com/rss.xml" topics="product_management" faviconUrl="https://www.fastcompany.com/favicon.ico" />
 			<outline text="Startup news and funding updates" title="Startups – TechCrunch" type="rss" xmlUrl="https://techcrunch.com/startups/feed/" topics="startups" />
 			<outline text="Leadership and management insights" title="Forbes - Leadership" type="rss" xmlUrl="https://www.forbes.com/leadership/feed/" topics="product_management" />
 			<outline text="Business innovation and design" title="Fast Company" type="rss" xmlUrl="http://feeds.feedburner.com/fastcompany/headlines" topics="product_management" />
 			<outline text="Entrepreneurship and business success" title="Forbes - Entrepreneurs" type="rss" xmlUrl="http://www.forbes.com/entrepreneurs/index.xml" topics="startups" />
 		</outline>
 		<outline text="Products &amp; Ideas" title="Products &amp; Ideas">
-			<outline text="Daily discovery of new products and startups" title="Product Hunt — The best new products, every day" type="rss" xmlUrl="http://www.producthunt.com/feed" topics="startups,product_management" />
+			<outline text="Daily discovery of new products and startups" title="Product Hunt — The best new products, every day" type="rss" xmlUrl="http://www.producthunt.com/feed" topics="startups,product_management" faviconUrl="https://www.producthunt.com/favicon.ico" />
 			<outline text="Developer projects and demos" title="Hacker News: Show HN" type="rss" xmlUrl="http://hnrss.org/show" topics="devtools,open_source" />
 			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" topics="startups,product_management" />
 			<outline text="Product management and entrepreneurship insights" title="Sachin Rekhi's Blog" type="rss" xmlUrl="http://feeds.feedburner.com/sachinrekhiblog" topics="product_management,startups" />
@@ -82,7 +82,7 @@
 			<outline text="E-commerce platform engineering" title="Shopify Engineering - Shopify Engineering" type="rss" xmlUrl="https://shopifyengineering.myshopify.com/blogs/engineering.atom" topics="devtools,distributed_systems" />
 			<outline text="Southeast Asian superapp engineering" title="Grab Tech" type="rss" xmlUrl="https://engineering.grab.com/feed.xml" topics="devtools,distributed_systems" />
 			<outline text="CSS and frontend development" title="Josh Comeau's blog" type="rss" xmlUrl="https://joshwcomeau.com/rss.xml" topics="devtools,web_performance" />
-			<outline text="Transportation and marketplace engineering" title="Uber Engineering Blog" type="rss" xmlUrl="https://eng.uber.com/feed/" topics="devtools,distributed_systems" />
+			<outline text="Transportation and marketplace engineering" title="Uber Engineering Blog" type="rss" xmlUrl="https://eng.uber.com/feed/" topics="devtools,distributed_systems" faviconUrl="https://www.uber.com/favicon.ico" />
 			<outline text="Engineering leadership and technology strategy" title="Flurries of latent creativity - Stripe CTO blog" type="rss" xmlUrl="https://blog.singleton.io/index.xml" topics="devtools,product_management" />
 			<outline text="React and frontend engineering" title="Sophie Alpert" type="rss" xmlUrl="https://sophiebits.com/atom.xml" topics="devtools,web_performance" />
 			<outline text="Developer tools and coding platforms" title="Amjad Masad" type="rss" xmlUrl="https://amasad.me/rss" topics="devtools" />
@@ -100,7 +100,7 @@
 			<outline text="AI research and academic insights" title="The Berkeley Artificial Intelligence Research Blog" type="rss" xmlUrl="http://bair.berkeley.edu/blog/feed.xml" topics="ai_research" />
 			<outline text="Deep learning education and tutorials" title="DeepLearningAI" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCcIXc5mJsHVYTZR1maL5l9w" topics="ai_research" />
 			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="http://blog.evjang.com/feeds/posts/default?alt=rss" topics="ai_research" />
-			<outline text="AI research and product updates" title="OpenAI " type="rss" xmlUrl="https://openai.com/news/rss.xml" topics="ai_research,llms" />
+			<outline text="AI research and product updates" title="OpenAI " type="rss" xmlUrl="https://openai.com/news/rss.xml" topics="ai_research,llms" faviconUrl="https://openai.com/favicon.ico" />
 			<outline text="AI research and academic perspectives" title="The Gradient" type="rss" xmlUrl="https://thegradient.pub/rss/" topics="ai_research" />
 			<outline text="AI and machine learning for creative applications" title="Magenta" type="rss" xmlUrl="http://magenta.tensorflow.org/feed.xml" topics="ai_research" />
 			<outline text="Natural language processing research and news" title="NLP News" type="rss" xmlUrl="http://newsletter.ruder.io/?format=rss" topics="ai_research,llms" />
@@ -154,14 +154,14 @@
 			<outline text="SEO and digital marketing insights" title="Moz" type="rss" xmlUrl="http://feeds.feedburner.com/seomoz" topics="growth_engineering" />
 			<outline text="Content marketing strategies and best practices" title="Content Marketing Institute" type="rss" xmlUrl="http://feeds.feedburner.com/cmi-content-marketing" topics="growth_engineering" />
 			<outline text="Digital marketing and growth strategies" title="Neil Patel" type="rss" xmlUrl="http://feeds.feedburner.com/KISSmetrics" topics="growth_engineering" />
-			<outline text="Marketing education and insights" title="MarketingProfs " type="rss" xmlUrl="http://rss.marketingprofs.com/marketingprofs/daily" topics="growth_engineering" />
+			<outline text="Marketing education and insights" title="MarketingProfs " type="rss" xmlUrl="http://rss.marketingprofs.com/marketingprofs/daily" topics="growth_engineering" faviconUrl="https://www.marketingprofs.com/favicon.ico" />
 			<outline text="B2B marketing strategies and tactics" title="Marketo Marketing blog " type="rss" xmlUrl="http://feeds.feedburner.com/modernb2bmarketing" topics="growth_engineering" />
 			<outline text="Digital marketing and SEO insights" title="Quick Sprout" type="rss" xmlUrl="http://www.quicksprout.com/feed/" topics="growth_engineering" />
 			<outline text="Social media marketing strategies" title="Social Media Examiner | Social Media Marketing" type="rss" xmlUrl="http://www.socialmediaexaminer.com/feed/" topics="growth_engineering" />
 			<outline text="Marketing and business insights" title="John Egan" type="rss" xmlUrl="http://jwegan.com/feed/rss/" topics="growth_engineering" />
 			<outline text="Digital marketing and customer experience" title="Convince and Convert " type="rss" xmlUrl="http://www.convinceandconvert.com/feed/" topics="growth_engineering" />
 			<outline text="Inbound marketing and sales strategies" title="Hubspot" type="rss" xmlUrl="http://blog.hubspot.com/CMS/UI/Modules/BizBlogger/rss.aspx?tabid=6307&amp;moduleid=8441&amp;maxcount=25" topics="growth_engineering" />
-			<outline text="Marketing philosophy and business insights" title="Seth Godin's Blog " type="rss" xmlUrl="http://sethgodin.typepad.com/seths_blog/atom.xml" topics="growth_engineering" />
+			<outline text="Marketing philosophy and business insights" title="Seth Godin's Blog " type="rss" xmlUrl="http://sethgodin.typepad.com/seths_blog/atom.xml" topics="growth_engineering" faviconUrl="https://seths.blog/favicon.ico" />
 			<outline text="SEO strategies and link building" title="Backlinko" type="rss" xmlUrl="http://backlinko.com/feed" topics="growth_engineering" />
 		</outline>
 		<outline text="Scientific Research" title="Scientific Research">
@@ -177,11 +177,11 @@
 			<outline text="Information retrieval and search research" title="ArXiv Information Retrieval" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.IR" topics="ai_research" />
 			<!-- https://huggingface.co/posts/takarajordan/806643001426071 -->
 			<!-- Note: community maintained/hosted, might be unreliable. -->
-			<outline text="Daily AI research papers and summaries" title="HuggingFace Daily Papers" type="rss" xmlUrl="https://papers.takara.ai/api/feed" topics="llms,ai_research" />
+			<outline text="Daily AI research papers and summaries" title="HuggingFace Daily Papers" type="rss" xmlUrl="https://papers.takara.ai/api/feed" topics="llms,ai_research" faviconUrl="https://huggingface.co/favicon.ico" />
 		</outline>
 		<outline text="Others" title="Others">
 			<outline text="Ideas worth spreading and inspiring talks" title="TED Talks Daily" type="rss" xmlUrl="http://feeds.feedburner.com/tedtalks_video" topics="product_management" />
-			<outline text="Business strategy and management insights" title="HBR.org" type="rss" xmlUrl="http://feeds.harvardbusiness.org/harvardbusiness/" topics="product_management" />
+			<outline text="Business strategy and management insights" title="HBR.org" type="rss" xmlUrl="http://feeds.harvardbusiness.org/harvardbusiness/" topics="product_management" faviconUrl="https://hbr.org/favicon.ico" />
 		</outline>
 	</body>
 </opml>

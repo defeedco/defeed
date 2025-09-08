@@ -106,6 +106,12 @@ func (s *SourceFeed) Initialize(logger *zerolog.Logger) error {
 }
 
 func (s *SourceFeed) fetchIcon(ctx context.Context, logger *zerolog.Logger) error {
+	// If favicon URL is already set (from OPML), use it
+	if s.IconURL != "" {
+		return nil
+	}
+
+	// Otherwise, try to fetch it automatically
 	websiteURL := s.getWebsiteURL()
 	if websiteURL != "" {
 		s.IconURL = lib.FetchFaviconURL(ctx, logger, websiteURL)
