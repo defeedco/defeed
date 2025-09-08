@@ -43,7 +43,7 @@ func (s *SourceTopic) UID() activitytypes.TypedUID {
 }
 
 func (s *SourceTopic) Name() string {
-	return fmt.Sprintf("GitHub #%s repositories", s.Topic)
+	return fmt.Sprintf("Topic #%s", s.Topic)
 }
 
 func (s *SourceTopic) Description() string {

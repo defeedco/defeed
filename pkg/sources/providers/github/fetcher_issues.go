@@ -73,7 +73,7 @@ func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]types.Sourc
 
 	searchResult, _, err := client.Search.Repositories(ctx, searchQuery, &github.SearchOptions{
 		ListOptions: github.ListOptions{
-			PerPage: 10,
+			PerPage: 5,
 		},
 	})
 	if err != nil {

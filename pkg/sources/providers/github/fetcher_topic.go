@@ -106,7 +106,7 @@ func (f *TopicFetcher) searchTopics(ctx context.Context, query string) ([]string
 	base, _ := url.Parse("https://api.github.com/search/topics")
 	q := base.Query()
 	q.Set("q", query)
-	q.Set("per_page", "10")
+	q.Set("per_page", "5")
 	base.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base.String(), nil)
