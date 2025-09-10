@@ -11,7 +11,6 @@ import (
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/types"
-	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
 
@@ -67,37 +66,8 @@ func (f *TopicFetcher) Search(ctx context.Context, query string, config *types.P
 		return sources, nil
 	}
 
-	// Fallback: validate that the exact topic exists by checking for at least one repository
-	exists, err := f.topicExistsByRepositorySearch(ctx, query, config)
-	if err != nil {
-		return nil, fmt.Errorf("check topic existence: %w", err)
-	}
-	if exists {
-		return []types.Source{
-			&SourceTopic{Topic: query},
-		}, nil
-	}
-
 	// Nothing found
 	return []types.Source{}, nil
-}
-
-// topicExistsByRepositorySearch checks if there is at least one repository for the given topic
-func (f *TopicFetcher) topicExistsByRepositorySearch(ctx context.Context, topic string, config *types.ProviderConfig) (bool, error) {
-	token := config.GithubAPIToken
-	var client *github.Client
-	if token != "" {
-		client = github.NewClient(nil).WithAuthToken(token)
-	} else {
-		client = github.NewClient(nil)
-	}
-
-	query := fmt.Sprintf("topic:%s", topic)
-	result, _, err := client.Search.Repositories(ctx, query, &github.SearchOptions{ListOptions: github.ListOptions{PerPage: 1}})
-	if err != nil {
-		return false, err
-	}
-	return result.GetTotal() > 0, nil
 }
 
 // searchTopics queries the GitHub Topics search API to get topic suggestions
@@ -117,8 +87,8 @@ func (f *TopicFetcher) searchTopics(ctx context.Context, query string, config *t
 	// Required preview header for topics API
 	req.Header.Set("Accept", "application/vnd.github.mercy-preview+json")
 
-	if config.GithubAPIToken != "" {
-		req.Header.Set("Authorization", "Bearer "+config.GithubAPIToken)
+	if config.GithubAPIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+config.GithubAPIKey)
 	}
 
 	type topicItem struct {

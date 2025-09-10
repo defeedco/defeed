@@ -1,7 +1,7 @@
 package types
 
 type ProviderConfig struct {
-	GithubAPIToken string `env:"GITHUB_API_TOKEN,default="`
+	GithubAPIKey string `env:"GITHUB_API_KEY,default="`
 
 	RedditClientID     string `env:"REDDIT_CLIENT_ID,default="`
 	RedditClientSecret string `env:"REDDIT_CLIENT_SECRET,default="`
@@ -9,5 +9,5 @@ type ProviderConfig struct {
 	MastodonClientID     string `env:"MASTODON_CLIENT_ID,default="`
 	MastodonClientSecret string `env:"MASTODON_CLIENT_SECRET,default="`
 
-	ChangedetectionToken string `env:"CHANGEDETECTION_TOKEN,default="`
+	ChangedetectionKey string `env:"CHANGEDETECTION_API_KEY,default="`
 }

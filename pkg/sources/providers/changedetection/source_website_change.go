@@ -219,8 +219,8 @@ func (s *SourceWebsiteChange) fetchWatchFromChangeDetection(ctx context.Context)
 
 	if s.Token != "" {
 		req.Header.Add("X-API-Key", s.Token)
-	} else if s.config.ChangedetectionToken != "" {
-		req.Header.Add("X-API-Key", s.config.ChangedetectionToken)
+	} else if s.config.ChangedetectionKey != "" {
+		req.Header.Add("X-API-Key", s.config.ChangedetectionKey)
 	}
 
 	response, err := lib.DecodeJSONFromRequest[changeDetectionWatchResponseJson](lib.DefaultHTTPClient, req)

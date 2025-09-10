@@ -29,8 +29,8 @@ func (f *ReleasesFetcher) SourceType() string {
 
 func (f *ReleasesFetcher) FindByID(ctx context.Context, id types2.TypedUID, config *types.ProviderConfig) (types.Source, error) {
 	var client *github.Client
-	if config.GithubAPIToken != "" {
-		client = github.NewClient(nil).WithAuthToken(config.GithubAPIToken)
+	if config.GithubAPIKey != "" {
+		client = github.NewClient(nil).WithAuthToken(config.GithubAPIKey)
 	} else {
 		client = github.NewClient(nil)
 	}
@@ -53,7 +53,7 @@ func (f *ReleasesFetcher) FindByID(ctx context.Context, id types2.TypedUID, conf
 }
 
 func (f *ReleasesFetcher) Search(ctx context.Context, query string, config *types.ProviderConfig) ([]types.Source, error) {
-	token := config.GithubAPIToken
+	token := config.GithubAPIKey
 	var client *github.Client
 	if token != "" {
 		client = github.NewClient(nil).WithAuthToken(token)

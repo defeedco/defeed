@@ -72,7 +72,7 @@ func (s *SourceRelease) Initialize(logger *zerolog.Logger, config *sourcetypes.P
 
 	token := s.Token
 	if token == "" {
-		token = config.GithubAPIToken
+		token = config.GithubAPIKey
 	}
 
 	if token != "" {

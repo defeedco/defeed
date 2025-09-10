@@ -27,10 +27,23 @@ type SourceTopic struct {
 }
 
 func (s *SourceTopic) Topics() []types.TopicTag {
-	return []types.TopicTag{
-		types.TopicOpenSource,
-		types.TopicDevTools,
+	tags := make([]types.TopicTag, 0)
+	parts := strings.SplitSeq(s.Topic, "-")
+	for part := range parts {
+		if tag, ok := types.WordToTopic(part); ok {
+			tags = append(tags, tag)
+		}
 	}
+
+	if len(tags) == 0 {
+		// Hardcoded fallback
+		return []types.TopicTag{
+			types.TopicOpenSource,
+			types.TopicDevTools,
+		}
+	}
+
+	return tags
 }
 
 func NewSourceTopic() *SourceTopic {
@@ -62,8 +75,8 @@ func (s *SourceTopic) Initialize(logger *zerolog.Logger, config *types.ProviderC
 		return err
 	}
 
-	if config.GithubAPIToken != "" {
-		s.client = github.NewClient(nil).WithAuthToken(config.GithubAPIToken)
+	if config.GithubAPIKey != "" {
+		s.client = github.NewClient(nil).WithAuthToken(config.GithubAPIKey)
 	} else {
 		s.client = github.NewClient(nil)
 	}
@@ -77,48 +90,21 @@ func (s *SourceTopic) Stream(ctx context.Context, since activitytypes.Activity, 
 }
 
 func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
-	// Hyperparameters - adjust according to the rate limits available
-	minTrendingStars := 1000
+	// minTrendingStars could be set based on the popularity of the topic (more popular topics => higher popularity thresholds)
+	minTrendingStars := 200
 	perPage := 100
 	pageLimit := 1
-	mode := "trending"
-
-	var sinceDate string
-	if since != nil {
-		sinceDate = since.CreatedAt().Format(time.DateOnly)
-	} else {
-		// Default look-back window
-		switch mode {
-		case "new":
-			sinceDate = time.Now().AddDate(0, 0, -14).Format(time.DateOnly)
-		default:
-			sinceDate = time.Now().AddDate(0, -1, 0).Format(time.DateOnly)
-		}
-	}
-
-	var queryBuilder strings.Builder
-	queryBuilder.WriteString("topic:")
-	queryBuilder.WriteString(s.Topic)
-	queryBuilder.WriteString(" ")
-	queryBuilder.WriteString("stars:>")
-	queryBuilder.WriteString(fmt.Sprintf("%d", minTrendingStars))
-
-	if sinceDate != "" {
-		queryBuilder.WriteString(" ")
-		queryBuilder.WriteString("created:>")
-		queryBuilder.WriteString(sinceDate)
-	}
-
-	searchQuery := queryBuilder.String()
+	// Note: Do not filter by creation date, since popular repositories can be arbitrary old, but only recently gain popularity.
+	query := fmt.Sprintf("topic:%s stars:>%d", s.Topic, minTrendingStars)
 
 	s.logger.Debug().
 		Str("topic", s.Topic).
-		Str("query", searchQuery).
+		Str("query", query).
 		Msg("Searching GitHub repositories by topic")
 
 	page := 1
 	for {
-		result, _, err := s.client.Search.Repositories(ctx, searchQuery, &github.SearchOptions{
+		result, _, err := s.client.Search.Repositories(ctx, query, &github.SearchOptions{
 			ListOptions: github.ListOptions{
 				PerPage: perPage,
 				Page:    page,
@@ -131,13 +117,10 @@ func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, since activity
 			return
 		}
 
-		if len(result.Repositories) == 0 || page >= pageLimit {
-			break
-		}
-
 		s.logger.Debug().
 			Int("count", len(result.Repositories)).
 			Int("page", page).
+			Str("query", query).
 			Msg("Fetched repositories for topic")
 
 		for _, repo := range result.Repositories {
@@ -146,10 +129,15 @@ func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, since activity
 				continue
 			}
 			activity := &Repository{
-				Repository: repo,
-				SourceID:   s.UID(),
+				Repository:            repo,
+				SourceID:              s.UID(),
+				PopularityReachedDate: time.Now(),
 			}
 			feed <- activity
+		}
+
+		if len(result.Repositories) == 0 || page >= pageLimit {
+			break
 		}
 
 		page++
@@ -185,6 +173,8 @@ func (s *SourceTopic) UnmarshalJSON(data []byte) error {
 type Repository struct {
 	Repository *github.Repository     `json:"repository"`
 	SourceID   activitytypes.TypedUID `json:"source_id"`
+	// PopularityReachedDate is the date when the repository reached the stars threshold
+	PopularityReachedDate time.Time `json:"popularity_reached_date"`
 }
 
 func NewRepository() *Repository {
@@ -257,14 +247,5 @@ func (a *Repository) ImageURL() string {
 }
 
 func (a *Repository) CreatedAt() time.Time {
-	if a.Repository.CreatedAt != nil {
-		return a.Repository.GetCreatedAt().Time
-	}
-	if a.Repository.PushedAt != nil {
-		return a.Repository.GetPushedAt().Time
-	}
-	if a.Repository.UpdatedAt != nil {
-		return a.Repository.GetUpdatedAt().Time
-	}
-	return time.Now()
+	return a.PopularityReachedDate
 }

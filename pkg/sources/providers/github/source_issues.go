@@ -162,8 +162,8 @@ func (s *SourceIssues) Initialize(logger *zerolog.Logger, config *sourcetypes.Pr
 		return err
 	}
 
-	if config.GithubAPIToken != "" {
-		s.client = github.NewClient(nil).WithAuthToken(config.GithubAPIToken)
+	if config.GithubAPIKey != "" {
+		s.client = github.NewClient(nil).WithAuthToken(config.GithubAPIKey)
 	} else {
 		s.client = github.NewClient(nil)
 	}
