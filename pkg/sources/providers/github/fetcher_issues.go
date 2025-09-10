@@ -3,7 +3,6 @@ package github
 import (
 	"context"
 	"fmt"
-	"time"
 
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 
@@ -62,7 +61,7 @@ func (f *IssuesFetcher) Search(ctx context.Context, query string, config *types.
 
 	var searchQuery string
 	if query == "" {
-		searchQuery = trendingRepositoriesQuery()
+		searchQuery = "stars:>1000 sort:stars-desc"
 	} else {
 		searchQuery = query
 	}
@@ -96,10 +95,4 @@ func (f *IssuesFetcher) Search(ctx context.Context, query string, config *types.
 		Msg("GitHub Issues fetcher found repositories")
 
 	return sources, nil
-}
-
-// trendingRepositoriesQuery returns an approximate query for trending repositories
-func trendingRepositoriesQuery() string {
-	oneMonthAgo := time.Now().AddDate(0, -1, 0).Format(time.DateOnly)
-	return fmt.Sprintf("created:>%s stars:>1000 sort:stars-desc", oneMonthAgo)
 }

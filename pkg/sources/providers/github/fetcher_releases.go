@@ -63,7 +63,7 @@ func (f *ReleasesFetcher) Search(ctx context.Context, query string, config *type
 
 	var searchQuery string
 	if query == "" {
-		searchQuery = trendingRepositoriesQuery()
+		searchQuery = "stars:>1000 sort:stars-desc"
 	} else {
 		searchQuery = query
 	}
