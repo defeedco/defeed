@@ -288,11 +288,10 @@ func (r *Scheduler) List(req ListRequest) ([]sourcetypes.Source, error) {
 	}
 
 	var filtered []sourcetypes.Source
-	if len(includeSourceUIDs) == 0 {
+	if len(includeSourceUIDs) > 0 {
 		for _, source := range result {
 			if includeSourceUIDs[source.UID().String()] {
 				filtered = append(filtered, source)
-				break
 			}
 		}
 	} else {
