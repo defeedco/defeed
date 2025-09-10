@@ -26,14 +26,16 @@ import (
 
 // Registry manages available source configurations through fetchers.
 type Registry struct {
-	fetchers []types.Fetcher
-	logger   *zerolog.Logger
+	fetchers     []types.Fetcher
+	logger       *zerolog.Logger
+	sourceConfig *types.ProviderConfig
 }
 
-func NewRegistry(logger *zerolog.Logger) *Registry {
+func NewRegistry(logger *zerolog.Logger, sourceConfig *types.ProviderConfig) *Registry {
 	return &Registry{
-		fetchers: make([]types.Fetcher, 0),
-		logger:   logger,
+		fetchers:     make([]types.Fetcher, 0),
+		logger:       logger,
+		sourceConfig: sourceConfig,
 	}
 }
 
@@ -46,6 +48,7 @@ func (r *Registry) Initialize() error {
 	r.fetchers = append(r.fetchers, rssFetcher)
 	r.fetchers = append(r.fetchers, github.NewIssuesFetcher(r.logger))
 	r.fetchers = append(r.fetchers, github.NewReleasesFetcher(r.logger))
+	r.fetchers = append(r.fetchers, github.NewTopicFetcher(r.logger))
 	r.fetchers = append(r.fetchers, reddit.NewSubredditFetcher(r.logger))
 	r.fetchers = append(r.fetchers, hackernews.NewPostsFetcher(r.logger))
 	r.fetchers = append(r.fetchers, lobsters.NewFeedFetcher(r.logger))
@@ -72,7 +75,7 @@ func (r *Registry) FindByUID(ctx context.Context, uid activitytypes.TypedUID) (t
 		return nil, errors.New("source not found")
 	}
 
-	source, err := fetcher.FindByID(ctx, uid)
+	source, err := fetcher.FindByID(ctx, uid, r.sourceConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +98,7 @@ func (r *Registry) Search(ctx context.Context, params SearchRequest) ([]types.So
 	results := make([]types.Source, 0)
 	for _, f := range r.fetchers {
 		g.Go(func() error {
-			res, err := f.Search(gctx, params.Query)
+			res, err := f.Search(gctx, params.Query, r.sourceConfig)
 			if err != nil {
 				return fmt.Errorf("fetcher search: %w", err)
 			}

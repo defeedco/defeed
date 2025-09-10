@@ -142,9 +142,15 @@ var popularSubredditSources = []types.Source{
 		SortBy:           "hot",
 		TopPeriod:        "day",
 	},
+	&SourceSubreddit{
+		Subreddit:        "mcp",
+		SubredditSummary: "Model Context Protocol (MCP)",
+		SortBy:           "hot",
+		TopPeriod:        "day",
+	},
 }
 
-func (f *SubredditFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
+func (f *SubredditFetcher) FindByID(ctx context.Context, id types2.TypedUID, config *types.ProviderConfig) (types.Source, error) {
 	for _, source := range popularSubredditSources {
 		if lib.Equals(source.UID(), id) {
 			return source, nil
@@ -153,7 +159,7 @@ func (f *SubredditFetcher) FindByID(ctx context.Context, id types2.TypedUID) (ty
 	return nil, fmt.Errorf("source not found")
 }
 
-func (f *SubredditFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
+func (f *SubredditFetcher) Search(ctx context.Context, query string, config *types.ProviderConfig) ([]types.Source, error) {
 	// TODO(sources): Support searching custom subreddits
 	// Ignore the query, since the set of all available sources is small
 	return popularSubredditSources, nil

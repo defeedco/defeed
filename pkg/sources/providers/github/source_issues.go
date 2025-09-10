@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -19,7 +18,6 @@ const TypeGithubIssues = "githubissues"
 type SourceIssues struct {
 	Owner  string `json:"owner" validate:"required"`
 	Repo   string `json:"repo" validate:"required"`
-	Token  string `json:"token"`
 	client *github.Client
 	logger *zerolog.Logger
 }
@@ -159,18 +157,13 @@ func (i *Issue) CreatedAt() time.Time {
 	return i.Issue.GetUpdatedAt().Time
 }
 
-func (s *SourceIssues) Initialize(logger *zerolog.Logger) error {
+func (s *SourceIssues) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
 
-	token := s.Token
-	if token == "" {
-		token = os.Getenv("GITHUB_TOKEN")
-	}
-
-	if token != "" {
-		s.client = github.NewClient(nil).WithAuthToken(token)
+	if config.GithubAPIKey != "" {
+		s.client = github.NewClient(nil).WithAuthToken(config.GithubAPIKey)
 	} else {
 		s.client = github.NewClient(nil)
 	}

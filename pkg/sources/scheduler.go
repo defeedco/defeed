@@ -28,6 +28,7 @@ type Scheduler struct {
 	cancelBySourceID   sync.Map
 	cancelByActivityID sync.Map
 	logger             *zerolog.Logger
+	sourceConfig       *sourcetypes.ProviderConfig
 }
 
 type sourceStore interface {
@@ -42,12 +43,14 @@ func NewScheduler(
 	sourceRepo sourceStore,
 	activityRegistry *activities.Registry,
 	config *Config,
+	sourceConfig *sourcetypes.ProviderConfig,
 ) *Scheduler {
 	return &Scheduler{
 		activeSourceRepo:   sourceRepo,
 		activityRegistry:   activityRegistry,
 		logger:             logger,
 		activityWorkerPool: pond.NewPool(config.MaxActivityProcessorConcurrency),
+		sourceConfig:       sourceConfig,
 	}
 }
 
@@ -61,7 +64,7 @@ func (r *Scheduler) Initialize(ctx context.Context) error {
 
 	for _, source := range sources {
 		sLogger := sourceLogger(source, r.logger)
-		if err := source.Initialize(sLogger); err != nil {
+		if err := source.Initialize(sLogger, r.sourceConfig); err != nil {
 			sLogger.Error().
 				Err(err).
 				Msg("Failed to initialize source")
@@ -178,7 +181,8 @@ func (r *Scheduler) processActivity(activity activitytypes.Activity) {
 	r.cancelByActivityID.Store(activity.UID(), cancel)
 
 	r.activityWorkerPool.Submit(func() {
-		// Do not force reprocessing if activity already exists
+		// Do not force reprocessing if activity already exists,
+		// since some sources might return already processed activities (e.g. GitHub topic).
 		isCreated, err := r.activityRegistry.Create(ctx, activity, false)
 		if err != nil {
 			// TODO: Better error handling (retry or track the failures)
@@ -211,7 +215,7 @@ func (r *Scheduler) Add(source sourcetypes.Source) error {
 		return nil
 	}
 
-	if err := source.Initialize(sourceLogger(source, r.logger)); err != nil {
+	if err := source.Initialize(sourceLogger(source, r.logger), r.sourceConfig); err != nil {
 		return fmt.Errorf("initialize source: %w", err)
 	}
 
@@ -285,11 +289,10 @@ func (r *Scheduler) List(req ListRequest) ([]sourcetypes.Source, error) {
 	}
 
 	var filtered []sourcetypes.Source
-	if len(includeSourceUIDs) == 0 {
+	if len(includeSourceUIDs) > 0 {
 		for _, source := range result {
 			if includeSourceUIDs[source.UID().String()] {
 				filtered = append(filtered, source)
-				break
 			}
 		}
 	} else {

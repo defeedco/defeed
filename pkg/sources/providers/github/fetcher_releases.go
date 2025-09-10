@@ -3,8 +3,8 @@ package github
 import (
 	"context"
 	"fmt"
+
 	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
-	"os"
 
 	"github.com/glanceapp/glance/pkg/sources/types"
 
@@ -27,12 +27,10 @@ func (f *ReleasesFetcher) SourceType() string {
 	return TypeGithubReleases
 }
 
-func (f *ReleasesFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
-	// TODO: Move to Initialize() func and read from Config struct (add to providers/config.go)
-	token := os.Getenv("GITHUB_TOKEN")
+func (f *ReleasesFetcher) FindByID(ctx context.Context, id types2.TypedUID, config *types.ProviderConfig) (types.Source, error) {
 	var client *github.Client
-	if token != "" {
-		client = github.NewClient(nil).WithAuthToken(token)
+	if config.GithubAPIKey != "" {
+		client = github.NewClient(nil).WithAuthToken(config.GithubAPIKey)
 	} else {
 		client = github.NewClient(nil)
 	}
@@ -54,9 +52,8 @@ func (f *ReleasesFetcher) FindByID(ctx context.Context, id types2.TypedUID) (typ
 	}, nil
 }
 
-func (f *ReleasesFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	// TODO: Move to config struct
-	token := os.Getenv("GITHUB_TOKEN")
+func (f *ReleasesFetcher) Search(ctx context.Context, query string, config *types.ProviderConfig) ([]types.Source, error) {
+	token := config.GithubAPIKey
 	var client *github.Client
 	if token != "" {
 		client = github.NewClient(nil).WithAuthToken(token)
@@ -66,14 +63,14 @@ func (f *ReleasesFetcher) Search(ctx context.Context, query string) ([]types.Sou
 
 	var searchQuery string
 	if query == "" {
-		searchQuery = trendingRepositoriesQuery()
+		searchQuery = "stars:>1000 sort:stars-desc"
 	} else {
 		searchQuery = query
 	}
 
 	searchResult, _, err := client.Search.Repositories(ctx, searchQuery, &github.SearchOptions{
 		ListOptions: github.ListOptions{
-			PerPage: 10,
+			PerPage: 5,
 		},
 	})
 	if err != nil {

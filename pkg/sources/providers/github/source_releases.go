@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/glanceapp/glance/pkg/lib"
@@ -66,14 +65,14 @@ func (s *SourceRelease) Stream(ctx context.Context, since activitytypes.Activity
 	s.fetchGithubReleases(ctx, since, feed, errs)
 }
 
-func (s *SourceRelease) Initialize(logger *zerolog.Logger) error {
+func (s *SourceRelease) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
 
 	token := s.Token
 	if token == "" {
-		token = os.Getenv("GITHUB_TOKEN")
+		token = config.GithubAPIKey
 	}
 
 	if token != "" {

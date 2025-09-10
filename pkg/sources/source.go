@@ -48,6 +48,8 @@ func NewSource(sourceType string) (sourcestypes.Source, error) {
 		s = github.NewReleaseSource()
 	case github.TypeGithubIssues:
 		s = github.NewIssuesSource()
+	case github.TypeGithubTopic:
+		s = github.NewSourceTopic()
 	case changedetection.TypeChangedetectionWebsite:
 		s = changedetection.NewSourceWebsiteChange()
 	default:

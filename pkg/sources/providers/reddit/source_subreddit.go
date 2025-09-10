@@ -25,12 +25,7 @@ type SourceSubreddit struct {
 	TopPeriod        string `json:"topPeriod" validate:"required,oneof=hour day week month year all"`
 	Search           string `json:"search"`
 	client           *reddit.Client
-	AppAuth          struct {
-		Name   string `json:"name"`
-		ID     string `json:"ID"`
-		Secret string `json:"secret" validate:"required_with=ID"`
-	} `json:"auth"`
-	logger *zerolog.Logger
+	logger           *zerolog.Logger
 }
 
 func NewSourceSubreddit() *SourceSubreddit {
@@ -97,10 +92,10 @@ func (s *SourceSubreddit) Topics() []sourcetypes.TopicTag {
 }
 
 type Post struct {
-	Post            *reddit.Post            `json:"post"`
-	ExternalContent string                  `json:"external_content"`
-	SourceID        activitytypes.TypedUID  `json:"source_id"`
-	SourceTyp       string                  `json:"source_type"`
+	Post            *reddit.Post           `json:"post"`
+	ExternalContent string                 `json:"external_content"`
+	SourceID        activitytypes.TypedUID `json:"source_id"`
+	SourceTyp       string                 `json:"source_type"`
 }
 
 func NewPost() *Post {
@@ -169,14 +164,14 @@ func (p *Post) CreatedAt() time.Time {
 	return p.Post.Created.Time
 }
 
-func (s *SourceSubreddit) Initialize(logger *zerolog.Logger) error {
+func (s *SourceSubreddit) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	var client *reddit.Client
 	var err error
 
-	if s.AppAuth.ID != "" && s.AppAuth.Secret != "" {
+	if config.RedditClientID != "" && config.RedditClientSecret != "" {
 		client, err = reddit.NewClient(reddit.Credentials{
-			ID:     s.AppAuth.ID,
-			Secret: s.AppAuth.Secret,
+			ID:     config.RedditClientID,
+			Secret: config.RedditClientSecret,
 		})
 	} else {
 		client, err = reddit.NewReadonlyClient()
@@ -198,7 +193,7 @@ func (s *SourceSubreddit) Stream(ctx context.Context, since activitytypes.Activi
 }
 
 func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
-	subrLogger := s.logger.With().
+	event := s.logger.With().
 		Str("subreddit", s.Subreddit).
 		Str("sort_by", s.SortBy).
 		Str("top_period", s.TopPeriod).
@@ -209,7 +204,7 @@ func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since activit
 	if since != nil {
 		sinceID = since.(*Post).Post.FullID
 	} else {
-		subrLogger.Debug().Msg("Fetching recent posts")
+		event.Debug().Msg("Fetching recent posts")
 		// If this is the first time we're fetching posts,
 		// only fetch the last few posts to avoid retrieving all historic posts.
 		s.fetchRecentPosts(ctx, feed, errs)
@@ -218,7 +213,7 @@ func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since activit
 
 outer:
 	for {
-		subrLogger.Debug().Msg("Fetching posts")
+		event.Debug().Msg("Fetching posts")
 		redditPosts, _, err := s.fetchByCurrentTimeline(ctx, &reddit.ListOptions{
 			Limit: 10,
 			After: sinceID,
@@ -228,7 +223,7 @@ outer:
 			return
 		}
 
-		subrLogger.Debug().Int("count", len(redditPosts)).Msg("Fetched posts")
+		event.Debug().Int("count", len(redditPosts)).Msg("Fetched posts")
 
 		if len(redditPosts) == 0 {
 			break outer

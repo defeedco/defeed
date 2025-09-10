@@ -550,6 +550,8 @@ func serializeSourceType(in string) (SourceType, error) {
 		return GithubReleases, nil
 	case github.TypeGithubIssues:
 		return GithubIssues, nil
+	case github.TypeGithubTopic:
+		return GithubTopics, nil
 	case changedetection.TypeChangedetectionWebsite:
 		return ChangedetectionWebsite, nil
 	}

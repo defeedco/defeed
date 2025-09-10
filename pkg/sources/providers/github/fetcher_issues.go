@@ -3,9 +3,8 @@ package github
 import (
 	"context"
 	"fmt"
-	types2 "github.com/glanceapp/glance/pkg/sources/activities/types"
-	"os"
-	"time"
+
+	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 
 	"github.com/glanceapp/glance/pkg/sources/types"
 
@@ -28,12 +27,10 @@ func (f *IssuesFetcher) SourceType() string {
 	return TypeGithubIssues
 }
 
-func (f *IssuesFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types.Source, error) {
-	// TODO: Move to Initialize() func and read from Config struct (add to providers/config.go)
-	token := os.Getenv("GITHUB_TOKEN")
+func (f *IssuesFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID, config *types.ProviderConfig) (types.Source, error) {
 	var client *github.Client
-	if token != "" {
-		client = github.NewClient(nil).WithAuthToken(token)
+	if config.GithubAPIKey != "" {
+		client = github.NewClient(nil).WithAuthToken(config.GithubAPIKey)
 	} else {
 		client = github.NewClient(nil)
 	}
@@ -54,26 +51,24 @@ func (f *IssuesFetcher) FindByID(ctx context.Context, id types2.TypedUID) (types
 	}, nil
 }
 
-func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]types.Source, error) {
-	// TODO: Move to Initialize() func and read from Config struct (add to providers/config.go)
-	token := os.Getenv("GITHUB_TOKEN")
+func (f *IssuesFetcher) Search(ctx context.Context, query string, config *types.ProviderConfig) ([]types.Source, error) {
 	var client *github.Client
-	if token != "" {
-		client = github.NewClient(nil).WithAuthToken(token)
+	if config.GithubAPIKey != "" {
+		client = github.NewClient(nil).WithAuthToken(config.GithubAPIKey)
 	} else {
 		client = github.NewClient(nil)
 	}
 
 	var searchQuery string
 	if query == "" {
-		searchQuery = trendingRepositoriesQuery()
+		searchQuery = "stars:>1000 sort:stars-desc"
 	} else {
 		searchQuery = query
 	}
 
 	searchResult, _, err := client.Search.Repositories(ctx, searchQuery, &github.SearchOptions{
 		ListOptions: github.ListOptions{
-			PerPage: 10,
+			PerPage: 5,
 		},
 	})
 	if err != nil {
@@ -100,10 +95,4 @@ func (f *IssuesFetcher) Search(ctx context.Context, query string) ([]types.Sourc
 		Msg("GitHub Issues fetcher found repositories")
 
 	return sources, nil
-}
-
-// trendingRepositoriesQuery returns an approximate query for trending repositories
-func trendingRepositoriesQuery() string {
-	oneMonthAgo := time.Now().AddDate(0, -1, 0).Format(time.DateOnly)
-	return fmt.Sprintf("created:>%s stars:>1000 sort:stars-desc", oneMonthAgo)
 }

@@ -65,8 +65,8 @@ func (s *SourcePosts) Topics() []sourcetypes.TopicTag {
 func (s *SourcePosts) Validate() error { return lib.ValidateStruct(s) }
 
 type Post struct {
-	Post            *gohn.Item     `json:"post"`
-	ArticleTextBody string         `json:"article_text_body"`
+	Post            *gohn.Item             `json:"post"`
+	ArticleTextBody string                 `json:"article_text_body"`
 	SourceID        activitytypes.TypedUID `json:"source_id"`
 }
 
@@ -153,7 +153,7 @@ func (p *Post) CreatedAt() time.Time {
 	return time.Unix(int64(*p.Post.Time), 0)
 }
 
-func (s *SourcePosts) Initialize(logger *zerolog.Logger) error {
+func (s *SourcePosts) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	var err error
 	s.client, err = gohn.NewClient(nil)
 	if err != nil {

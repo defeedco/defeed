@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
@@ -32,10 +31,9 @@ type completionModel interface {
 }
 
 type summarizeActivityInput struct {
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	URL       string `json:"url"`
-	CreatedAt string `json:"created_at"`
+	Title string `json:"title"`
+	Body  string `json:"body"`
+	URL   string `json:"url"`
 }
 
 func (sum *Summarizer) SummarizeActivity(
@@ -84,9 +82,7 @@ func (sum *Summarizer) generateFullSummary(ctx context.Context, input summarizeA
 	prompt := fmt.Sprintf(`You are a summarizer. Summarize the provided JSON faithfully and concisely.
 
 Rules:
-- Use only title, body, created_at.
 - Use **bold** for key terms, `+"`code`"+` for identifiers, hyperlinks for URLs.
-- Include date only if relevant.
 - Max 80 words.
 - Format as Markdown with Context/Key Points/Why it matters structure (titles formatted with ###).
 
@@ -113,7 +109,6 @@ func (sum *Summarizer) generateShortSummary(ctx context.Context, input summarize
 	prompt := fmt.Sprintf(`You are a summarizer. Create a concise summary of the provided JSON.
 
 Rules:
-- Use only title, body, created_at.
 - Max 20 words.
 - Plain text, no Markdown.
 - Capture the essence.
@@ -140,18 +135,17 @@ Output only the summary text, no JSON formatting.`, sum.formatActivityInput(inpu
 func (sum *Summarizer) formatActivityInput(input summarizeActivityInput) string {
 	inputJSON, err := json.MarshalIndent(input, "", "  ")
 	if err != nil {
-		return fmt.Sprintf(`{"title": "%s", "body": "%s", "url": "%s", "created_at": "%s"}`,
-			input.Title, input.Body, input.URL, input.CreatedAt)
+		return fmt.Sprintf(`{"title": "%s", "body": "%s", "url": "%s"}`,
+			input.Title, input.Body, input.URL)
 	}
 	return string(inputJSON)
 }
 
 func (sum *Summarizer) activityToInput(activity types.Activity) summarizeActivityInput {
 	return summarizeActivityInput{
-		Title:     activity.Title(),
-		Body:      activity.Body(),
-		URL:       activity.URL(),
-		CreatedAt: activity.CreatedAt().Format(time.RFC3339) + "Z",
+		Title: activity.Title(),
+		Body:  activity.Body(),
+		URL:   activity.URL(),
 	}
 }
 

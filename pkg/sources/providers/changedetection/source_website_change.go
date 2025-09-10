@@ -22,6 +22,7 @@ type SourceWebsiteChange struct {
 	Limit       int    `json:"limit"`
 	IconURL     string `json:"icon_url"`
 	logger      *zerolog.Logger
+	config      *sourcetypes.ProviderConfig
 }
 
 func NewSourceWebsiteChange() *SourceWebsiteChange {
@@ -80,7 +81,7 @@ func (s *SourceWebsiteChange) fetchAndSendNewChanges(ctx context.Context, since 
 	}
 }
 
-func (s *SourceWebsiteChange) Initialize(logger *zerolog.Logger) error {
+func (s *SourceWebsiteChange) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
 	}
@@ -94,6 +95,7 @@ func (s *SourceWebsiteChange) Initialize(logger *zerolog.Logger) error {
 	}
 
 	s.logger = logger
+	s.config = config
 
 	return nil
 }
@@ -217,6 +219,8 @@ func (s *SourceWebsiteChange) fetchWatchFromChangeDetection(ctx context.Context)
 
 	if s.Token != "" {
 		req.Header.Add("X-API-Key", s.Token)
+	} else if s.config.ChangedetectionKey != "" {
+		req.Header.Add("X-API-Key", s.config.ChangedetectionKey)
 	}
 
 	response, err := lib.DecodeJSONFromRequest[changeDetectionWatchResponseJson](lib.DefaultHTTPClient, req)
