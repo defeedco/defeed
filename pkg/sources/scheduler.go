@@ -3,10 +3,11 @@ package sources
 import (
 	"context"
 	"fmt"
-	"github.com/alitto/pond/v2"
-	"github.com/glanceapp/glance/pkg/sources/activities"
 	"sync"
 	"time"
+
+	"github.com/alitto/pond/v2"
+	"github.com/glanceapp/glance/pkg/sources/activities"
 
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
@@ -147,17 +148,26 @@ func (r *Scheduler) executeSourceOnce(source sourcetypes.Source, since activityt
 	for {
 		select {
 		case activity, ok := <-activityChan:
-			if ok {
+			if !ok {
+				activityChan = nil
+			} else {
 				r.processActivity(activity)
 			}
 		case err, ok := <-errorChan:
-			if ok {
+			if !ok {
+				errorChan = nil
+			} else {
 				r.logger.Error().
 					Err(err).
 					Str("source_id", source.UID().String()).
 					Msg("Poll activities error")
 			}
 		case <-ctx.Done():
+			return
+		}
+
+		// Exit when both channels are closed
+		if activityChan == nil && errorChan == nil {
 			return
 		}
 	}
