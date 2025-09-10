@@ -30,7 +30,7 @@
 			<!-- https://www.indiehackers.com/post/an-unofficial-feed-of-indie-hackers-2413a17623 -->
 			<!-- Note: community maintained/hosted, might be unreliable. -->
 			<!-- Another alternative to try if this doesn't work well: https://github.com/ahonn/ihrss -->
-			<outline text="Indie entrepreneur posts and discussions" title="Indie Hackers Posts" type="rss" xmlUrl="https://feed.indiehackers.world/posts.rss" topics="startups" />
+			<outline text="Indie entrepreneur posts and discussions" title="Indie Hackers Posts" type="rss" xmlUrl="https://feed.indiehackers.world/posts.rss" topics="startups" faviconUrl="http://indiehackers.com/images/favicons/favicon--32x32.png" />
 		</outline>
 		<outline text="Tech News" title="Tech News">
 			<outline text="Enterprise technology and business news" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" topics="startups,cloud_infrastructure" faviconUrl="https://venturebeat.com/favicon.ico" />
