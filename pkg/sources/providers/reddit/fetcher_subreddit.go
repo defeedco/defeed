@@ -142,6 +142,12 @@ var popularSubredditSources = []types.Source{
 		SortBy:           "hot",
 		TopPeriod:        "day",
 	},
+	&SourceSubreddit{
+		Subreddit:        "mcp",
+		SubredditSummary: "Model Context Protocol (MCP)",
+		SortBy:           "hot",
+		TopPeriod:        "day",
+	},
 }
 
 func (f *SubredditFetcher) FindByID(ctx context.Context, id types2.TypedUID, config *types.ProviderConfig) (types.Source, error) {

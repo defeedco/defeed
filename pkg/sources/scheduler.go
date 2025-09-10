@@ -181,7 +181,8 @@ func (r *Scheduler) processActivity(activity activitytypes.Activity) {
 	r.cancelByActivityID.Store(activity.UID(), cancel)
 
 	r.activityWorkerPool.Submit(func() {
-		// Do not force reprocessing if activity already exists
+		// Do not force reprocessing if activity already exists,
+		// since some sources might return already processed activities (e.g. GitHub topic).
 		isCreated, err := r.activityRegistry.Create(ctx, activity, false)
 		if err != nil {
 			// TODO: Better error handling (retry or track the failures)

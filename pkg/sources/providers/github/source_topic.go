@@ -89,11 +89,11 @@ func (s *SourceTopic) Stream(ctx context.Context, since activitytypes.Activity, 
 	s.fetchTopicRepositories(ctx, since, feed, errs)
 }
 
-func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
+func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, _ activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	// minTrendingStars could be set based on the popularity of the topic (more popular topics => higher popularity thresholds)
 	minTrendingStars := 200
-	perPage := 100
-	pageLimit := 1
+	perPage := 200
+	pageLimit := 2
 	// Note: Do not filter by creation date, since popular repositories can be arbitrary old, but only recently gain popularity.
 	query := fmt.Sprintf("topic:%s stars:>%d", s.Topic, minTrendingStars)
 
