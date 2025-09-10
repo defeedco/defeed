@@ -385,7 +385,7 @@ func (r *Registry) summarizeTopics(
 	activityToTopic map[string]string,
 ) (map[string]string, error) {
 	g, gctx := errgroup.WithContext(ctx)
-	g.SetLimit(5)
+	g.SetLimit(-1) // no limit
 
 	indexedSummaries := make([]string, len(topics))
 	for ti, topic := range topics {

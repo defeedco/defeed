@@ -30,23 +30,23 @@
 			<!-- https://www.indiehackers.com/post/an-unofficial-feed-of-indie-hackers-2413a17623 -->
 			<!-- Note: community maintained/hosted, might be unreliable. -->
 			<!-- Another alternative to try if this doesn't work well: https://github.com/ahonn/ihrss -->
-			<outline text="Indie entrepreneur posts and discussions" title="Indie Hackers Posts" type="rss" xmlUrl="https://feed.indiehackers.world/posts.rss" topics="startups" />
+			<outline text="Indie entrepreneur posts and discussions" title="Indie Hackers Posts" type="rss" xmlUrl="https://feed.indiehackers.world/posts.rss" topics="startups" faviconUrl="http://indiehackers.com/images/favicons/favicon--32x32.png" />
 		</outline>
 		<outline text="Tech News" title="Tech News">
 			<outline text="Enterprise technology and business news" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" topics="startups,cloud_infrastructure" faviconUrl="https://venturebeat.com/favicon.ico" />
 			<outline text="Technology, science, art, and culture" title="The Verge" type="rss" xmlUrl="http://www.theverge.com/rss/full.xml" topics="devtools" />
 			<outline text="Asian technology and startup news" title="Tech in Asia" type="rss" xmlUrl="https://feeds2.feedburner.com/PennOlson" topics="startups" />
-			<outline text="Breaking technology and startup news" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" topics="startups" />
+			<outline text="Breaking technology and startup news" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" topics="startups" faviconUrl="https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png?w=32" />
 			<outline text="Design and innovation in business" title="Fast Company " type="rss" xmlUrl="http://www.fastcodesign.com/rss.xml" topics="product_management" faviconUrl="https://www.fastcompany.com/favicon.ico" />
-			<outline text="Startup news and funding updates" title="Startups – TechCrunch" type="rss" xmlUrl="https://techcrunch.com/startups/feed/" topics="startups" />
+			<outline text="Startup news and funding updates" title="Startups – TechCrunch" type="rss" xmlUrl="https://techcrunch.com/startups/feed/" topics="startups" faviconUrl="https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png?w=32" />
 			<outline text="Leadership and management insights" title="Forbes - Leadership" type="rss" xmlUrl="https://www.forbes.com/leadership/feed/" topics="product_management" />
 			<outline text="Business innovation and design" title="Fast Company" type="rss" xmlUrl="http://feeds.feedburner.com/fastcompany/headlines" topics="product_management" />
 			<outline text="Entrepreneurship and business success" title="Forbes - Entrepreneurs" type="rss" xmlUrl="http://www.forbes.com/entrepreneurs/index.xml" topics="startups" />
 		</outline>
 		<outline text="Products &amp; Ideas" title="Products &amp; Ideas">
 			<outline text="Daily discovery of new products and startups" title="Product Hunt — The best new products, every day" type="rss" xmlUrl="http://www.producthunt.com/feed" topics="startups,product_management" faviconUrl="https://www.producthunt.com/favicon.ico" />
-			<outline text="Developer projects and demos" title="Hacker News: Show HN" type="rss" xmlUrl="http://hnrss.org/show" topics="devtools,open_source" />
-			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" topics="startups,product_management" />
+			<outline text="Developer projects and demos" title="Hacker News: Show HN" type="rss" xmlUrl="http://hnrss.org/show" topics="devtools,open_source" faviconUrl="https://news.ycombinator.com/favicon.ico" />
+			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" topics="startups,product_management" faviconUrl="https://news.ycombinator.com/favicon.ico" />
 			<outline text="Product management and entrepreneurship insights" title="Sachin Rekhi's Blog" type="rss" xmlUrl="http://feeds.feedburner.com/sachinrekhiblog" topics="product_management,startups" />
 		</outline>
 		<outline text="Engineering blogs" title="Engineering blogs">
@@ -165,16 +165,16 @@
 			<outline text="SEO strategies and link building" title="Backlinko" type="rss" xmlUrl="http://backlinko.com/feed" topics="growth_engineering" />
 		</outline>
 		<outline text="Scientific Research" title="Scientific Research">
-			<outline text="AI research papers and publications" title="ArXiv AI" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.AI" topics="ai_research" />
-			<outline text="Machine learning research and papers" title="ArXiv Machine Learning" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.LG" topics="ai_research" />
-			<outline text="Computer vision and image processing research" title="ArXiv Computer Vision" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CV" topics="ai_research" />
-			<outline text="Natural language processing research" title="ArXiv Natural Language Processing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CL" topics="ai_research,llms" />
-			<outline text="Cryptography and security research" title="ArXiv Cryptography &amp; Security" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CR" topics="security_engineering" />
-			<outline text="Distributed computing and algorithms" title="ArXiv Distributed Computing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DC" topics="distributed_systems" />
-			<outline text="Database and data mining research" title="ArXiv Databases" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DB" topics="databases" />
-			<outline text="Software engineering research" title="ArXiv Software Engineering" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.SE" topics="devtools" />
-			<outline text="Human-computer interaction research" title="ArXiv Human-Computer Interaction" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.HC" topics="product_management" />
-			<outline text="Information retrieval and search research" title="ArXiv Information Retrieval" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.IR" topics="ai_research" />
+			<outline text="AI research papers and publications" title="ArXiv AI" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.AI" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Machine learning research and papers" title="ArXiv Machine Learning" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.LG" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Computer vision and image processing research" title="ArXiv Computer Vision" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CV" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Natural language processing research" title="ArXiv Natural Language Processing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CL" topics="ai_research,llms" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Cryptography and security research" title="ArXiv Cryptography &amp; Security" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CR" topics="security_engineering" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Distributed computing and algorithms" title="ArXiv Distributed Computing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DC" topics="distributed_systems" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Database and data mining research" title="ArXiv Databases" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DB" topics="databases" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Software engineering research" title="ArXiv Software Engineering" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.SE" topics="devtools" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Human-computer interaction research" title="ArXiv Human-Computer Interaction" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.HC" topics="product_management" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="Information retrieval and search research" title="ArXiv Information Retrieval" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.IR" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
 			<!-- https://huggingface.co/posts/takarajordan/806643001426071 -->
 			<!-- Note: community maintained/hosted, might be unreliable. -->
 			<outline text="Daily AI research papers and summaries" title="HuggingFace Daily Papers" type="rss" xmlUrl="https://papers.takara.ai/api/feed" topics="llms,ai_research" faviconUrl="https://huggingface.co/favicon.ico" />
