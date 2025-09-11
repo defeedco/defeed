@@ -53,7 +53,7 @@ Guidelines:
 
 ## Input
 
-Original (user) query: {{.original_query}}
+Original (user) query: "{{.original_query}}"
 Sources of activity data: {{.sources}}
 
 ## Output

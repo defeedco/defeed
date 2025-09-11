@@ -241,15 +241,6 @@ func (r *Registry) Activities(
 		return nil, fmt.Errorf("get feed: %w", err)
 	}
 
-	// For now list active sources from the scheduler instead of the source registry,
-	// since the source registry is fetching some sources from the 3rd party APIs and may hit rate limits.
-	feedSources, err := r.sourceScheduler.List(sources.ListRequest{
-		SourceUIDs: feed.SourceUIDs,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("list sources: %w", err)
-	}
-
 	// Public feeds can be accessed by anyone (even non-authenticated user)
 	if feed.UserID != userID && !feed.Public {
 		return nil, errors.New("feed not found")
@@ -263,6 +254,44 @@ func (r *Registry) Activities(
 		query = queryOverride
 	}
 
+	if query != "" {
+		// Only if user provides the query, we can rewrite it to sub-queries and return results in topics.
+		return r.searchByQuery(ctx, feed.SourceUIDs, query, sortBy, period, limit)
+	}
+
+	result, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
+		SourceUIDs: feed.SourceUIDs,
+		SortBy:     sortBy,
+		Period:     period,
+		Limit:      limit,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("search activities: %w", err)
+	}
+
+	return &ActivitiesResponse{
+		Results: result.Activities,
+		Topics:  nil,
+	}, nil
+}
+
+func (r *Registry) searchByQuery(
+	ctx context.Context,
+	sourceUIDs []activitytypes.TypedUID,
+	query string,
+	sortBy activitytypes.SortBy,
+	period activitytypes.Period,
+	limit int,
+) (*ActivitiesResponse, error) {
+	// For now list active sources from the scheduler instead of the source registry,
+	// since the source registry is fetching some sources from the 3rd party APIs and may hit rate limits.
+	feedSources, err := r.sourceScheduler.List(sources.ListRequest{
+		SourceUIDs: sourceUIDs,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list sources: %w", err)
+	}
+
 	topicQueryGroups, err := r.queryRewriter.RewriteToTopics(ctx, nlp.RewriteRequest{
 		Query:   query,
 		Sources: feedSources,
@@ -271,7 +300,7 @@ func (r *Registry) Activities(
 		return nil, fmt.Errorf("rewrite query to topics: %w", err)
 	}
 
-	acts, activityToTopic, err := r.searchByTopicQueryGroups(ctx, feed.SourceUIDs, topicQueryGroups, sortBy, period, limit)
+	acts, activityToTopic, err := r.searchByTopicQueryGroups(ctx, sourceUIDs, topicQueryGroups, sortBy, period, limit)
 	if err != nil {
 		return nil, fmt.Errorf("search by topic query groups: %w", err)
 	}
