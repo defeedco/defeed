@@ -17,16 +17,13 @@ import (
 const TypeHackerNewsPosts = "hackernewsposts"
 
 type SourcePosts struct {
-	FeedName     string        `json:"feedName" validate:"required,oneof=top new best"`
-	PollInterval time.Duration `json:"pollInterval"`
-	client       *gohn.Client
-	logger       *zerolog.Logger
+	FeedName string `json:"feedName" validate:"required,oneof=top new best"`
+	client   *gohn.Client
+	logger   *zerolog.Logger
 }
 
 func NewSourcePosts() *SourcePosts {
-	return &SourcePosts{
-		PollInterval: 45 * time.Minute,
-	}
+	return &SourcePosts{}
 }
 
 func (s *SourcePosts) UID() activitytypes.TypedUID {
@@ -160,10 +157,6 @@ func (s *SourcePosts) Initialize(logger *zerolog.Logger, config *sourcetypes.Pro
 		return fmt.Errorf("init client: %v", err)
 	}
 
-	if s.PollInterval == 0 {
-		s.PollInterval = 45 * time.Minute
-	}
-
 	s.logger = logger
 
 	return nil
@@ -173,7 +166,7 @@ func (s *SourcePosts) Stream(ctx context.Context, since activitytypes.Activity, 
 	s.fetchHackerNewsPosts(ctx, since, feed, errs)
 }
 
-func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
+func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, _ activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	storyIDs, err := s.fetchStoryIDs(ctx)
 
 	if err != nil {
@@ -186,34 +179,20 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, since activityty
 		return
 	}
 
-	// Note: We are assuming post IDs are returned in descending order (newest first),
-	// and that post IDs are incremented based on the order of the creation time.
-	// This is not explicitly stated anywhere, but it seems to be the case based on the observations.
-	var sincePostID int
-	if since == nil {
-		// Number of posts to look back for the initial fetch
-		n := 100
-		if len(storyIDs) >= n {
-			sincePostID = *storyIDs[len(storyIDs)-n]
-		} else {
-			// Fallback - shouldn't happen.
-			sincePostID = *storyIDs[len(storyIDs)-1]
-		}
-	} else {
-		sincePostID = *since.(*Post).Post.ID
-	}
+	// Note: We can't simply optimise the fetching by only retrieving since the incremental story ID,
+	// because the stories are chronologically ordered only on the "new" feed timeline.
+	// The order on "best" or "top" is not chronological and can change over time.
+	// So for now just fetch all stories, the scheduler will skip the already processed ones.
 
 	for _, id := range storyIDs {
 		if id == nil {
 			continue
 		}
 
-		storyLogger := s.logger.With().Int("story_id", *id).Logger()
-
-		if sincePostID != 0 && *id <= sincePostID {
-			storyLogger.Debug().Msg("Reached last seen story")
-			break
-		}
+		storyLogger := s.logger.With().
+			Int("story_id", *id).
+			Int("stories_count", len(storyIDs)).
+			Logger()
 
 		storyLogger.Debug().Msg("Fetching hacker news story")
 		story, err := s.client.Items.Get(ctx, *id)
