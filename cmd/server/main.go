@@ -99,9 +99,12 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 
 	sourceScheduler := sources.NewScheduler(logger, sourceRepo, activityRegistry, &config.Sources, &config.SourceProviders)
 	if config.SourceInitialization {
-		if err := sourceScheduler.Initialize(ctx); err != nil {
-			return nil, fmt.Errorf("initialize source scheduler: %w", err)
-		}
+		// Don't block the server startup
+		go func() {
+			if err := sourceScheduler.Initialize(ctx); err != nil {
+				logger.Error().Err(err).Msg("failed to initialize source scheduler")
+			}
+		}()
 	}
 
 	// Cache source results to avoid hitting the 3rd party APIs for every FindByUID call
