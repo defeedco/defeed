@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alexferrari88/gohn/pkg/gohn"
+	"github.com/alitto/pond/v2"
 	"github.com/glanceapp/glance/pkg/lib"
 	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
 	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
@@ -184,48 +185,54 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, _ activitytypes.
 	// The order on "best" or "top" is not chronological and can change over time.
 	// So for now just fetch all stories, the scheduler will skip the already processed ones.
 
+	pool := pond.NewPool(10)
+
 	for _, id := range storyIDs {
 		if id == nil {
 			continue
 		}
 
-		storyLogger := s.logger.With().
-			Int("story_id", *id).
-			Int("stories_count", len(storyIDs)).
-			Logger()
+		pool.Submit(func() {
+			storyLogger := s.logger.With().
+				Int("story_id", *id).
+				Int("stories_count", len(storyIDs)).
+				Logger()
 
-		storyLogger.Debug().Msg("Fetching hacker news story")
-		story, err := s.client.Items.Get(ctx, *id)
-		if err != nil {
-			storyLogger.Error().Err(err).Msg("Failed to fetch hacker news story")
-			continue
-		}
-
-		if story == nil {
-			storyLogger.Debug().Msg("Fetched story is nil")
-			continue
-		}
-
-		textContent := ""
-		if story.Text != nil {
-			textContent = *story.Text
-		} else if story.URL != nil {
-			content, err := lib.FetchTextFromURL(ctx, s.logger, *story.URL)
-			if err != nil && !errors.Is(err, lib.ErrUnsupportedContentType) {
-				storyLogger.Error().Err(err).Msg("Failed to fetch external article")
-				continue
+			storyLogger.Debug().Msg("Fetching hacker news story")
+			story, err := s.client.Items.Get(ctx, *id)
+			if err != nil {
+				storyLogger.Error().Err(err).Msg("Failed to fetch hacker news story")
+				return
 			}
-			textContent = content
-		}
 
-		post := &Post{
-			Post:            story,
-			ArticleTextBody: textContent,
-			SourceID:        s.UID(),
-		}
+			if story == nil {
+				storyLogger.Debug().Msg("Fetched story is nil")
+				return
+			}
 
-		feed <- post
+			textContent := ""
+			if story.Text != nil {
+				textContent = *story.Text
+			} else if story.URL != nil {
+				content, err := lib.FetchTextFromURL(ctx, s.logger, *story.URL)
+				if err != nil && !errors.Is(err, lib.ErrUnsupportedContentType) {
+					storyLogger.Error().Err(err).Msg("Failed to fetch external article")
+					return
+				}
+				textContent = content
+			}
+
+			post := &Post{
+				Post:            story,
+				ArticleTextBody: textContent,
+				SourceID:        s.UID(),
+			}
+
+			feed <- post
+		})
 	}
+
+	pool.StopAndWait()
 }
 
 func (s *SourcePosts) fetchStoryIDs(ctx context.Context) ([]*int, error) {
