@@ -38,10 +38,15 @@ const userIDContextKey UserIDContextKey = "userID"
 
 type Server struct {
 	sourceScheduler *sources.Scheduler
-	sourceRegistry  *sources.Registry
+	sourceRegistry  sourceRegistry
 	feedRegistry    *feeds.Registry
 	logger          *zerolog.Logger
 	http            http.Server
+}
+
+type sourceRegistry interface {
+	FindByUID(ctx context.Context, uid activitytypes.TypedUID) (sourcetypes.Source, error)
+	Search(ctx context.Context, params sources.SearchRequest) ([]sourcetypes.Source, error)
 }
 
 var _ ServerInterface = (*Server)(nil)
@@ -49,7 +54,7 @@ var _ ServerInterface = (*Server)(nil)
 func NewServer(
 	logger *zerolog.Logger,
 	config *Config,
-	sourceRegistry *sources.Registry,
+	sourceRegistry sourceRegistry,
 	sourceScheduler *sources.Scheduler,
 	feedRegistry *feeds.Registry,
 ) (*Server, error) {

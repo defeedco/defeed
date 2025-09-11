@@ -104,7 +104,8 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 		}
 	}
 
-	sourceRegistry := sources.NewRegistry(logger, &config.SourceProviders)
+	// Cache source results to avoid hitting the 3rd party APIs for every FindByUID call
+	sourceRegistry := sources.NewCachedRegistry(sources.NewRegistry(logger, &config.SourceProviders), logger)
 	if err := sourceRegistry.Initialize(); err != nil {
 		return nil, fmt.Errorf("initialize source registry: %w", err)
 	}

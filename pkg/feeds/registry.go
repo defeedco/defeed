@@ -9,6 +9,7 @@ import (
 
 	"github.com/glanceapp/glance/pkg/lib"
 	"github.com/glanceapp/glance/pkg/sources/activities"
+	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
 
 	"golang.org/x/sync/errgroup"
 
@@ -26,7 +27,7 @@ var ErrAuthUsersOnly = errors.New("query override supported for authenticated us
 type Registry struct {
 	feedRepository   feedStore
 	sourceScheduler  *sources.Scheduler
-	sourceRegistry   *sources.Registry
+	sourceRegistry   sourceRegistry
 	activityRegistry *activities.Registry
 	summarizer       summarizer
 	queryRewriter    *nlp.QueryRewriter
@@ -46,10 +47,14 @@ type summarizer interface {
 	SummarizeTopic(ctx context.Context, topic *nlp.TopicQueryGroup, activities []*activitytypes.DecoratedActivity) (string, error)
 }
 
+type sourceRegistry interface {
+	FindByUID(ctx context.Context, uid activitytypes.TypedUID) (sourcetypes.Source, error)
+}
+
 func NewRegistry(
 	feedRepository feedStore,
 	sourceScheduler *sources.Scheduler,
-	sourceRegistry *sources.Registry,
+	sourceRegistry sourceRegistry,
 	activityRegistry *activities.Registry,
 	summarizer summarizer,
 	queryRewriter *nlp.QueryRewriter,
