@@ -36,6 +36,7 @@ require (
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/go-openapi/inflect v0.21.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
@@ -89,6 +90,7 @@ require (
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/andybalholm/cascadia v1.3.3 // indirect
+	github.com/clerk/clerk-sdk-go/v2 v2.4.0
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/go-shiori/go-readability v0.0.0-20250217085726-9f5bf5ca7612
 	github.com/google/uuid v1.6.0

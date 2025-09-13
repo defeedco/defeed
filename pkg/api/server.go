@@ -13,6 +13,7 @@ import (
 
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 
+	"github.com/defeedco/defeed/pkg/api/auth"
 	"github.com/defeedco/defeed/pkg/sources/providers/changedetection"
 	"github.com/defeedco/defeed/pkg/sources/providers/github"
 	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
@@ -32,10 +33,6 @@ import (
 //go:embed openapi.yaml
 var openapiSpecYaml string
 
-type UserIDContextKey string
-
-const userIDContextKey UserIDContextKey = "userID"
-
 type Server struct {
 	sourceScheduler *sources.Scheduler
 	sourceRegistry  sourceRegistry
@@ -54,6 +51,7 @@ var _ ServerInterface = (*Server)(nil)
 func NewServer(
 	logger *zerolog.Logger,
 	config *Config,
+	authMiddleware *auth.RouteAuthMiddleware,
 	sourceRegistry sourceRegistry,
 	sourceScheduler *sources.Scheduler,
 	feedRegistry *feeds.Registry,
@@ -67,7 +65,7 @@ func NewServer(
 		feedRegistry:    feedRegistry,
 		http: http.Server{
 			Addr:    fmt.Sprintf("%s:%d", config.Host, config.Port),
-			Handler: authMiddleware(corsMiddleware(mux, config.CORSOrigin)),
+			Handler: authMiddleware.Middleware(corsMiddleware(mux, config.CORSOrigin)),
 		},
 	}
 
@@ -75,55 +73,6 @@ func NewServer(
 	server.registerApiDocsHandlers(mux)
 
 	return server, nil
-}
-
-func authMiddleware(next http.Handler) http.Handler {
-	// Very hacky / low-effort auth for now.
-	authorizedUsers := []string{
-		"bart",
-		"yon",
-		"greg",
-		"teo",
-	}
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Docs should be public
-		if strings.HasPrefix(r.URL.Path, "/docs") {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Skip auth for OPTIONS (CORS preflight) requests
-		if r.Method == "OPTIONS" {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		authHeader := r.Header.Get("Authorization")
-		// TODO(auth): For now we protect all requests, but in the future we make auth optional (but add rate limiting) for certain endpoints
-
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "invalid authorization header", http.StatusBadRequest)
-			return
-		}
-
-		authToken := strings.TrimPrefix(authHeader, "Bearer ")
-		if authToken == "" {
-			http.Error(w, "invalid auth token format", http.StatusBadRequest)
-			return
-		}
-
-		// TODO(auth): Update authorization logic when user resource/auth is implemented
-		userID := authToken
-		if !slices.Contains(authorizedUsers, userID) {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), userIDContextKey, userID)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
 }
 
 func corsMiddleware(next http.Handler, originConfig string) http.Handler {
@@ -182,7 +131,11 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid string, params ListFeedActivitiesParams) {
-	userID := r.Context().Value(userIDContextKey).(string)
+	user, err := auth.UserFromContext(r.Context())
+	if err != nil {
+		s.internalError(w, err, "get user from context")
+		return
+	}
 
 	var queryOverride string
 	if params.Query != nil {
@@ -202,7 +155,7 @@ func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid 
 
 	period := deserializePeriod(params.Period)
 
-	out, err := s.feedRegistry.Activities(r.Context(), uid, userID, sortBy, limit, queryOverride, period)
+	out, err := s.feedRegistry.Activities(r.Context(), uid, user.UserID, sortBy, limit, queryOverride, period)
 	if err != nil {
 		s.internalError(w, err, "list feed activities")
 		return
@@ -283,10 +236,14 @@ func (s *Server) GetSource(w http.ResponseWriter, r *http.Request, uid string) {
 }
 
 func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(userIDContextKey).(string)
+	user, err := auth.UserFromContext(r.Context())
+	if err != nil {
+		s.internalError(w, err, "get user from context")
+		return
+	}
 
 	var req CreateFeedRequest
-	err := deserializeReq(r, &req)
+	err = deserializeReq(r, &req)
 	if err != nil {
 		s.badRequest(w, err, "deserialize request")
 		return
@@ -303,7 +260,7 @@ func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
 		Icon:       req.Icon,
 		Query:      req.Query,
 		SourceUIDs: sourceUIDs,
-		UserID:     userID,
+		UserID:     user.UserID,
 	}
 
 	createdFeed, err := s.feedRegistry.Create(r.Context(), createReq)
@@ -316,9 +273,13 @@ func (s *Server) CreateOwnFeed(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) ListFeeds(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(userIDContextKey).(string)
+	user, err := auth.UserFromContext(r.Context())
+	if err != nil {
+		s.internalError(w, err, "get user from context")
+		return
+	}
 
-	feedList, err := s.feedRegistry.ListByUserID(r.Context(), userID)
+	feedList, err := s.feedRegistry.ListByUserID(r.Context(), user.UserID)
 	if err != nil {
 		s.internalError(w, err, "list feeds")
 		return
@@ -335,7 +296,11 @@ func (s *Server) UpdateOwnFeed(w http.ResponseWriter, r *http.Request, uid strin
 		return
 	}
 
-	userID := r.Context().Value(userIDContextKey).(string)
+	user, err := auth.UserFromContext(r.Context())
+	if err != nil {
+		s.internalError(w, err, "get user from context")
+		return
+	}
 
 	sourceUIDs, err := deserializeSourceUIDs(req.SourceUids)
 	if err != nil {
@@ -344,7 +309,7 @@ func (s *Server) UpdateOwnFeed(w http.ResponseWriter, r *http.Request, uid strin
 	}
 	updatedFeed, err := s.feedRegistry.Update(r.Context(), feeds.UpdateRequest{
 		ID:         uid,
-		UserID:     userID,
+		UserID:     user.UserID,
 		Name:       req.Name,
 		Icon:       req.Icon,
 		Query:      req.Query,
@@ -359,9 +324,13 @@ func (s *Server) UpdateOwnFeed(w http.ResponseWriter, r *http.Request, uid strin
 }
 
 func (s *Server) DeleteOwnFeed(w http.ResponseWriter, r *http.Request, uid string) {
-	userID := r.Context().Value(userIDContextKey).(string)
+	user, err := auth.UserFromContext(r.Context())
+	if err != nil {
+		s.internalError(w, err, "get user from context")
+		return
+	}
 
-	err := s.feedRegistry.Remove(r.Context(), uid, userID)
+	err = s.feedRegistry.Remove(r.Context(), uid, user.UserID)
 	if err != nil {
 		s.internalError(w, err, "delete feed")
 		return
@@ -411,10 +380,6 @@ func (s *Server) internalError(w http.ResponseWriter, err error, msg string) {
 func (s *Server) badRequest(w http.ResponseWriter, err error, msg string) {
 	s.logger.Err(err).Msg(msg)
 	http.Error(w, err.Error(), http.StatusBadRequest)
-}
-
-func (s *Server) statusCode(w http.ResponseWriter, code int) {
-	w.WriteHeader(code)
 }
 
 func serializeFeeds(in []*feeds.Feed) []Feed {

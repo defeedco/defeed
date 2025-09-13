@@ -14,6 +14,7 @@ import (
 	"github.com/tmc/langchaingo/llms/openai"
 
 	"github.com/defeedco/defeed/pkg/api"
+	"github.com/defeedco/defeed/pkg/api/auth"
 	"github.com/defeedco/defeed/pkg/config"
 	"github.com/defeedco/defeed/pkg/lib/log"
 	"github.com/defeedco/defeed/pkg/storage/postgres"
@@ -116,10 +117,42 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 	feedStore := postgres.NewFeedRepository(db)
 	feedRegistry := feeds.NewRegistry(feedStore, sourceScheduler, sourceRegistry, activityRegistry, summarizer, queryRewriter, &config.Feeds, logger)
 
-	server, err := api.NewServer(logger, &config.API, sourceRegistry, sourceScheduler, feedRegistry)
+	authMw, err := authMiddleware(config)
+	if err != nil {
+		return nil, fmt.Errorf("create auth middleware: %w", err)
+	}
+
+	server, err := api.NewServer(logger, &config.API, authMw, sourceRegistry, sourceScheduler, feedRegistry)
 	if err != nil {
 		return nil, fmt.Errorf("create server: %w", err)
 	}
 
 	return server, nil
+}
+
+func authMiddleware(config *config.Config) (*auth.RouteAuthMiddleware, error) {
+	apiKeys, err := config.API.Auth.ParseAPIKeys()
+	if err != nil {
+		return nil, fmt.Errorf("parse API keys: %w", err)
+	}
+
+	// Set up default auth provider (api key for backward compatibility)
+	apiKeyProvider := auth.NewKeyAuthProvider(apiKeys)
+
+	authMiddleware := auth.NewRouteAuthMiddleware(&auth.AuthConfig{
+		Provider: apiKeyProvider,
+		Required: true,
+	})
+
+	// Per-route configuration
+	authMiddleware.
+		SetRouteAuthProvider("GET /sources", apiKeyProvider, true).
+		SetRouteAuthProvider("GET /sources/{uid}", apiKeyProvider, true).
+		SetRouteAuthProvider("GET /feeds", apiKeyProvider, true).
+		SetRouteAuthProvider("POST /feeds", apiKeyProvider, true).
+		SetRouteAuthProvider("PUT /feeds/{uid}", apiKeyProvider, true).
+		SetRouteAuthProvider("DELETE /feeds/{uid}", apiKeyProvider, true).
+		SetRouteAuthProvider("GET /feeds/{uid}/activities", apiKeyProvider, true)
+
+	return authMiddleware, nil
 }
