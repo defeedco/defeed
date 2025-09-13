@@ -2,6 +2,5 @@
 /build
 /playground
 /.idea
-/glance*.yml
 .env
 logs/*.log
