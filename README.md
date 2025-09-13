@@ -17,19 +17,20 @@ Defeed is a personal “signal-over-noise” dashboard that keeps you instantly 
 ## ✨ Features
 
 ### **Any Source**
-- **GitHub**: Issues, releases, and topic discussions
-- **Social Media**: Mastodon accounts and hashtags
-- **News Aggregators**: Hacker News posts, Lobsters tags and feeds
-- **Reddit**: Subreddit content
+- **GitHub**: issues, releases, and topics
+- **Mastodon**: accounts and hashtags
+- **HackerNews**: new, best, top posts
+- **Lobsters**: feeds and tags
+- **Reddit**: subreddits
 - **RSS/Atom**: Any RSS or Atom feed
-- ... more coming soon ...
 
-### **Intelligent Aggregation**
-- **Smart Summarization**: AI-generated summaries for quick content overview
+Missing a source? [Submit a feature request](https://github.com/defeed/defeed/issues/new?labels=enhancement&template=feature_request.md)!
+
+### **Smart Aggregation**
+- **Smart Summarization**: AI activity and topic summaries for quick overview
 - **Semantic Search**: Find content by meaning, not just keywords  
 - **Topic Clustering**: Automatically group related activities
-- **Query Rewriting**: Enhanced search with LLM-powered query expansion
-- **Personalization**: Content filtering based on user interests
+- **Query Expansion**: More breath of search with user query expansion
 
 ### **Feeds**
 - **Public/Private Feeds**: Share feeds or keep them personal
