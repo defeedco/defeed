@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
 	// required by schema hooks.
-	_ "github.com/glanceapp/glance/pkg/storage/postgres/ent/runtime"
+	_ "github.com/defeedco/defeed/pkg/storage/postgres/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/migrate"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/migrate"
 )
 
 type (

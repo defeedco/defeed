@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/lib"
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
-	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/defeedco/defeed/pkg/lib"
+	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/mmcdole/gofeed"
 	gofeedext "github.com/mmcdole/gofeed/extensions"
 	"github.com/rs/zerolog"

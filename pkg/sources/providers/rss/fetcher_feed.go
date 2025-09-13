@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
 
-	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/defeedco/defeed/pkg/lib"
+	"github.com/defeedco/defeed/pkg/sources/types"
 
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"

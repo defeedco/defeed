@@ -2,7 +2,7 @@
 
 package runtime
 
-// The schema-stitching logic is generated in github.com/glanceapp/glance/pkg/storage/postgres/ent/runtime.go
+// The schema-stitching logic is generated in github.com/defeedco/defeed/pkg/storage/postgres/ent/runtime.go
 
 const (
 	Version = "v0.14.4"                                         // Version of ent codegen.

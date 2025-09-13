@@ -8,9 +8,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
 
-	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/defeedco/defeed/pkg/lib"
 	"github.com/mattn/go-mastodon"
 	"golang.org/x/net/html"
 )

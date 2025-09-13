@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/tmc/langchaingo/embeddings"
 
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
 )
 
 type ActivityEmbedder struct {

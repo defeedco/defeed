@@ -3,14 +3,14 @@ package config
 import (
 	"fmt"
 
-	"github.com/glanceapp/glance/pkg/feeds"
-	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources"
-	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/defeedco/defeed/pkg/feeds"
+	"github.com/defeedco/defeed/pkg/lib"
+	"github.com/defeedco/defeed/pkg/sources"
+	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 
-	"github.com/glanceapp/glance/pkg/api"
-	"github.com/glanceapp/glance/pkg/lib/log"
-	"github.com/glanceapp/glance/pkg/storage/postgres"
+	"github.com/defeedco/defeed/pkg/api"
+	"github.com/defeedco/defeed/pkg/lib/log"
+	"github.com/defeedco/defeed/pkg/storage/postgres"
 	"github.com/joeshaw/envdecode"
 )
 

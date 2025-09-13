@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
 	"github.com/rs/zerolog"
 )
 

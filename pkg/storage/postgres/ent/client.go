@@ -9,14 +9,14 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/migrate"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/migrate"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/activity"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/feed"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/source"
 )
 
 // Client is the client that holds all ent builders.

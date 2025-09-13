@@ -7,15 +7,15 @@ import (
 	"sort"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/activities"
-	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/defeedco/defeed/pkg/lib"
+	"github.com/defeedco/defeed/pkg/sources/activities"
+	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/glanceapp/glance/pkg/sources"
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/sources/nlp"
+	"github.com/defeedco/defeed/pkg/sources"
+	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/nlp"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )

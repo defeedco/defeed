@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
 
-	"github.com/glanceapp/glance/pkg/feeds"
-	"github.com/glanceapp/glance/pkg/sources"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent"
-	entfeed "github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
+	"github.com/defeedco/defeed/pkg/feeds"
+	"github.com/defeedco/defeed/pkg/sources"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
+	entfeed "github.com/defeedco/defeed/pkg/storage/postgres/ent/feed"
 )
 
 type FeedRepository struct {

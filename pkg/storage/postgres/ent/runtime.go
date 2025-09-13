@@ -3,8 +3,8 @@
 package ent
 
 import (
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/schema"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/activity"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/schema"
 )
 
 // The init function reads all schema descriptors with runtime code

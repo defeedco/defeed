@@ -7,15 +7,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/defeedco/defeed/pkg/lib"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/glanceapp/glance/pkg/sources/activities"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/activities"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
 	"github.com/pgvector/pgvector-go"
 
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent"
-	entactivity "github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
+	entactivity "github.com/defeedco/defeed/pkg/storage/postgres/ent/activity"
 )
 
 type ActivityRepository struct {

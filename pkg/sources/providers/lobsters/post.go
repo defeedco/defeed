@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
 
-	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/defeedco/defeed/pkg/lib"
 )
 
 type Post struct {

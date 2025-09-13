@@ -7,18 +7,18 @@ import (
 	"fmt"
 	"sort"
 
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
 
-	"github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/defeedco/defeed/pkg/sources/types"
 
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/sources/providers/github"
-	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
-	"github.com/glanceapp/glance/pkg/sources/providers/lobsters"
-	"github.com/glanceapp/glance/pkg/sources/providers/mastodon"
-	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
-	"github.com/glanceapp/glance/pkg/sources/providers/rss"
+	"github.com/defeedco/defeed/pkg/sources/providers/github"
+	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
+	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
+	"github.com/defeedco/defeed/pkg/sources/providers/mastodon"
+	"github.com/defeedco/defeed/pkg/sources/providers/reddit"
+	"github.com/defeedco/defeed/pkg/sources/providers/rss"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"

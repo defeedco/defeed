@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/alitto/pond/v2"
-	"github.com/glanceapp/glance/pkg/sources/activities"
+	"github.com/defeedco/defeed/pkg/sources/activities"
 
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
-	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
+	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 
 	"github.com/rs/zerolog"
 )

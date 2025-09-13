@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/feeds"
-	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources"
-	"github.com/glanceapp/glance/pkg/sources/activities"
-	"github.com/glanceapp/glance/pkg/sources/nlp"
+	"github.com/defeedco/defeed/pkg/feeds"
+	"github.com/defeedco/defeed/pkg/lib"
+	"github.com/defeedco/defeed/pkg/sources"
+	"github.com/defeedco/defeed/pkg/sources/activities"
+	"github.com/defeedco/defeed/pkg/sources/nlp"
 	"github.com/rs/zerolog"
 	"github.com/tmc/langchaingo/llms/openai"
 
-	"github.com/glanceapp/glance/pkg/api"
-	"github.com/glanceapp/glance/pkg/config"
-	"github.com/glanceapp/glance/pkg/lib/log"
-	"github.com/glanceapp/glance/pkg/storage/postgres"
+	"github.com/defeedco/defeed/pkg/api"
+	"github.com/defeedco/defeed/pkg/config"
+	"github.com/defeedco/defeed/pkg/lib/log"
+	"github.com/defeedco/defeed/pkg/storage/postgres"
 	"github.com/joho/godotenv"
 )
 

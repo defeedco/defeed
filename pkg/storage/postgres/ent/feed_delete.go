@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/feed"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/predicate"
 )
 
 // FeedDelete is the builder for deleting a Feed entity.

@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/predicate"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/source"
 )
 
 // SourceQuery is the builder for querying Source entities.

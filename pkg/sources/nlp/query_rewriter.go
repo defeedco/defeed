@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
+	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/rs/zerolog"
 	"github.com/tmc/langchaingo/prompts"
 

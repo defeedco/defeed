@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/defeedco/defeed/pkg/lib"
 	"github.com/tmc/langchaingo/llms"
 )
 

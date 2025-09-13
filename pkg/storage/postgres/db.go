@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
 
 	entsql "entgo.io/ent/dialect/sql"
 

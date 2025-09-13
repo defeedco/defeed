@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
 )
 
 // TypedUID is a custom TypedUID implementation for GitHub repository sources.

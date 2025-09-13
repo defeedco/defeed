@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/defeedco/defeed/pkg/lib"
 )
 
 // There is no official REST API, but each page can be fetched as JSON.

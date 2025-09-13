@@ -11,10 +11,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/activity"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/feed"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/predicate"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/source"
 	pgvector "github.com/pgvector/pgvector-go"
 )
 

@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
+	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
 )
 
 // Fetcher interface allows source types to provide preset/search functionality.

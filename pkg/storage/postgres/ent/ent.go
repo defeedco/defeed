@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/activity"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/activity"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/feed"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/source"
 )
 
 // ent aliases to avoid import conflicts in user's code.

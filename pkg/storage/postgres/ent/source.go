@@ -8,7 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/source"
 )
 
 // Source is the model entity for the Source schema.

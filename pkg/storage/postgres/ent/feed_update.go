@@ -12,8 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/feed"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/feed"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/predicate"
 )
 
 // FeedUpdate is the builder for updating Feed entities.

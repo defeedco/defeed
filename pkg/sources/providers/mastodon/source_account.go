@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/glanceapp/glance/pkg/lib"
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
-	sourcetypes "github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/defeedco/defeed/pkg/lib"
+	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/mattn/go-mastodon"
 	"github.com/rs/zerolog"
 )

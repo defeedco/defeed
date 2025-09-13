@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/defeedco/defeed/pkg/sources/types"
 
-	"github.com/glanceapp/glance/pkg/sources"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/source"
+	"github.com/defeedco/defeed/pkg/sources"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/source"
 )
 
 type SourceRepository struct {

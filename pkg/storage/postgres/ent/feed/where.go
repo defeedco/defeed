@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/glanceapp/glance/pkg/storage/postgres/ent/predicate"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.

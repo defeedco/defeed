@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/lib"
-	activitytypes "github.com/glanceapp/glance/pkg/sources/activities/types"
-	"github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/defeedco/defeed/pkg/lib"
+	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/rs/zerolog"
 )
 

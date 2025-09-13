@@ -2,18 +2,19 @@ package sources
 
 import (
 	"fmt"
-	"github.com/glanceapp/glance/pkg/sources/activities/types"
 	"strings"
 
-	"github.com/glanceapp/glance/pkg/lib"
-	"github.com/glanceapp/glance/pkg/sources/providers/changedetection"
-	"github.com/glanceapp/glance/pkg/sources/providers/github"
-	"github.com/glanceapp/glance/pkg/sources/providers/hackernews"
-	"github.com/glanceapp/glance/pkg/sources/providers/lobsters"
-	"github.com/glanceapp/glance/pkg/sources/providers/mastodon"
-	"github.com/glanceapp/glance/pkg/sources/providers/reddit"
-	"github.com/glanceapp/glance/pkg/sources/providers/rss"
-	sourcestypes "github.com/glanceapp/glance/pkg/sources/types"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
+
+	"github.com/defeedco/defeed/pkg/lib"
+	"github.com/defeedco/defeed/pkg/sources/providers/changedetection"
+	"github.com/defeedco/defeed/pkg/sources/providers/github"
+	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
+	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
+	"github.com/defeedco/defeed/pkg/sources/providers/mastodon"
+	"github.com/defeedco/defeed/pkg/sources/providers/reddit"
+	"github.com/defeedco/defeed/pkg/sources/providers/rss"
+	sourcestypes "github.com/defeedco/defeed/pkg/sources/types"
 )
 
 func NewTypedUID(uid string) (types.TypedUID, error) {

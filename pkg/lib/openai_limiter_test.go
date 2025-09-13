@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/glanceapp/glance/pkg/lib"
+	"github.com/defeedco/defeed/pkg/lib"
 	"github.com/rs/zerolog"
 )
 
