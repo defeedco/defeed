@@ -1,65 +1,44 @@
-# Pulse
+<div align="center">
 
-Never Miss What Matters.
+# 🚀 Defeed
 
-## Usage
+**Defeat your fragmented feeds 💪**
 
-### 1. Setup environment variables
+*A unified API to aggregate, filter, and intelligently organize activities from across the web*
 
-Copy the example environment file and customize the values:
-```bash
-cp .env.example .env
-```
+[Features](#-features) • [Quick Start](#-quick-start) • [API Documentation](#-api-documentation) • [Contributing](#-contributing)
 
-### 2. Run the application
-```bash
-docker compose up --build
-```
+</div>
 
-### 3. Use the API
+---
 
-Visit http://localhost:8080/docs to interact with the REST API.
+Defeed is a personal “signal-over-noise” dashboard that keeps you instantly informed about the updates you genuinely care about—across code repos, product changelogs, social feeds, industry news, markets, and more. Think of it as a live, auto-curated newspaper you design yourself.
+
+## ✨ Features
+
+### **Any Source**
+- **GitHub**: Issues, releases, and topic discussions
+- **Social Media**: Mastodon accounts and hashtags
+- **News Aggregators**: Hacker News posts, Lobsters tags and feeds
+- **Reddit**: Subreddit content
+- **RSS/Atom**: Any RSS or Atom feed
+- ... more coming soon ...
+
+### **Intelligent Aggregation**
+- **Smart Summarization**: AI-generated summaries for quick content overview
+- **Semantic Search**: Find content by meaning, not just keywords  
+- **Topic Clustering**: Automatically group related activities
+- **Query Rewriting**: Enhanced search with LLM-powered query expansion
+- **Personalization**: Content filtering based on user interests
+
+### **Feeds**
+- **Public/Private Feeds**: Share feeds or keep them personal
+- **Custom Feeds**: Create feeds with custom sources and filter queries
+- **Real-time Updates**: Automatic content fetching and processing
+- **Flexible Filtering**: Time-based and similarity-based content sorting
 
 
-### 4. View the UI
+## 🙏 Credits
 
-The page configuration is specified as a base64 encoded JSON string to the `config` query parameter.
-
-> Sources referenced in `source_id` must be manually created using the REST API.
-
-Here is an example of a page configuration:
-```json
-{
-  "name": "MCP updates in LLM agents",
-  "columns": [
-    {
-      "size": "full",
-      "widgets": [
-        {
-          "limit": 10,
-          "collapse_after": 3,
-          "show_thumbnails": true,
-          "source_id": "github-issues/browser-use/browser-use",
-          "query": "MCP support discussions",
-          "min_similarity": 0.2
-        }
-      ]
-    },
-    {
-      "size": "full",
-      "widgets": [
-        {
-          "limit": 10,
-          "collapse_after": 3,
-          "show_thumbnails": true,
-          "source_id": "github-releases/browser-use/browser-use",
-          "query": "MCP related changes",
-          "min_similarity": 0.2
-        }
-      ]
-    }
-  ]
-}
-```
-
-This configuration can be viewed at: [http://localhost:8080/page?config=ewogICJuYW1l...](http://localhost:8080/page?config=ewogICJuYW1lIjogIk1DUCB1cGRhdGVzIGluIExMTSBhZ2VudHMiLAogICJjb2x1bW5zIjogWwogICAgewogICAgICAic2l6ZSI6ICJmdWxsIiwKICAgICAgIndpZGdldHMiOiBbCiAgICAgICAgewogICAgICAgICAgImxpbWl0IjogMTAsCiAgICAgICAgICAiY29sbGFwc2VfYWZ0ZXIiOiAzLAogICAgICAgICAgInNob3dfdGh1bWJuYWlscyI6IHRydWUsCiAgICAgICAgICAic291cmNlX2lkIjogImdpdGh1Yi1pc3N1ZXMvYnJvd3Nlci11c2UvYnJvd3Nlci11c2UiLAogICAgICAgICAgInF1ZXJ5IjogIk1DUCBzdXBwb3J0IGRpc2N1c3Npb25zIiwKICAgICAgICAgICJtaW5fc2ltaWxhcml0eSI6IDAuMgogICAgICAgIH0KICAgICAgXQogICAgfSwKICAgIHsKICAgICAgInNpemUiOiAiZnVsbCIsCiAgICAgICJ3aWRnZXRzIjogWwogICAgICAgIHsKICAgICAgICAgICJsaW1pdCI6IDEwLAogICAgICAgICAgImNvbGxhcHNlX2FmdGVyIjogMywKICAgICAgICAgICJzaG93X3RodW1ibmFpbHMiOiB0cnVlLAogICAgICAgICAgInNvdXJjZV9pZCI6ICJnaXRodWItcmVsZWFzZXMvYnJvd3Nlci11c2UvYnJvd3Nlci11c2UiLAogICAgICAgICAgInF1ZXJ5IjogIk1DUCByZWxhdGVkIGNoYW5nZXMiLAogICAgICAgICAgIm1pbl9zaW1pbGFyaXR5IjogMC4yCiAgICAgICAgfQogICAgICBdCiAgICB9CiAgXQp9)
+DeFeed was originally inspired and based on [Glance](https://github.com/glanceapp/glance), an open-source project licensed under AGPL-3.0.  
+The codebase has been extensively rewritten since then.
