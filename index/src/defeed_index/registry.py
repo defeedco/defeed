@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from bertopic import BERTopic
 from sklearn.feature_extraction.text import CountVectorizer
 import pandas as pd
+from datetime import datetime, timedelta
 
 from .repository import ActivityRepository
 from .types import DecoratedActivity, SearchRequest, SearchResult
@@ -40,7 +41,7 @@ class Registry:
         Load existing activities from the repository and seed the BERTopic index.
         """
 
-        self.activities = self.repository.list(limit=100)
+        self.activities = self.repository.list(from_date=datetime.now() - timedelta(days=1))
 
         if not self.activities:
             self.logger.warning("No activities found in database")
@@ -49,12 +50,9 @@ class Registry:
         # Prepare documents for BERTopic
         self.documents = []
         for activity in self.activities:
-            if activity.summary and activity.summary.full_summary:
-                doc_text = activity.summary.full_summary
-            else:
-                doc_text = f"{activity.activity.title} {activity.summary.short_summary}"
-            
-            self.documents.append(doc_text)
+            # full_summary is formatted in Markdown with predefined sections.
+            # This will skew the topic modeling results, so use short_summary instead.
+            self.documents.append(f"{activity.activity.title}: {activity.summary.short_summary}")
         
         self.logger.info(f"Prepared {len(self.documents)} documents for topic modeling")
         

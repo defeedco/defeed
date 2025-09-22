@@ -4,6 +4,7 @@ import psycopg2.extras
 from typing import List, Optional, Dict, Any, Union
 import logging
 import os
+from datetime import datetime
 
 from .types import Activity, ActivitySummary, DecoratedActivity, SearchRequest, SearchResult, SortBy, Period
 
@@ -20,12 +21,12 @@ class ActivityRepository:
         self.connection_string = _build_connection_string(config)
         self.logger = logging.getLogger(__name__)
 
-    def list(self, limit: int) -> List[DecoratedActivity]:
+    def list(self, from_date: Optional[datetime] = None, limit: Optional[int] = None) -> List[DecoratedActivity]:
         """
         Read all activities from the database.
         This is the main function needed for seeding BERTopic.
         """
-        query = f"""
+        query = """
         SELECT 
             id,
             uid,
@@ -42,24 +43,29 @@ class ActivityRepository:
             embedding
         FROM activities
         WHERE embedding IS NOT NULL
-        ORDER BY created_at DESC
-        LIMIT {limit}
         """
+        
+        params = []
+        
+        if from_date is not None:
+            query += " AND created_at >= %s"
+            params.append(from_date)
+        
+        query += " ORDER BY created_at DESC"
+
+        if limit is not None:
+            query += " LIMIT %s"
+            params.append(limit)
         
         try:
             with self._get_connection() as conn:
                 with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                    cur.execute(query)
+                    cur.execute(query, params)
                     rows = cur.fetchall()
                     
                     activities = []
                     for row in rows:
-                        try:
-                            activity = _deserialize_decorated_activity(dict(row))
-                            activities.append(activity)
-                        except Exception as e:
-                            self.logger.warning(f"Failed to parse activity {row.get('id', 'unknown')}: {e}")
-                            continue
+                        activities.append(_deserialize_decorated_activity(dict(row)))
                     
                     self.logger.info(f"Loaded {len(activities)} activities from database")
                     return activities
@@ -80,7 +86,7 @@ def _build_connection_string(config: ActivityRepositoryConfig) -> str:
 
     return conn_str
 
-def _deserialize_decorated_activity(self, row: Dict[str, Any]) -> DecoratedActivity:
+def _deserialize_decorated_activity(row: Dict[str, Any]) -> DecoratedActivity:
     """Deserialize a database row into a DecoratedActivity object."""
     activity = _deserialize_activity(row)
     summary = _deserialize_activity_summary(row)
@@ -95,7 +101,7 @@ def _deserialize_decorated_activity(self, row: Dict[str, Any]) -> DecoratedActiv
         similarity=similarity
     )
 
-def _deserialize_activity(self, row: Dict[str, Any]) -> Activity:
+def _deserialize_activity(row: Dict[str, Any]) -> Activity:
     """Deserialize a database row into an Activity object."""
     return Activity(
         uid=row['id'],
@@ -109,7 +115,7 @@ def _deserialize_activity(self, row: Dict[str, Any]) -> Activity:
         raw_json=row['raw_json']
     )
 
-def _deserialize_activity_summary(self, row: Dict[str, Any]) -> Optional[ActivitySummary]:
+def _deserialize_activity_summary(row: Dict[str, Any]) -> Optional[ActivitySummary]:
     """Deserialize a database row into an ActivitySummary object if data is available."""
     if row.get('short_summary') and row.get('full_summary'):
         return ActivitySummary(
