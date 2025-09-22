@@ -2,7 +2,6 @@
 name = "defeed-index"
 version = "0.1.0"
 description = "Add your description here"
-readme = "README.md"
 authors = [
     { name = "Bart", email = "bartolomej.kozorog@gmail.com" }
 ]
@@ -12,6 +11,8 @@ dependencies = [
     "numpy>=2.3.3",
     "pandas>=2.3.2",
     "scikit-learn>=1.7.2",
+    "psycopg2-binary>=2.9.9",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.scripts]
