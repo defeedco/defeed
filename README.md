@@ -2,10 +2,6 @@
 
 <img width="1968" height="1128" alt="Frame 4" src="https://github.com/user-attachments/assets/5314cbd2-b6bc-4af4-ae29-4f73a953b96e" />
 
-*A unified API to aggregate, filter, and intelligently organize activities from across the web*
-
-[Features](#-features) • [Quick Start](#-quick-start) • [API Documentation](#-api-documentation) • [Contributing](#-contributing)
-
 </div>
 
 ---
