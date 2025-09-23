@@ -9,6 +9,8 @@ to load activities from PostgreSQL and analyze them with BERTopic.
 import logging
 import os
 from dotenv import load_dotenv
+from matplotlib import pyplot as plt
+
 from defeed_index import Registry, ActivityRepository, ActivityRepositoryConfig
 
 # Set up logging
@@ -39,8 +41,16 @@ def main():
 
     print("\n📋 Topic Information:")
     topic_info = registry.topic_model.get_topic_info()
-    if topic_info is not None:
-        print(topic_info.head(50))
+    print(topic_info)
+
+    fig = registry.topic_model.visualize_document_datamap(
+        registry.documents,
+        topics=registry.topics,
+        width=1200,
+        height=800
+    )
+    plt.savefig("./out/datamapplot_1.png", dpi=300, bbox_inches='tight')
+    plt.show()
 
 if __name__ == "__main__":
     main()

@@ -21,7 +21,12 @@ class ActivityRepository:
         self.connection_string = _build_connection_string(config)
         self.logger = logging.getLogger(__name__)
 
-    def list(self, from_date: Optional[datetime] = None, limit: Optional[int] = None) -> List[DecoratedActivity]:
+    def list(
+        self, 
+        source_ids: Optional[List[str]] = None,
+        from_date: Optional[datetime] = None, 
+        limit: Optional[int] = None,
+    ) -> List[DecoratedActivity]:
         """
         Read all activities from the database.
         This is the main function needed for seeding BERTopic.
@@ -46,6 +51,10 @@ class ActivityRepository:
         """
         
         params = []
+        
+        if source_ids is not None:
+            query += " AND source_uid = ANY(%s)"
+            params.append(source_ids)
         
         if from_date is not None:
             query += " AND created_at >= %s"

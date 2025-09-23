@@ -43,7 +43,7 @@ class Registry:
         )
 
         self.hdbscan_model = HDBSCAN(
-            min_cluster_size=50,
+            min_cluster_size=5,
             metric='euclidean',
             cluster_selection_method='eom'
         )
@@ -66,7 +66,9 @@ class Registry:
         Load existing activities from the repository and seed the BERTopic index.
         """
 
-        self.activities = self.repository.list(from_date=datetime.now() - timedelta(days=1))
+        self.activities = self.repository.list(
+            from_date=datetime.now() - timedelta(days=1),
+        )
 
         if not self.activities:
             self.logger.warning("No activities found in database")
@@ -77,7 +79,7 @@ class Registry:
         for activity in self.activities:
             # full_summary is formatted in Markdown with predefined sections.
             # This will skew the topic modeling results, so use short_summary instead.
-            self.documents.append(f"{activity.activity.title}: {activity.summary.short_summary}")
+            self.documents.append(activity.summary.short_summary)
         
         self.logger.info(f"Prepared {len(self.documents)} documents for topic modeling")
 
