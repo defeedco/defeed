@@ -14,7 +14,6 @@ import (
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 
 	"github.com/defeedco/defeed/pkg/api/auth"
-	"github.com/defeedco/defeed/pkg/sources/providers/changedetection"
 	"github.com/defeedco/defeed/pkg/sources/providers/github"
 	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
@@ -522,8 +521,8 @@ func serializeSourceType(in string) (SourceType, error) {
 		return GithubIssues, nil
 	case github.TypeGithubTopic:
 		return GithubTopics, nil
-	case changedetection.TypeChangedetectionWebsite:
-		return ChangedetectionWebsite, nil
+		// case changedetection.TypeChangedetectionWebsite:
+		// return ChangedetectionWebsite, nil
 	}
 
 	return "", fmt.Errorf("unknown source type: %s", in)

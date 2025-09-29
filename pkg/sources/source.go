@@ -7,7 +7,6 @@ import (
 	"github.com/defeedco/defeed/pkg/sources/activities/types"
 
 	"github.com/defeedco/defeed/pkg/lib"
-	"github.com/defeedco/defeed/pkg/sources/providers/changedetection"
 	"github.com/defeedco/defeed/pkg/sources/providers/github"
 	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
@@ -51,8 +50,6 @@ func NewSource(sourceType string) (sourcestypes.Source, error) {
 		s = github.NewIssuesSource()
 	case github.TypeGithubTopic:
 		s = github.NewSourceTopic()
-	case changedetection.TypeChangedetectionWebsite:
-		s = changedetection.NewSourceWebsiteChange()
 	default:
 		return nil, fmt.Errorf("unknown source type: %s", sourceType)
 	}
