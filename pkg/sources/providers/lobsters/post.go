@@ -3,12 +3,11 @@ package lobsters
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"time"
 
-	"github.com/defeedco/defeed/pkg/sources/activities/types"
-
 	"github.com/defeedco/defeed/pkg/lib"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 )
 
 type Post struct {
@@ -107,10 +106,6 @@ func (p *Post) SocialScore() float64 {
 	maxScore := 500.0
 	maxComments := 100.0
 
-	normalizedScore := math.Min(score/maxScore, 1.0)
-	normalizedComments := math.Min(comments/maxComments, 1.0)
-
-	socialScore := (normalizedScore * scoreWeight) + (normalizedComments * commentsWeight)
-
-	return math.Min(socialScore, 1.0)
+	return (providers.NormSocialScore(score, maxScore) * scoreWeight) +
+		(providers.NormSocialScore(comments, maxComments) * commentsWeight)
 }

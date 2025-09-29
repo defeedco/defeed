@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/defeedco/defeed/pkg/lib"
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
@@ -184,12 +184,8 @@ func (i *Issue) SocialScore() float64 {
 	maxReactions := 100.0
 	maxComments := 50.0
 
-	normalizedReactions := math.Min(reactions/maxReactions, 1.0)
-	normalizedComments := math.Min(comments/maxComments, 1.0)
-
-	socialScore := (normalizedReactions * reactionsWeight) + (normalizedComments * commentsWeight)
-
-	return math.Min(socialScore, 1.0)
+	return (providers.NormSocialScore(reactions, maxReactions) * reactionsWeight) +
+		(providers.NormSocialScore(comments, maxComments) * commentsWeight)
 }
 
 func (s *SourceIssues) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {

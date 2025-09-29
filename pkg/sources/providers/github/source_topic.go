@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
-	"github.com/defeedco/defeed/pkg/sources/types"
-
 	"github.com/defeedco/defeed/pkg/lib"
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
+	"github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
@@ -280,11 +279,7 @@ func (a *Repository) SocialScore() float64 {
 	maxForks := 2000.0
 	maxIssues := 500.0
 
-	normalizedStars := math.Min(stars/maxStars, 1.0)
-	normalizedForks := math.Min(forks/maxForks, 1.0)
-	normalizedIssues := math.Min(issues/maxIssues, 1.0)
-
-	socialScore := (normalizedStars * starsWeight) + (normalizedForks * forksWeight) + (normalizedIssues * issuesWeight)
-
-	return math.Min(socialScore, 1.0)
+	return (providers.NormSocialScore(stars, maxStars) * starsWeight) +
+		(providers.NormSocialScore(forks, maxForks) * forksWeight) +
+		(providers.NormSocialScore(issues, maxIssues) * issuesWeight)
 }

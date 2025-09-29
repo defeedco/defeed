@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"html"
-	"math"
 	"strings"
 	"time"
 
 	"github.com/defeedco/defeed/pkg/lib"
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/rs/zerolog"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
@@ -191,12 +191,8 @@ func (p *Post) SocialScore() float64 {
 	maxScore := 10000.0
 	maxComments := 1000.0
 
-	normalizedScore := math.Min(score/maxScore, 1.0)
-	normalizedComments := math.Min(comments/maxComments, 1.0)
-
-	socialScore := (normalizedScore * scoreWeight) + (normalizedComments * commentsWeight)
-
-	return math.Min(socialScore, 1.0)
+	return (providers.NormSocialScore(score, maxScore) * scoreWeight) +
+		(providers.NormSocialScore(comments, maxComments) * commentsWeight)
 }
 
 func (s *SourceSubreddit) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {

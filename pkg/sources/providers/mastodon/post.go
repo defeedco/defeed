@@ -3,15 +3,14 @@ package mastodon
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
 
-	"github.com/defeedco/defeed/pkg/sources/activities/types"
-
 	"github.com/defeedco/defeed/pkg/lib"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 	"github.com/mattn/go-mastodon"
 	"golang.org/x/net/html"
 )
@@ -134,13 +133,9 @@ func (p *Post) SocialScore() float64 {
 	maxReblogs := 100.0
 	maxReplies := 50.0
 
-	normalizedFavorites := math.Min(favorites/maxFavorites, 1.0)
-	normalizedReblogs := math.Min(reblogs/maxReblogs, 1.0)
-	normalizedReplies := math.Min(replies/maxReplies, 1.0)
-
-	socialScore := (normalizedFavorites * favoritesWeight) + (normalizedReblogs * reblogsWeight) + (normalizedReplies * repliesWeight)
-
-	return math.Min(socialScore, 1.0)
+	return (providers.NormSocialScore(favorites, maxFavorites) * favoritesWeight) +
+		(providers.NormSocialScore(reblogs, maxReblogs) * reblogsWeight) +
+		(providers.NormSocialScore(replies, maxReplies) * repliesWeight)
 }
 
 func extractTextFromHTML(htmlStr string) string {
