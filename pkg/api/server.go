@@ -521,6 +521,7 @@ func serializeSourceType(in string) (SourceType, error) {
 		return GithubIssues, nil
 	case github.TypeGithubTopic:
 		return GithubTopics, nil
+		// Note: temporarily removed in commit a8c728a86cefadd20f67a424363dc6f61c41cf66
 		// case changedetection.TypeChangedetectionWebsite:
 		// return ChangedetectionWebsite, nil
 	}
