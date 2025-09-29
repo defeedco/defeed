@@ -305,6 +305,9 @@ func (r *Registry) searchByQuery(
 		return nil, fmt.Errorf("search by topic query groups: %w", err)
 	}
 
+	// Note: topic summaries are disabled for now,
+	// since they seem to add unecessary noise in the UI
+	// and noticably increase the latency of the request.
 	var topicToSummary map[string]string
 	if r.config.SummarizeTopics {
 		topicToSummary, err = r.summarizeTopics(ctx, period, topicQueryGroups, acts, activityToTopic)
