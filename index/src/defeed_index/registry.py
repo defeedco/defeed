@@ -67,7 +67,7 @@ class Registry:
         """
 
         self.activities = self.repository.list(
-            from_date=datetime.now() - timedelta(days=1),
+            from_date=datetime.now() - timedelta(days=10),
         )
 
         if not self.activities:
