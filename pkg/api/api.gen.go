@@ -79,23 +79,29 @@ type ActivitiesListResponse struct {
 
 // Activity defines model for Activity.
 type Activity struct {
-	Body      string    `json:"body"`
-	CreatedAt time.Time `json:"createdAt"`
+	// AmplificationCount Number of shares/reposts/forks/etc. -1 if not available.
+	AmplificationCount int    `json:"amplificationCount"`
+	Body               string `json:"body"`
+
+	// CommentsCount Number of comments/discussions. -1 if not available.
+	CommentsCount int       `json:"commentsCount"`
+	CreatedAt     time.Time `json:"createdAt"`
 
 	// FullSummary One-paragraph markdown summary.
 	FullSummary string `json:"fullSummary"`
 	ImageUrl    string `json:"imageUrl"`
 
 	// ShortSummary One-line short plain text summary.
-	ShortSummary string `json:"shortSummary"`
+	ShortSummary string     `json:"shortSummary"`
+	Similarity   *float32   `json:"similarity,omitempty"`
+	SourceType   SourceType `json:"sourceType"`
+	SourceUid    string     `json:"sourceUid"`
+	Title        string     `json:"title"`
+	Uid          string     `json:"uid"`
 
-	// Similarity Similarity score (0-1) when using semantic search
-	Similarity *float32   `json:"similarity,omitempty"`
-	SourceType SourceType `json:"sourceType"`
-	SourceUid  string     `json:"sourceUid"`
-	Title      string     `json:"title"`
-	Uid        string     `json:"uid"`
-	Url        string     `json:"url"`
+	// UpvotesCount Number of upvotes/likes. -1 if not available.
+	UpvotesCount int    `json:"upvotesCount"`
+	Url          string `json:"url"`
 }
 
 // ActivityPeriod Time period to filter activities from. 'month' means last month, 'week' means last week, 'day' means last day.

@@ -121,11 +121,29 @@ export interface Activity {
      */
     'createdAt': string;
     /**
-     * Similarity score (0-1) when using semantic search
+     * 
      * @type {number}
      * @memberof Activity
      */
     'similarity'?: number;
+    /**
+     * Number of upvotes/likes. -1 if not available.
+     * @type {number}
+     * @memberof Activity
+     */
+    'upvotesCount': number;
+    /**
+     * Number of comments/discussions. -1 if not available.
+     * @type {number}
+     * @memberof Activity
+     */
+    'commentsCount': number;
+    /**
+     * Number of shares/reposts/forks/etc. -1 if not available.
+     * @type {number}
+     * @memberof Activity
+     */
+    'amplificationCount': number;
 }
 
 

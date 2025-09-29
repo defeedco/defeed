@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"math"
 	"strings"
 	"time"
 
@@ -162,6 +163,40 @@ func (p *Post) ImageURL() string {
 
 func (p *Post) CreatedAt() time.Time {
 	return p.Post.Created.Time
+}
+
+func (p *Post) UpvotesCount() int {
+	return p.Post.Score
+}
+
+func (p *Post) DownvotesCount() int {
+	return -1
+}
+
+func (p *Post) CommentsCount() int {
+	return p.Post.NumberOfComments
+}
+
+func (p *Post) AmplificationCount() int {
+	return -1
+}
+
+func (p *Post) SocialScore() float64 {
+	score := float64(p.UpvotesCount())
+	comments := float64(p.CommentsCount())
+
+	scoreWeight := 0.6
+	commentsWeight := 0.4
+
+	maxScore := 10000.0
+	maxComments := 1000.0
+
+	normalizedScore := math.Min(score/maxScore, 1.0)
+	normalizedComments := math.Min(comments/maxComments, 1.0)
+
+	socialScore := (normalizedScore * scoreWeight) + (normalizedComments * commentsWeight)
+
+	return math.Min(socialScore, 1.0)
 }
 
 func (s *SourceSubreddit) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {

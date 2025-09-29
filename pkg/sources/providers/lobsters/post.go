@@ -3,6 +3,7 @@ package lobsters
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/defeedco/defeed/pkg/sources/activities/types"
@@ -78,4 +79,38 @@ func (p *Post) ImageURL() string {
 
 func (p *Post) CreatedAt() time.Time {
 	return p.Post.CreatedAt
+}
+
+func (p *Post) UpvotesCount() int {
+	return p.Post.Score
+}
+
+func (p *Post) DownvotesCount() int {
+	return -1
+}
+
+func (p *Post) CommentsCount() int {
+	return p.Post.CommentCount
+}
+
+func (p *Post) AmplificationCount() int {
+	return -1
+}
+
+func (p *Post) SocialScore() float64 {
+	score := float64(p.UpvotesCount())
+	comments := float64(p.CommentsCount())
+
+	scoreWeight := 0.6
+	commentsWeight := 0.4
+
+	maxScore := 500.0
+	maxComments := 100.0
+
+	normalizedScore := math.Min(score/maxScore, 1.0)
+	normalizedComments := math.Min(comments/maxComments, 1.0)
+
+	socialScore := (normalizedScore * scoreWeight) + (normalizedComments * commentsWeight)
+
+	return math.Min(socialScore, 1.0)
 }

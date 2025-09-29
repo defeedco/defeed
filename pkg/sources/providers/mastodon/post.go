@@ -3,6 +3,7 @@ package mastodon
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -102,6 +103,44 @@ func (p *Post) ImageURL() string {
 
 func (p *Post) CreatedAt() time.Time {
 	return p.Status.CreatedAt
+}
+
+func (p *Post) UpvotesCount() int {
+	return int(p.Status.FavouritesCount)
+}
+
+func (p *Post) DownvotesCount() int {
+	return -1
+}
+
+func (p *Post) CommentsCount() int {
+	return int(p.Status.RepliesCount)
+}
+
+func (p *Post) AmplificationCount() int {
+	return int(p.Status.ReblogsCount)
+}
+
+func (p *Post) SocialScore() float64 {
+	favorites := float64(p.UpvotesCount())
+	reblogs := float64(p.AmplificationCount())
+	replies := float64(p.CommentsCount())
+
+	favoritesWeight := 0.4
+	reblogsWeight := 0.4
+	repliesWeight := 0.2
+
+	maxFavorites := 500.0
+	maxReblogs := 100.0
+	maxReplies := 50.0
+
+	normalizedFavorites := math.Min(favorites/maxFavorites, 1.0)
+	normalizedReblogs := math.Min(reblogs/maxReblogs, 1.0)
+	normalizedReplies := math.Min(replies/maxReplies, 1.0)
+
+	socialScore := (normalizedFavorites * favoritesWeight) + (normalizedReblogs * reblogsWeight) + (normalizedReplies * repliesWeight)
+
+	return math.Min(socialScore, 1.0)
 }
 
 func extractTextFromHTML(htmlStr string) string {

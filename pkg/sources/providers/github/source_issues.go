@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/defeedco/defeed/pkg/lib"
@@ -155,6 +156,40 @@ func (i *Issue) ImageURL() string {
 
 func (i *Issue) CreatedAt() time.Time {
 	return i.Issue.GetUpdatedAt().Time
+}
+
+func (i *Issue) UpvotesCount() int {
+	return i.Issue.GetReactions().GetTotalCount()
+}
+
+func (i *Issue) DownvotesCount() int {
+	return -1
+}
+
+func (i *Issue) CommentsCount() int {
+	return i.Issue.GetComments()
+}
+
+func (i *Issue) AmplificationCount() int {
+	return -1
+}
+
+func (i *Issue) SocialScore() float64 {
+	reactions := float64(i.UpvotesCount())
+	comments := float64(i.CommentsCount())
+
+	reactionsWeight := 0.4
+	commentsWeight := 0.6
+
+	maxReactions := 100.0
+	maxComments := 50.0
+
+	normalizedReactions := math.Min(reactions/maxReactions, 1.0)
+	normalizedComments := math.Min(comments/maxComments, 1.0)
+
+	socialScore := (normalizedReactions * reactionsWeight) + (normalizedComments * commentsWeight)
+
+	return math.Min(socialScore, 1.0)
 }
 
 func (s *SourceIssues) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {

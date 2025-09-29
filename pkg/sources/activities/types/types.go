@@ -17,6 +17,17 @@ type Activity interface {
 	URL() string
 	ImageURL() string
 	CreatedAt() time.Time
+	// UpvotesCount is the number of upvotes/likes. -1 if not available.
+	UpvotesCount() int
+	// DownvotesCount is the number of downvotes/dislikes. -1 if not available.
+	DownvotesCount() int
+	// CommentsCount is the number of comments/discussions. -1 if not available.
+	CommentsCount() int
+	// AmplificationCount is the number of shares/reposts/forks/etc. -1 if not available.
+	AmplificationCount() int
+	// SocialScore is a source-specific score to measure the activity's social engagement.
+	// Range is 0-1. -1 if not available.
+	SocialScore() float64
 }
 
 // TypedUID is a semi-structured ID format for easy resource type extraction.

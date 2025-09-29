@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -248,4 +249,42 @@ func (a *Repository) ImageURL() string {
 
 func (a *Repository) CreatedAt() time.Time {
 	return a.PopularityReachedDate
+}
+
+func (a *Repository) UpvotesCount() int {
+	return a.Repository.GetStargazersCount()
+}
+
+func (a *Repository) DownvotesCount() int {
+	return -1
+}
+
+func (a *Repository) CommentsCount() int {
+	return a.Repository.GetOpenIssuesCount()
+}
+
+func (a *Repository) AmplificationCount() int {
+	return a.Repository.GetForksCount()
+}
+
+func (a *Repository) SocialScore() float64 {
+	stars := float64(a.UpvotesCount())
+	forks := float64(a.AmplificationCount())
+	issues := float64(a.CommentsCount())
+
+	starsWeight := 0.5
+	forksWeight := 0.3
+	issuesWeight := 0.2
+
+	maxStars := 10000.0
+	maxForks := 2000.0
+	maxIssues := 500.0
+
+	normalizedStars := math.Min(stars/maxStars, 1.0)
+	normalizedForks := math.Min(forks/maxForks, 1.0)
+	normalizedIssues := math.Min(issues/maxIssues, 1.0)
+
+	socialScore := (normalizedStars * starsWeight) + (normalizedForks * forksWeight) + (normalizedIssues * issuesWeight)
+
+	return math.Min(socialScore, 1.0)
 }

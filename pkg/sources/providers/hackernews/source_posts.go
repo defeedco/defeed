@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/alexferrari88/gohn/pkg/gohn"
@@ -141,6 +142,41 @@ func (p *Post) URL() string {
 
 func (p *Post) ImageURL() string {
 	return ""
+}
+
+func (p *Post) UpvotesCount() int {
+	return *p.Post.Score
+}
+
+func (p *Post) DownvotesCount() int {
+	return -1
+}
+
+func (p *Post) CommentsCount() int {
+	return *p.Post.Descendants
+}
+
+func (p *Post) AmplificationCount() int {
+	return -1
+}
+
+func (p *Post) SocialScore() float64 {
+	upvotes := float64(p.UpvotesCount())
+	comments := float64(p.CommentsCount())
+
+	scoreWeight := 0.6
+	commentsWeight := 0.4
+
+	// Most popular post on HackerNews has 6k upvotes: https://hn.algolia.com/?dateRange=all&page=0&prefix=false&query=&sort=byPopularity&type=all.
+	// Assume its unlikely for a post to have more comments than likes.
+	maxUpvotes := 6000.0
+
+	normalizedScore := math.Min(upvotes/maxUpvotes, 1.0)
+	normalizedComments := math.Min(comments/maxUpvotes, 1.0)
+
+	socialScore := (normalizedScore * scoreWeight) + (normalizedComments * commentsWeight)
+
+	return math.Min(socialScore, 1.0)
 }
 
 func (p *Post) CreatedAt() time.Time {

@@ -448,17 +448,20 @@ func serializeActivity(in *activitytypes.DecoratedActivity) (*Activity, error) {
 	}
 
 	return &Activity{
-		Body:         in.Activity.Body(),
-		CreatedAt:    in.Activity.CreatedAt(),
-		ImageUrl:     in.Activity.ImageURL(),
-		FullSummary:  in.Summary.FullSummary,
-		ShortSummary: in.Summary.ShortSummary,
-		SourceUid:    in.Activity.SourceUID().String(),
-		SourceType:   sourceType,
-		Title:        in.Activity.Title(),
-		Uid:          in.Activity.UID().String(),
-		Url:          in.Activity.URL(),
-		Similarity:   &in.Similarity,
+		Body:               in.Activity.Body(),
+		CreatedAt:          in.Activity.CreatedAt(),
+		ImageUrl:           in.Activity.ImageURL(),
+		FullSummary:        in.Summary.FullSummary,
+		ShortSummary:       in.Summary.ShortSummary,
+		SourceUid:          in.Activity.SourceUID().String(),
+		SourceType:         sourceType,
+		Title:              in.Activity.Title(),
+		Uid:                in.Activity.UID().String(),
+		Url:                in.Activity.URL(),
+		Similarity:         &in.Similarity,
+		UpvotesCount:       in.Activity.UpvotesCount(),
+		CommentsCount:      in.Activity.CommentsCount(),
+		AmplificationCount: in.Activity.AmplificationCount(),
 	}, nil
 }
 
