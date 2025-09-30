@@ -428,14 +428,18 @@ func serializeTopics(in []*feeds.Topic) (*[]ActivityTopic, error) {
 	out := make([]ActivityTopic, 0, len(in))
 
 	for _, topic := range in {
-		serializedTopic := &ActivityTopic{
+		queries := topic.Queries
+		if queries == nil {
+			// Slice must be non-nil
+			queries = []string{}
+		}
+		out = append(out, ActivityTopic{
 			Title:       topic.Title,
 			Emoji:       topic.Emoji,
 			Summary:     topic.Summary,
-			Queries:     topic.Queries,
+			Queries:     queries,
 			ActivityIds: topic.ActivityIDs,
-		}
-		out = append(out, *serializedTopic)
+		})
 	}
 
 	return &out, nil
@@ -448,17 +452,20 @@ func serializeActivity(in *activitytypes.DecoratedActivity) (*Activity, error) {
 	}
 
 	return &Activity{
-		Body:         in.Activity.Body(),
-		CreatedAt:    in.Activity.CreatedAt(),
-		ImageUrl:     in.Activity.ImageURL(),
-		FullSummary:  in.Summary.FullSummary,
-		ShortSummary: in.Summary.ShortSummary,
-		SourceUid:    in.Activity.SourceUID().String(),
-		SourceType:   sourceType,
-		Title:        in.Activity.Title(),
-		Uid:          in.Activity.UID().String(),
-		Url:          in.Activity.URL(),
-		Similarity:   &in.Similarity,
+		Body:               in.Activity.Body(),
+		CreatedAt:          in.Activity.CreatedAt(),
+		ImageUrl:           in.Activity.ImageURL(),
+		FullSummary:        in.Summary.FullSummary,
+		ShortSummary:       in.Summary.ShortSummary,
+		SourceUid:          in.Activity.SourceUID().String(),
+		SourceType:         sourceType,
+		Title:              in.Activity.Title(),
+		Uid:                in.Activity.UID().String(),
+		Url:                in.Activity.URL(),
+		Similarity:         &in.Similarity,
+		UpvotesCount:       in.Activity.UpvotesCount(),
+		CommentsCount:      in.Activity.CommentsCount(),
+		AmplificationCount: in.Activity.AmplificationCount(),
 	}, nil
 }
 
@@ -590,16 +597,17 @@ func deserializeSourceUIDs(in []string) ([]activitytypes.TypedUID, error) {
 	return out, nil
 }
 
+// TODO(social-feed-ranking): should we change the sort to best/new or remove it entirely?
 func deserializeSortBy(in *ActivitySortBy) (activitytypes.SortBy, error) {
 	if in == nil {
-		return activitytypes.SortByDate, nil
+		return activitytypes.SortByWeightedScore, nil
 	}
 
 	switch *in {
 	case CreationDate:
-		return activitytypes.SortByDate, nil
+		return activitytypes.SortBySocialScore, nil
 	case Similarity:
-		return activitytypes.SortBySimilarity, nil
+		return activitytypes.SortByWeightedScore, nil
 	}
 
 	return "", fmt.Errorf("unknown sort by: %s", *in)

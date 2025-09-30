@@ -233,7 +233,7 @@ func (r *Registry) Activities(
 	userID string,
 	sortBy activitytypes.SortBy,
 	limit int,
-	queryOverride string,
+	query string,
 	period activitytypes.Period,
 ) (*ActivitiesResponse, error) {
 	feed, err := r.feedRepository.GetByID(ctx, feedID)
@@ -246,14 +246,8 @@ func (r *Registry) Activities(
 		return nil, errors.New("feed not found")
 	}
 
-	query := feed.Query
-	if queryOverride != "" {
-		if userID == "" {
-			return nil, ErrAuthUsersOnly
-		}
-		query = queryOverride
-	}
-
+	// Do not fallback to feed.Query,
+	// so that consumer can purposefully set an empty query.
 	if query != "" {
 		// Only if user provides the query, we can rewrite it to sub-queries and return results in topics.
 		return r.searchByQuery(ctx, feed.SourceUIDs, query, sortBy, period, limit)
@@ -269,10 +263,43 @@ func (r *Registry) Activities(
 		return nil, fmt.Errorf("search activities: %w", err)
 	}
 
+	// Fallback to grouping activities by the source type
+	topics, err := r.topicsBySourceType(result.Activities)
+	if err != nil {
+		return nil, fmt.Errorf("topics by source type: %w", err)
+	}
+
 	return &ActivitiesResponse{
 		Results: result.Activities,
-		Topics:  nil,
+		Topics:  topics,
 	}, nil
+}
+
+func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActivity) ([]*Topic, error) {
+	sourceTypeToActivities := make(map[string][]string)
+	for _, activity := range activities {
+		srcType := activity.Activity.SourceUID().Type()
+		sourceTypeToActivities[srcType] = append(sourceTypeToActivities[srcType], activity.Activity.UID().String())
+	}
+
+	topics := make([]*Topic, 0, len(sourceTypeToActivities))
+	for srcType, activityIDs := range sourceTypeToActivities {
+		label, err := sources.SourceTypeToLabel(srcType)
+		if err != nil {
+			return nil, fmt.Errorf("source type to label: %w", err)
+		}
+		emoji, err := sources.SourceTypeToEmoji(srcType)
+		if err != nil {
+			return nil, fmt.Errorf("source type to emoji: %w", err)
+		}
+		topics = append(topics, &Topic{
+			Title:       label,
+			Emoji:       emoji,
+			ActivityIDs: activityIDs,
+		})
+	}
+
+	return topics, nil
 }
 
 func (r *Registry) searchByQuery(

@@ -42,6 +42,8 @@ type Activity struct {
 	RawJSON string `json:"raw_json,omitempty"`
 	// Embedding holds the value of the "embedding" field.
 	Embedding *pgvector.Vector `json:"embedding,omitempty"`
+	// SocialScore holds the value of the "social_score" field.
+	SocialScore float64 `json:"social_score,omitempty"`
 	// UpdateCount holds the value of the "update_count" field.
 	UpdateCount  int `json:"update_count,omitempty"`
 	selectValues sql.SelectValues
@@ -54,6 +56,8 @@ func (*Activity) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case activity.FieldEmbedding:
 			values[i] = &sql.NullScanner{S: new(pgvector.Vector)}
+		case activity.FieldSocialScore:
+			values[i] = new(sql.NullFloat64)
 		case activity.FieldUpdateCount:
 			values[i] = new(sql.NullInt64)
 		case activity.FieldID, activity.FieldUID, activity.FieldSourceUID, activity.FieldSourceType, activity.FieldTitle, activity.FieldBody, activity.FieldURL, activity.FieldImageURL, activity.FieldShortSummary, activity.FieldFullSummary, activity.FieldRawJSON:
@@ -154,6 +158,12 @@ func (a *Activity) assignValues(columns []string, values []any) error {
 				a.Embedding = new(pgvector.Vector)
 				*a.Embedding = *value.S.(*pgvector.Vector)
 			}
+		case activity.FieldSocialScore:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field social_score", values[i])
+			} else if value.Valid {
+				a.SocialScore = value.Float64
+			}
 		case activity.FieldUpdateCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field update_count", values[i])
@@ -233,6 +243,9 @@ func (a *Activity) String() string {
 		builder.WriteString("embedding=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("social_score=")
+	builder.WriteString(fmt.Sprintf("%v", a.SocialScore))
 	builder.WriteString(", ")
 	builder.WriteString("update_count=")
 	builder.WriteString(fmt.Sprintf("%v", a.UpdateCount))

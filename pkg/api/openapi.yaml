@@ -447,6 +447,9 @@ components:
         - url
         - imageUrl
         - createdAt
+        - upvotesCount
+        - commentsCount
+        - amplificationCount
       properties:
         uid:
           type: string
@@ -476,4 +479,12 @@ components:
         similarity:
           type: number
           format: float
-          description: Similarity score (0-1) when using semantic search
+        upvotesCount:
+          type: integer
+          description: Number of upvotes/likes. -1 if not available.
+        commentsCount:
+          type: integer
+          description: Number of comments/discussions. -1 if not available.
+        amplificationCount:
+          type: integer
+          description: Number of shares/reposts/forks/etc. -1 if not available.

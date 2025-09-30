@@ -281,6 +281,26 @@ func (e *FeedItem) CreatedAt() time.Time {
 	return time.Now()
 }
 
+func (e *FeedItem) UpvotesCount() int {
+	return -1
+}
+
+func (e *FeedItem) DownvotesCount() int {
+	return -1
+}
+
+func (e *FeedItem) CommentsCount() int {
+	return -1
+}
+
+func (e *FeedItem) AmplificationCount() int {
+	return -1
+}
+
+func (e *FeedItem) SocialScore() float64 {
+	return -1
+}
+
 func (e *FeedItem) Categories() []string {
 	categories := make([]string, 0, len(e.Item.Categories))
 	for _, category := range e.Item.Categories {

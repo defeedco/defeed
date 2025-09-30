@@ -32,6 +32,8 @@ func (Activity) Fields() []ent.Field {
 			}).
 			Nillable().
 			Optional(),
+		field.Float("social_score").
+			Default(-1.0),
 		// Internal field for monitoring purposes
 		field.Int("update_count").
 			Default(0),

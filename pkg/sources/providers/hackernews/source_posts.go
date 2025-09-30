@@ -11,6 +11,7 @@ import (
 	"github.com/alitto/pond/v2"
 	"github.com/defeedco/defeed/pkg/lib"
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/rs/zerolog"
 )
@@ -141,6 +142,37 @@ func (p *Post) URL() string {
 
 func (p *Post) ImageURL() string {
 	return ""
+}
+
+func (p *Post) UpvotesCount() int {
+	return *p.Post.Score
+}
+
+func (p *Post) DownvotesCount() int {
+	return -1
+}
+
+func (p *Post) CommentsCount() int {
+	return *p.Post.Descendants
+}
+
+func (p *Post) AmplificationCount() int {
+	return -1
+}
+
+func (p *Post) SocialScore() float64 {
+	upvotes := float64(p.UpvotesCount())
+	comments := float64(p.CommentsCount())
+
+	scoreWeight := 0.6
+	commentsWeight := 0.4
+
+	// Most popular post on HackerNews has 6k upvotes: https://hn.algolia.com/?dateRange=all&page=0&prefix=false&query=&sort=byPopularity&type=all.
+	// Assume its unlikely for a post to have more comments than likes.
+	maxUpvotes := 6000.0
+
+	return (providers.NormSocialScore(upvotes, maxUpvotes) * scoreWeight) +
+		(providers.NormSocialScore(comments, maxUpvotes) * commentsWeight)
 }
 
 func (p *Post) CreatedAt() time.Time {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/defeedco/defeed/pkg/lib"
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/rs/zerolog"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
@@ -162,6 +163,36 @@ func (p *Post) ImageURL() string {
 
 func (p *Post) CreatedAt() time.Time {
 	return p.Post.Created.Time
+}
+
+func (p *Post) UpvotesCount() int {
+	return p.Post.Score
+}
+
+func (p *Post) DownvotesCount() int {
+	return -1
+}
+
+func (p *Post) CommentsCount() int {
+	return p.Post.NumberOfComments
+}
+
+func (p *Post) AmplificationCount() int {
+	return -1
+}
+
+func (p *Post) SocialScore() float64 {
+	score := float64(p.UpvotesCount())
+	comments := float64(p.CommentsCount())
+
+	scoreWeight := 0.6
+	commentsWeight := 0.4
+
+	maxScore := 10000.0
+	maxComments := 1000.0
+
+	return (providers.NormSocialScore(score, maxScore) * scoreWeight) +
+		(providers.NormSocialScore(comments, maxComments) * commentsWeight)
 }
 
 func (s *SourceSubreddit) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
