@@ -136,9 +136,21 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 
 		simWeight := req.SimilarityWeight
 		socialWeight := req.SocialScoreWeight
-		if simWeight == 0 && socialWeight == 0 {
+		recencyWeight := req.RecencyWeight
+
+		// Normalize weights if all are zero
+		if simWeight == 0 && socialWeight == 0 && recencyWeight == 0 {
 			simWeight = 1.0
 			socialWeight = 0.0
+			recencyWeight = 0.0
+		}
+
+		// Normalize weights to sum to 1
+		totalWeight := simWeight + socialWeight + recencyWeight
+		if totalWeight > 0 {
+			simWeight = simWeight / totalWeight
+			socialWeight = socialWeight / totalWeight
+			recencyWeight = recencyWeight / totalWeight
 		}
 
 		// Some activities (e.g. rss feed items) don't have a social score,
@@ -146,8 +158,18 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		// to ensure they're not completely excluded from results.
 		fallbackSocialScore := providers.NormSocialScore(20, 100)
 		normalizedSocialScore := fmt.Sprintf("CASE WHEN social_score < 0 THEN %f ELSE social_score END", fallbackSocialScore)
-		combinedExpr := fmt.Sprintf("((%s * %f) + (%s * %f))", simExpr, simWeight, normalizedSocialScore, socialWeight)
-		s.AppendSelect(sql.As(combinedExpr, "weighted_score"))
+
+		// Calculate time decay score (exponential decay over 30 days)
+		// Score = e^(-k * days_old), where k controls decay rate
+		// k = 0.1 means ~0.74 score after 3 days, ~0.37 after 10 days, ~0.05 after 30 days
+		decayRate := 0.1
+		recencyScoreExpr := fmt.Sprintf("EXP(-%f * EXTRACT(EPOCH FROM (NOW() - created_at)) / 86400)", decayRate)
+
+		weightedExpr := fmt.Sprintf("((%s * %f) + (%s * %f) + (%s * %f))",
+			simExpr, simWeight,
+			normalizedSocialScore, socialWeight,
+			recencyScoreExpr, recencyWeight)
+		s.AppendSelect(sql.As(weightedExpr, "weighted_score"))
 	})
 
 	switch req.SortBy {

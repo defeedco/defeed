@@ -12,6 +12,7 @@ type SearchRequest struct {
 	QueryEmbedding    []float32
 	SimilarityWeight  float64
 	SocialScoreWeight float64
+	RecencyWeight     float64
 }
 
 // SearchResult represents paginated search results
