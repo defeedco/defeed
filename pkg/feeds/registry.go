@@ -233,7 +233,7 @@ func (r *Registry) Activities(
 	userID string,
 	sortBy activitytypes.SortBy,
 	limit int,
-	queryOverride string,
+	query string,
 	period activitytypes.Period,
 ) (*ActivitiesResponse, error) {
 	feed, err := r.feedRepository.GetByID(ctx, feedID)
@@ -246,14 +246,8 @@ func (r *Registry) Activities(
 		return nil, errors.New("feed not found")
 	}
 
-	query := feed.Query
-	if queryOverride != "" {
-		if userID == "" {
-			return nil, ErrAuthUsersOnly
-		}
-		query = queryOverride
-	}
-
+	// Do not fallback to feed.Query,
+	// so that consumer can purposefully set an empty query.
 	if query != "" {
 		// Only if user provides the query, we can rewrite it to sub-queries and return results in topics.
 		return r.searchByQuery(ctx, feed.SourceUIDs, query, sortBy, period, limit)
