@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/defeedco/defeed/pkg/lib"
-
 	"entgo.io/ent/dialect/sql"
+	"github.com/defeedco/defeed/pkg/lib"
 	"github.com/defeedco/defeed/pkg/sources/activities"
 	"github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 	"github.com/pgvector/pgvector-go"
 
 	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
@@ -141,7 +141,11 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 			socialWeight = 0.0
 		}
 
-		normalizedSocialScore := "CASE WHEN social_score < 0 THEN 0 ELSE social_score END"
+		// Some activities (e.g. rss feed items) don't have a social score,
+		// so we fallback to a low popularity score for now,
+		// to ensure they're not completely excluded from results.
+		fallbackSocialScore := providers.NormSocialScore(20, 100)
+		normalizedSocialScore := fmt.Sprintf("CASE WHEN social_score < 0 THEN %f ELSE social_score END", fallbackSocialScore)
 		combinedExpr := fmt.Sprintf("((%s * %f) + (%s * %f))", simExpr, simWeight, normalizedSocialScore, socialWeight)
 		s.AppendSelect(sql.As(combinedExpr, "weighted_score"))
 	})
