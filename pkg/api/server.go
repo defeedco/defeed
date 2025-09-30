@@ -428,14 +428,18 @@ func serializeTopics(in []*feeds.Topic) (*[]ActivityTopic, error) {
 	out := make([]ActivityTopic, 0, len(in))
 
 	for _, topic := range in {
-		serializedTopic := &ActivityTopic{
+		queries := topic.Queries
+		if queries == nil {
+			// Slice must be non-nil
+			queries = []string{}
+		}
+		out = append(out, ActivityTopic{
 			Title:       topic.Title,
 			Emoji:       topic.Emoji,
 			Summary:     topic.Summary,
-			Queries:     topic.Queries,
+			Queries:     queries,
 			ActivityIds: topic.ActivityIDs,
-		}
-		out = append(out, *serializedTopic)
+		})
 	}
 
 	return &out, nil
