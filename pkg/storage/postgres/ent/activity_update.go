@@ -203,6 +203,27 @@ func (au *ActivityUpdate) ClearEmbedding() *ActivityUpdate {
 	return au
 }
 
+// SetSocialScore sets the "social_score" field.
+func (au *ActivityUpdate) SetSocialScore(f float64) *ActivityUpdate {
+	au.mutation.ResetSocialScore()
+	au.mutation.SetSocialScore(f)
+	return au
+}
+
+// SetNillableSocialScore sets the "social_score" field if the given value is not nil.
+func (au *ActivityUpdate) SetNillableSocialScore(f *float64) *ActivityUpdate {
+	if f != nil {
+		au.SetSocialScore(*f)
+	}
+	return au
+}
+
+// AddSocialScore adds f to the "social_score" field.
+func (au *ActivityUpdate) AddSocialScore(f float64) *ActivityUpdate {
+	au.mutation.AddSocialScore(f)
+	return au
+}
+
 // SetUpdateCount sets the "update_count" field.
 func (au *ActivityUpdate) SetUpdateCount(i int) *ActivityUpdate {
 	au.mutation.ResetUpdateCount()
@@ -303,6 +324,12 @@ func (au *ActivityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if au.mutation.EmbeddingCleared() {
 		_spec.ClearField(activity.FieldEmbedding, field.TypeOther)
+	}
+	if value, ok := au.mutation.SocialScore(); ok {
+		_spec.SetField(activity.FieldSocialScore, field.TypeFloat64, value)
+	}
+	if value, ok := au.mutation.AddedSocialScore(); ok {
+		_spec.AddField(activity.FieldSocialScore, field.TypeFloat64, value)
 	}
 	if value, ok := au.mutation.UpdateCount(); ok {
 		_spec.SetField(activity.FieldUpdateCount, field.TypeInt, value)
@@ -504,6 +531,27 @@ func (auo *ActivityUpdateOne) ClearEmbedding() *ActivityUpdateOne {
 	return auo
 }
 
+// SetSocialScore sets the "social_score" field.
+func (auo *ActivityUpdateOne) SetSocialScore(f float64) *ActivityUpdateOne {
+	auo.mutation.ResetSocialScore()
+	auo.mutation.SetSocialScore(f)
+	return auo
+}
+
+// SetNillableSocialScore sets the "social_score" field if the given value is not nil.
+func (auo *ActivityUpdateOne) SetNillableSocialScore(f *float64) *ActivityUpdateOne {
+	if f != nil {
+		auo.SetSocialScore(*f)
+	}
+	return auo
+}
+
+// AddSocialScore adds f to the "social_score" field.
+func (auo *ActivityUpdateOne) AddSocialScore(f float64) *ActivityUpdateOne {
+	auo.mutation.AddSocialScore(f)
+	return auo
+}
+
 // SetUpdateCount sets the "update_count" field.
 func (auo *ActivityUpdateOne) SetUpdateCount(i int) *ActivityUpdateOne {
 	auo.mutation.ResetUpdateCount()
@@ -634,6 +682,12 @@ func (auo *ActivityUpdateOne) sqlSave(ctx context.Context) (_node *Activity, err
 	}
 	if auo.mutation.EmbeddingCleared() {
 		_spec.ClearField(activity.FieldEmbedding, field.TypeOther)
+	}
+	if value, ok := auo.mutation.SocialScore(); ok {
+		_spec.SetField(activity.FieldSocialScore, field.TypeFloat64, value)
+	}
+	if value, ok := auo.mutation.AddedSocialScore(); ok {
+		_spec.AddField(activity.FieldSocialScore, field.TypeFloat64, value)
 	}
 	if value, ok := auo.mutation.UpdateCount(); ok {
 		_spec.SetField(activity.FieldUpdateCount, field.TypeInt, value)

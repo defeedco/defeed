@@ -55,6 +55,7 @@ func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.Decorat
 		SetShortSummary(activity.Summary.ShortSummary).
 		SetFullSummary(activity.Summary.FullSummary).
 		SetEmbedding(pgvector.NewVector(activity.Embedding)).
+		SetSocialScore(activity.Activity.SocialScore()).
 		SetUpdateCount(existingUpdateCount + 1).
 		// https://github.com/ent/ent/issues/2494#issuecomment-1182015427
 		OnConflictColumns(entactivity.FieldID).
@@ -66,7 +67,8 @@ func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.Decorat
 
 type activityWithSimilarity struct {
 	ent.Activity
-	Similarity float64 `sql:"similarity"`
+	Similarity    float64 `sql:"similarity"`
+	WeightedScore float64 `sql:"weighted_score"`
 }
 
 func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest) (*types.SearchResult, error) {
@@ -131,6 +133,17 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 			simExpr = "CAST(0 AS float8)"
 		}
 		s.AppendSelect(sql.As(simExpr, "similarity"))
+
+		simWeight := req.SimilarityWeight
+		socialWeight := req.SocialScoreWeight
+		if simWeight == 0 && socialWeight == 0 {
+			simWeight = 1.0
+			socialWeight = 0.0
+		}
+
+		normalizedSocialScore := "CASE WHEN social_score < 0 THEN 0 ELSE social_score END"
+		combinedExpr := fmt.Sprintf("((%s * %f) + (%s * %f))", simExpr, simWeight, normalizedSocialScore, socialWeight)
+		s.AppendSelect(sql.As(combinedExpr, "weighted_score"))
 	})
 
 	switch req.SortBy {
@@ -144,6 +157,14 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		}
 	case types.SortByDate:
 		query = query.Order(ent.Desc(entactivity.FieldCreatedAt))
+	case types.SortBySocialScore:
+		query = query.Order(func(s *sql.Selector) {
+			s.OrderExpr(sql.Expr("social_score DESC"))
+		})
+	case types.SortByWeightedScore:
+		query = query.Order(func(s *sql.Selector) {
+			s.OrderExpr(sql.Expr("weighted_score DESC"))
+		})
 	}
 
 	if req.Cursor != "" {
@@ -193,6 +214,7 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		entactivity.FieldFullSummary,
 		entactivity.FieldRawJSON,
 		entactivity.FieldEmbedding,
+		entactivity.FieldSocialScore,
 	}
 
 	var rows []activityWithSimilarity

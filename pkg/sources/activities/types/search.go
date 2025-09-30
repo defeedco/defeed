@@ -2,14 +2,16 @@ package types
 
 // SearchRequest represents a search query for activities
 type SearchRequest struct {
-	SourceUIDs     []TypedUID
-	ActivityUIDs   []TypedUID
-	MinSimilarity  float32
-	Limit          int
-	Cursor         string
-	SortBy         SortBy
-	Period         Period
-	QueryEmbedding []float32
+	SourceUIDs        []TypedUID
+	ActivityUIDs      []TypedUID
+	MinSimilarity     float32
+	Limit             int
+	Cursor            string
+	SortBy            SortBy
+	Period            Period
+	QueryEmbedding    []float32
+	SimilarityWeight  float64
+	SocialScoreWeight float64
 }
 
 // SearchResult represents paginated search results
@@ -25,8 +27,10 @@ type SearchResult struct {
 type SortBy string
 
 const (
-	SortBySimilarity SortBy = "similarity"
-	SortByDate       SortBy = "date"
+	SortBySimilarity    SortBy = "similarity"
+	SortByDate          SortBy = "date"
+	SortBySocialScore   SortBy = "social_score"
+	SortByWeightedScore SortBy = "weighted_score"
 )
 
 // Period defines time periods for filtering activities

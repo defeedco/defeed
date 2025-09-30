@@ -593,16 +593,17 @@ func deserializeSourceUIDs(in []string) ([]activitytypes.TypedUID, error) {
 	return out, nil
 }
 
+// TODO(social-feed-ranking): should we change the sort to best/new or remove it entirely?
 func deserializeSortBy(in *ActivitySortBy) (activitytypes.SortBy, error) {
 	if in == nil {
-		return activitytypes.SortByDate, nil
+		return activitytypes.SortByWeightedScore, nil
 	}
 
 	switch *in {
 	case CreationDate:
-		return activitytypes.SortByDate, nil
+		return activitytypes.SortBySocialScore, nil
 	case Similarity:
-		return activitytypes.SortBySimilarity, nil
+		return activitytypes.SortByWeightedScore, nil
 	}
 
 	return "", fmt.Errorf("unknown sort by: %s", *in)

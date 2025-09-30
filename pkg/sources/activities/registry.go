@@ -46,12 +46,25 @@ type activityStore interface {
 	Search(ctx context.Context, req types.SearchRequest) (*types.SearchResult, error)
 }
 
+type CreateRequest struct {
+	Activity types.Activity
+	// Reprocess recomputes the summary and embeddings.
+	// If Reprocess is true, Upsert must also be true.
+	Reprocess bool
+	// Upsert updates the existing record.
+	Upsert bool
+}
+
 // Create processes a single activity and stores it in the database.
 // Returns false if activity was skipped.
-func (r *Registry) Create(ctx context.Context, activity types.Activity, upsert bool) (bool, error) {
+func (r *Registry) Create(ctx context.Context, req CreateRequest) (bool, error) {
+	// Reprocess requires Upsert.
+	if req.Reprocess && !req.Upsert {
+		return false, fmt.Errorf("reprocess without upsert is not allowed")
+	}
 
 	// Race conditions can occur if multiple goroutines process the same activity concurrently.
-	lockKey := activity.UID().String()
+	lockKey := req.Activity.UID().String()
 	lock, _ := r.activityLocks.LoadOrStore(lockKey, &sync.Mutex{})
 	mu := lock.(*sync.Mutex)
 
@@ -61,56 +74,65 @@ func (r *Registry) Create(ctx context.Context, activity types.Activity, upsert b
 		r.activityLocks.Delete(lockKey)
 	}()
 
-	// Check if activity already exists and has been processed
-	if !upsert {
-		result, err := r.activityRepo.Search(ctx, types.SearchRequest{
-			ActivityUIDs: []types.TypedUID{activity.UID()},
-			Limit:        1,
-		})
+	existing, err := r.findOne(ctx, req.Activity.UID())
+	if err != nil {
+		return false, fmt.Errorf("load existing activity: %w", err)
+	}
+
+	if existing != nil && !req.Upsert {
+		return false, nil
+	}
+
+	var summary *types.ActivitySummary
+	var embedding []float32
+
+	if existing != nil {
+		summary = existing.Summary
+		embedding = existing.Embedding
+	}
+
+	if req.Reprocess || existing == nil || existing.Summary.FullSummary == "" || existing.Summary.ShortSummary == "" {
+		summary, err = r.summarizer.SummarizeActivity(ctx, req.Activity)
 		if err != nil {
-			return false, fmt.Errorf("check if activity exists: %w", err)
-		}
-
-		// Skip processing if activity already exists and has been processed
-		if len(result.Activities) > 0 {
-			existing := result.Activities[0]
-			if existing.Summary != nil && existing.Summary.FullSummary != "" && len(existing.Embedding) > 0 {
-				return false, nil
-			}
+			return false, fmt.Errorf("summarize activity: %w", err)
 		}
 	}
 
-	// Summarize activity
-	summary, err := r.summarizer.SummarizeActivity(ctx, activity)
-	if err != nil {
-		return false, fmt.Errorf("summarize activity: %w", err)
-	}
-
-	// Compute embedding for the summary
-	embedding, err := r.embedder.EmbedActivity(ctx, summary)
-	if err != nil {
-		r.logger.Error().
-			Err(err).
-			Any("activity", activity).
-			Any("summary", summary).
-			Msg("compute embedding")
-		return false, fmt.Errorf("compute embedding: %w", err)
+	if req.Reprocess || existing == nil || len(existing.Embedding) == 0 {
+		embedding, err = r.embedder.EmbedActivity(ctx, summary)
+		if err != nil {
+			return false, fmt.Errorf("compute embedding: %w", err)
+		}
 	}
 
 	err = r.activityRepo.Upsert(ctx, &types.DecoratedActivity{
-		Activity:  activity,
+		Activity:  req.Activity,
 		Summary:   summary,
 		Embedding: embedding,
 	})
 	if err != nil {
 		r.logger.Error().
 			Err(err).
-			Any("activity", activity).
+			Any("activity", req.Activity).
 			Msg("store activity")
 		return false, fmt.Errorf("store activity: %w", err)
 	}
 
 	return true, nil
+}
+
+func (r *Registry) findOne(ctx context.Context, uid types.TypedUID) (*types.DecoratedActivity, error) {
+	res, err := r.activityRepo.Search(ctx, types.SearchRequest{
+		ActivityUIDs: []types.TypedUID{uid},
+		Limit:        1,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("find one: %w", err)
+	}
+	if len(res.Activities) == 0 {
+		return nil, nil
+	}
+	return res.Activities[0], nil
 }
 
 type SearchRequest struct {
@@ -135,13 +157,15 @@ func (r *Registry) Search(ctx context.Context, req SearchRequest) (*types.Search
 	}
 
 	return r.activityRepo.Search(ctx, types.SearchRequest{
-		SourceUIDs:     req.SourceUIDs,
-		ActivityUIDs:   req.ActivityUIDs,
-		MinSimilarity:  req.MinSimilarity,
-		Limit:          req.Limit,
-		Cursor:         req.Cursor,
-		SortBy:         req.SortBy,
-		Period:         req.Period,
-		QueryEmbedding: queryEmbedding,
+		SourceUIDs:        req.SourceUIDs,
+		ActivityUIDs:      req.ActivityUIDs,
+		MinSimilarity:     req.MinSimilarity,
+		Limit:             req.Limit,
+		Cursor:            req.Cursor,
+		SortBy:            req.SortBy,
+		Period:            req.Period,
+		QueryEmbedding:    queryEmbedding,
+		SocialScoreWeight: 0.5,
+		SimilarityWeight:  0.5,
 	})
 }

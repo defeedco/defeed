@@ -4,11 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/alitto/pond/v2"
-	"github.com/defeedco/defeed/pkg/sources/activities"
 	"os"
 	"strings"
 	"sync/atomic"
+
+	"github.com/alitto/pond/v2"
+	"github.com/defeedco/defeed/pkg/sources/activities"
 
 	appconfig "github.com/defeedco/defeed/pkg/config"
 	"github.com/defeedco/defeed/pkg/lib"
@@ -28,6 +29,7 @@ type Config struct {
 	MaxActivities  int
 	MaxConcurrency int
 	ForceReprocess bool
+	ForceUpsert    bool
 	Period         types.Period `json:"period" validate:"required,oneof=all month week day"`
 	EnvFilePath    string       `validate:"required"`
 }
@@ -41,7 +43,8 @@ func main() {
 	flag.IntVar(&config.BatchSize, "batch-size", 50, "Number of activities to process in each batch")
 	flag.IntVar(&config.MaxActivities, "max-activities", 0, "Maximum number of activities to reprocess (0 = no limit)")
 	flag.IntVar(&config.MaxConcurrency, "max-concurrency", 100, "Maximum number of activities to reprocess (0 = no limit)")
-	flag.BoolVar(&config.ForceReprocess, "force", false, "Force reprocess even if activity already has summary/embedding")
+	flag.BoolVar(&config.ForceReprocess, "force-reprocess", false, "Force reprocess even if activity already has summary/embedding")
+	flag.BoolVar(&config.ForceUpsert, "force-upsert", false, "Force upsert even if activity already exists")
 	flag.StringVar((*string)(&config.Period), "period", "all", "Time period to filter activities (all, month, week, day)")
 	flag.StringVar(&config.EnvFilePath, "env-file", ".env", "Path to .env file")
 	flag.Parse()
@@ -120,7 +123,8 @@ func run(ctx context.Context, config Config) error {
 		Int("batch_size", config.BatchSize).
 		Int("max_activities", config.MaxActivities).
 		Int("max_concurrency", config.MaxConcurrency).
-		Bool("force", config.ForceReprocess).
+		Bool("force-reprocess", config.ForceReprocess).
+		Bool("force-upsert", config.ForceUpsert).
 		Str("period", string(config.Period)).
 		Msg("Starting reprocessing")
 
@@ -144,10 +148,6 @@ func run(ctx context.Context, config Config) error {
 			Bool("has_more", result.HasMore).
 			Msg("Processing batch")
 
-		if !result.HasMore {
-			break
-		}
-
 		if config.MaxActivities > 0 && fetchCount > config.MaxActivities {
 			break
 		}
@@ -158,7 +158,11 @@ func run(ctx context.Context, config Config) error {
 
 		for _, act := range result.Activities {
 			pool.Submit(func() {
-				isAdded, err := activityRegistry.Create(ctx, act.Activity, config.ForceReprocess)
+				isUpserted, err := activityRegistry.Create(ctx, activities.CreateRequest{
+					Activity:  act.Activity,
+					Reprocess: config.ForceReprocess,
+					Upsert:    config.ForceUpsert,
+				})
 				if err != nil {
 					logger.Error().
 						Err(err).
@@ -166,14 +170,18 @@ func run(ctx context.Context, config Config) error {
 						Msg("Error reprocessing activity")
 					errored.Add(1)
 				}
-				if !isAdded {
+				if !isUpserted {
 					skipped.Add(1)
 				}
 				logger.Info().
 					Str("activity_id", act.Activity.UID().String()).
-					Bool("is_added", isAdded).
+					Bool("is_added", isUpserted).
 					Msg("Processed activity")
 			})
+		}
+
+		if !result.HasMore {
+			break
 		}
 	}
 

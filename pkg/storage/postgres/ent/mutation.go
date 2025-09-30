@@ -50,6 +50,8 @@ type ActivityMutation struct {
 	full_summary    *string
 	raw_json        *string
 	embedding       *pgvector.Vector
+	social_score    *float64
+	addsocial_score *float64
 	update_count    *int
 	addupdate_count *int
 	clearedFields   map[string]struct{}
@@ -607,6 +609,62 @@ func (m *ActivityMutation) ResetEmbedding() {
 	delete(m.clearedFields, activity.FieldEmbedding)
 }
 
+// SetSocialScore sets the "social_score" field.
+func (m *ActivityMutation) SetSocialScore(f float64) {
+	m.social_score = &f
+	m.addsocial_score = nil
+}
+
+// SocialScore returns the value of the "social_score" field in the mutation.
+func (m *ActivityMutation) SocialScore() (r float64, exists bool) {
+	v := m.social_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSocialScore returns the old "social_score" field's value of the Activity entity.
+// If the Activity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ActivityMutation) OldSocialScore(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSocialScore is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSocialScore requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSocialScore: %w", err)
+	}
+	return oldValue.SocialScore, nil
+}
+
+// AddSocialScore adds f to the "social_score" field.
+func (m *ActivityMutation) AddSocialScore(f float64) {
+	if m.addsocial_score != nil {
+		*m.addsocial_score += f
+	} else {
+		m.addsocial_score = &f
+	}
+}
+
+// AddedSocialScore returns the value that was added to the "social_score" field in this mutation.
+func (m *ActivityMutation) AddedSocialScore() (r float64, exists bool) {
+	v := m.addsocial_score
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSocialScore resets all changes to the "social_score" field.
+func (m *ActivityMutation) ResetSocialScore() {
+	m.social_score = nil
+	m.addsocial_score = nil
+}
+
 // SetUpdateCount sets the "update_count" field.
 func (m *ActivityMutation) SetUpdateCount(i int) {
 	m.update_count = &i
@@ -697,7 +755,7 @@ func (m *ActivityMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ActivityMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.uid != nil {
 		fields = append(fields, activity.FieldUID)
 	}
@@ -734,6 +792,9 @@ func (m *ActivityMutation) Fields() []string {
 	if m.embedding != nil {
 		fields = append(fields, activity.FieldEmbedding)
 	}
+	if m.social_score != nil {
+		fields = append(fields, activity.FieldSocialScore)
+	}
 	if m.update_count != nil {
 		fields = append(fields, activity.FieldUpdateCount)
 	}
@@ -769,6 +830,8 @@ func (m *ActivityMutation) Field(name string) (ent.Value, bool) {
 		return m.RawJSON()
 	case activity.FieldEmbedding:
 		return m.Embedding()
+	case activity.FieldSocialScore:
+		return m.SocialScore()
 	case activity.FieldUpdateCount:
 		return m.UpdateCount()
 	}
@@ -804,6 +867,8 @@ func (m *ActivityMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldRawJSON(ctx)
 	case activity.FieldEmbedding:
 		return m.OldEmbedding(ctx)
+	case activity.FieldSocialScore:
+		return m.OldSocialScore(ctx)
 	case activity.FieldUpdateCount:
 		return m.OldUpdateCount(ctx)
 	}
@@ -899,6 +964,13 @@ func (m *ActivityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetEmbedding(v)
 		return nil
+	case activity.FieldSocialScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSocialScore(v)
+		return nil
 	case activity.FieldUpdateCount:
 		v, ok := value.(int)
 		if !ok {
@@ -914,6 +986,9 @@ func (m *ActivityMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *ActivityMutation) AddedFields() []string {
 	var fields []string
+	if m.addsocial_score != nil {
+		fields = append(fields, activity.FieldSocialScore)
+	}
 	if m.addupdate_count != nil {
 		fields = append(fields, activity.FieldUpdateCount)
 	}
@@ -925,6 +1000,8 @@ func (m *ActivityMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ActivityMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case activity.FieldSocialScore:
+		return m.AddedSocialScore()
 	case activity.FieldUpdateCount:
 		return m.AddedUpdateCount()
 	}
@@ -936,6 +1013,13 @@ func (m *ActivityMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ActivityMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case activity.FieldSocialScore:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSocialScore(v)
+		return nil
 	case activity.FieldUpdateCount:
 		v, ok := value.(int)
 		if !ok {
@@ -1014,6 +1098,9 @@ func (m *ActivityMutation) ResetField(name string) error {
 		return nil
 	case activity.FieldEmbedding:
 		m.ResetEmbedding()
+		return nil
+	case activity.FieldSocialScore:
+		m.ResetSocialScore()
 		return nil
 	case activity.FieldUpdateCount:
 		m.ResetUpdateCount()
