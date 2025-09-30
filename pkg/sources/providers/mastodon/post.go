@@ -8,9 +8,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/defeedco/defeed/pkg/sources/activities/types"
-
 	"github.com/defeedco/defeed/pkg/lib"
+	"github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 	"github.com/mattn/go-mastodon"
 	"golang.org/x/net/html"
 )
@@ -102,6 +102,40 @@ func (p *Post) ImageURL() string {
 
 func (p *Post) CreatedAt() time.Time {
 	return p.Status.CreatedAt
+}
+
+func (p *Post) UpvotesCount() int {
+	return int(p.Status.FavouritesCount)
+}
+
+func (p *Post) DownvotesCount() int {
+	return -1
+}
+
+func (p *Post) CommentsCount() int {
+	return int(p.Status.RepliesCount)
+}
+
+func (p *Post) AmplificationCount() int {
+	return int(p.Status.ReblogsCount)
+}
+
+func (p *Post) SocialScore() float64 {
+	favorites := float64(p.UpvotesCount())
+	reblogs := float64(p.AmplificationCount())
+	replies := float64(p.CommentsCount())
+
+	favoritesWeight := 0.4
+	reblogsWeight := 0.4
+	repliesWeight := 0.2
+
+	maxFavorites := 500.0
+	maxReblogs := 100.0
+	maxReplies := 50.0
+
+	return (providers.NormSocialScore(favorites, maxFavorites) * favoritesWeight) +
+		(providers.NormSocialScore(reblogs, maxReblogs) * reblogsWeight) +
+		(providers.NormSocialScore(replies, maxReplies) * repliesWeight)
 }
 
 func extractTextFromHTML(htmlStr string) string {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/defeedco/defeed/pkg/lib"
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
@@ -155,6 +156,36 @@ func (i *Issue) ImageURL() string {
 
 func (i *Issue) CreatedAt() time.Time {
 	return i.Issue.GetUpdatedAt().Time
+}
+
+func (i *Issue) UpvotesCount() int {
+	return i.Issue.GetReactions().GetTotalCount()
+}
+
+func (i *Issue) DownvotesCount() int {
+	return -1
+}
+
+func (i *Issue) CommentsCount() int {
+	return i.Issue.GetComments()
+}
+
+func (i *Issue) AmplificationCount() int {
+	return -1
+}
+
+func (i *Issue) SocialScore() float64 {
+	reactions := float64(i.UpvotesCount())
+	comments := float64(i.CommentsCount())
+
+	reactionsWeight := 0.4
+	commentsWeight := 0.6
+
+	maxReactions := 100.0
+	maxComments := 50.0
+
+	return (providers.NormSocialScore(reactions, maxReactions) * reactionsWeight) +
+		(providers.NormSocialScore(comments, maxComments) * commentsWeight)
 }
 
 func (s *SourceIssues) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {

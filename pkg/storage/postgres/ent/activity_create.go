@@ -104,6 +104,20 @@ func (ac *ActivityCreate) SetNillableEmbedding(pg *pgvector.Vector) *ActivityCre
 	return ac
 }
 
+// SetSocialScore sets the "social_score" field.
+func (ac *ActivityCreate) SetSocialScore(f float64) *ActivityCreate {
+	ac.mutation.SetSocialScore(f)
+	return ac
+}
+
+// SetNillableSocialScore sets the "social_score" field if the given value is not nil.
+func (ac *ActivityCreate) SetNillableSocialScore(f *float64) *ActivityCreate {
+	if f != nil {
+		ac.SetSocialScore(*f)
+	}
+	return ac
+}
+
 // SetUpdateCount sets the "update_count" field.
 func (ac *ActivityCreate) SetUpdateCount(i int) *ActivityCreate {
 	ac.mutation.SetUpdateCount(i)
@@ -159,6 +173,10 @@ func (ac *ActivityCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (ac *ActivityCreate) defaults() {
+	if _, ok := ac.mutation.SocialScore(); !ok {
+		v := activity.DefaultSocialScore
+		ac.mutation.SetSocialScore(v)
+	}
 	if _, ok := ac.mutation.UpdateCount(); !ok {
 		v := activity.DefaultUpdateCount
 		ac.mutation.SetUpdateCount(v)
@@ -199,6 +217,9 @@ func (ac *ActivityCreate) check() error {
 	}
 	if _, ok := ac.mutation.RawJSON(); !ok {
 		return &ValidationError{Name: "raw_json", err: errors.New(`ent: missing required field "Activity.raw_json"`)}
+	}
+	if _, ok := ac.mutation.SocialScore(); !ok {
+		return &ValidationError{Name: "social_score", err: errors.New(`ent: missing required field "Activity.social_score"`)}
 	}
 	if _, ok := ac.mutation.UpdateCount(); !ok {
 		return &ValidationError{Name: "update_count", err: errors.New(`ent: missing required field "Activity.update_count"`)}
@@ -286,6 +307,10 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 	if value, ok := ac.mutation.Embedding(); ok {
 		_spec.SetField(activity.FieldEmbedding, field.TypeOther, value)
 		_node.Embedding = &value
+	}
+	if value, ok := ac.mutation.SocialScore(); ok {
+		_spec.SetField(activity.FieldSocialScore, field.TypeFloat64, value)
+		_node.SocialScore = value
 	}
 	if value, ok := ac.mutation.UpdateCount(); ok {
 		_spec.SetField(activity.FieldUpdateCount, field.TypeInt, value)
@@ -490,6 +515,24 @@ func (u *ActivityUpsert) UpdateEmbedding() *ActivityUpsert {
 // ClearEmbedding clears the value of the "embedding" field.
 func (u *ActivityUpsert) ClearEmbedding() *ActivityUpsert {
 	u.SetNull(activity.FieldEmbedding)
+	return u
+}
+
+// SetSocialScore sets the "social_score" field.
+func (u *ActivityUpsert) SetSocialScore(v float64) *ActivityUpsert {
+	u.Set(activity.FieldSocialScore, v)
+	return u
+}
+
+// UpdateSocialScore sets the "social_score" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateSocialScore() *ActivityUpsert {
+	u.SetExcluded(activity.FieldSocialScore)
+	return u
+}
+
+// AddSocialScore adds v to the "social_score" field.
+func (u *ActivityUpsert) AddSocialScore(v float64) *ActivityUpsert {
+	u.Add(activity.FieldSocialScore, v)
 	return u
 }
 
@@ -731,6 +774,27 @@ func (u *ActivityUpsertOne) UpdateEmbedding() *ActivityUpsertOne {
 func (u *ActivityUpsertOne) ClearEmbedding() *ActivityUpsertOne {
 	return u.Update(func(s *ActivityUpsert) {
 		s.ClearEmbedding()
+	})
+}
+
+// SetSocialScore sets the "social_score" field.
+func (u *ActivityUpsertOne) SetSocialScore(v float64) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetSocialScore(v)
+	})
+}
+
+// AddSocialScore adds v to the "social_score" field.
+func (u *ActivityUpsertOne) AddSocialScore(v float64) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.AddSocialScore(v)
+	})
+}
+
+// UpdateSocialScore sets the "social_score" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateSocialScore() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateSocialScore()
 	})
 }
 
@@ -1142,6 +1206,27 @@ func (u *ActivityUpsertBulk) UpdateEmbedding() *ActivityUpsertBulk {
 func (u *ActivityUpsertBulk) ClearEmbedding() *ActivityUpsertBulk {
 	return u.Update(func(s *ActivityUpsert) {
 		s.ClearEmbedding()
+	})
+}
+
+// SetSocialScore sets the "social_score" field.
+func (u *ActivityUpsertBulk) SetSocialScore(v float64) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetSocialScore(v)
+	})
+}
+
+// AddSocialScore adds v to the "social_score" field.
+func (u *ActivityUpsertBulk) AddSocialScore(v float64) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.AddSocialScore(v)
+	})
+}
+
+// UpdateSocialScore sets the "social_score" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateSocialScore() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateSocialScore()
 	})
 }
 

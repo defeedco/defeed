@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/defeedco/defeed/pkg/lib"
-
 	"entgo.io/ent/dialect/sql"
+	"github.com/defeedco/defeed/pkg/lib"
 	"github.com/defeedco/defeed/pkg/sources/activities"
 	"github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
 	"github.com/pgvector/pgvector-go"
 
 	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
@@ -55,6 +55,7 @@ func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.Decorat
 		SetShortSummary(activity.Summary.ShortSummary).
 		SetFullSummary(activity.Summary.FullSummary).
 		SetEmbedding(pgvector.NewVector(activity.Embedding)).
+		SetSocialScore(activity.Activity.SocialScore()).
 		SetUpdateCount(existingUpdateCount + 1).
 		// https://github.com/ent/ent/issues/2494#issuecomment-1182015427
 		OnConflictColumns(entactivity.FieldID).
@@ -66,7 +67,8 @@ func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.Decorat
 
 type activityWithSimilarity struct {
 	ent.Activity
-	Similarity float64 `sql:"similarity"`
+	Similarity    float64 `sql:"similarity"`
+	WeightedScore float64 `sql:"weighted_score"`
 }
 
 func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest) (*types.SearchResult, error) {
@@ -131,6 +133,43 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 			simExpr = "CAST(0 AS float8)"
 		}
 		s.AppendSelect(sql.As(simExpr, "similarity"))
+
+		simWeight := req.SimilarityWeight
+		socialWeight := req.SocialScoreWeight
+		recencyWeight := req.RecencyWeight
+
+		// Normalize weights if all are zero
+		if simWeight == 0 && socialWeight == 0 && recencyWeight == 0 {
+			simWeight = 1.0
+			socialWeight = 0.0
+			recencyWeight = 0.0
+		}
+
+		// Normalize weights to sum to 1
+		totalWeight := simWeight + socialWeight + recencyWeight
+		if totalWeight > 0 {
+			simWeight = simWeight / totalWeight
+			socialWeight = socialWeight / totalWeight
+			recencyWeight = recencyWeight / totalWeight
+		}
+
+		// Some activities (e.g. rss feed items) don't have a social score,
+		// so we fallback to a low popularity score for now,
+		// to ensure they're not completely excluded from results.
+		fallbackSocialScore := providers.NormSocialScore(20, 100)
+		normalizedSocialScore := fmt.Sprintf("CASE WHEN social_score < 0 THEN %f ELSE social_score END", fallbackSocialScore)
+
+		// Calculate time decay score (exponential decay over 30 days)
+		// Score = e^(-k * days_old), where k controls decay rate
+		// k = 0.1 means ~0.74 score after 3 days, ~0.37 after 10 days, ~0.05 after 30 days
+		decayRate := 0.1
+		recencyScoreExpr := fmt.Sprintf("EXP(-%f * EXTRACT(EPOCH FROM (NOW() - created_at)) / 86400)", decayRate)
+
+		weightedExpr := fmt.Sprintf("((%s * %f) + (%s * %f) + (%s * %f))",
+			simExpr, simWeight,
+			normalizedSocialScore, socialWeight,
+			recencyScoreExpr, recencyWeight)
+		s.AppendSelect(sql.As(weightedExpr, "weighted_score"))
 	})
 
 	switch req.SortBy {
@@ -144,6 +183,14 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		}
 	case types.SortByDate:
 		query = query.Order(ent.Desc(entactivity.FieldCreatedAt))
+	case types.SortBySocialScore:
+		query = query.Order(func(s *sql.Selector) {
+			s.OrderExpr(sql.Expr("social_score DESC"))
+		})
+	case types.SortByWeightedScore:
+		query = query.Order(func(s *sql.Selector) {
+			s.OrderExpr(sql.Expr("weighted_score DESC"))
+		})
 	}
 
 	if req.Cursor != "" {
@@ -193,6 +240,7 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		entactivity.FieldFullSummary,
 		entactivity.FieldRawJSON,
 		entactivity.FieldEmbedding,
+		entactivity.FieldSocialScore,
 	}
 
 	var rows []activityWithSimilarity

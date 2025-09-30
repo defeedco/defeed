@@ -125,6 +125,11 @@ func Embedding(v pgvector.Vector) predicate.Activity {
 	return predicate.Activity(sql.FieldEQ(FieldEmbedding, v))
 }
 
+// SocialScore applies equality check predicate on the "social_score" field. It's identical to SocialScoreEQ.
+func SocialScore(v float64) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldSocialScore, v))
+}
+
 // UpdateCount applies equality check predicate on the "update_count" field. It's identical to UpdateCountEQ.
 func UpdateCount(v int) predicate.Activity {
 	return predicate.Activity(sql.FieldEQ(FieldUpdateCount, v))
@@ -868,6 +873,46 @@ func EmbeddingIsNil() predicate.Activity {
 // EmbeddingNotNil applies the NotNil predicate on the "embedding" field.
 func EmbeddingNotNil() predicate.Activity {
 	return predicate.Activity(sql.FieldNotNull(FieldEmbedding))
+}
+
+// SocialScoreEQ applies the EQ predicate on the "social_score" field.
+func SocialScoreEQ(v float64) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldSocialScore, v))
+}
+
+// SocialScoreNEQ applies the NEQ predicate on the "social_score" field.
+func SocialScoreNEQ(v float64) predicate.Activity {
+	return predicate.Activity(sql.FieldNEQ(FieldSocialScore, v))
+}
+
+// SocialScoreIn applies the In predicate on the "social_score" field.
+func SocialScoreIn(vs ...float64) predicate.Activity {
+	return predicate.Activity(sql.FieldIn(FieldSocialScore, vs...))
+}
+
+// SocialScoreNotIn applies the NotIn predicate on the "social_score" field.
+func SocialScoreNotIn(vs ...float64) predicate.Activity {
+	return predicate.Activity(sql.FieldNotIn(FieldSocialScore, vs...))
+}
+
+// SocialScoreGT applies the GT predicate on the "social_score" field.
+func SocialScoreGT(v float64) predicate.Activity {
+	return predicate.Activity(sql.FieldGT(FieldSocialScore, v))
+}
+
+// SocialScoreGTE applies the GTE predicate on the "social_score" field.
+func SocialScoreGTE(v float64) predicate.Activity {
+	return predicate.Activity(sql.FieldGTE(FieldSocialScore, v))
+}
+
+// SocialScoreLT applies the LT predicate on the "social_score" field.
+func SocialScoreLT(v float64) predicate.Activity {
+	return predicate.Activity(sql.FieldLT(FieldSocialScore, v))
+}
+
+// SocialScoreLTE applies the LTE predicate on the "social_score" field.
+func SocialScoreLTE(v float64) predicate.Activity {
+	return predicate.Activity(sql.FieldLTE(FieldSocialScore, v))
 }
 
 // UpdateCountEQ applies the EQ predicate on the "update_count" field.

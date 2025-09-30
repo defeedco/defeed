@@ -189,6 +189,26 @@ func (r *Release) CreatedAt() time.Time {
 	return r.Release.GetPublishedAt().Time
 }
 
+func (r *Release) UpvotesCount() int {
+	return -1
+}
+
+func (r *Release) DownvotesCount() int {
+	return -1
+}
+
+func (r *Release) CommentsCount() int {
+	return -1
+}
+
+func (r *Release) AmplificationCount() int {
+	return -1
+}
+
+func (r *Release) SocialScore() float64 {
+	return -1
+}
+
 func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	sinceTime := time.Now().Add(-1 * time.Hour)
 	if since != nil {

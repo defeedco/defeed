@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/defeedco/defeed/pkg/sources/types"
-
 	"github.com/defeedco/defeed/pkg/lib"
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
+	"github.com/defeedco/defeed/pkg/sources/providers"
+	"github.com/defeedco/defeed/pkg/sources/types"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog"
 )
@@ -248,4 +248,38 @@ func (a *Repository) ImageURL() string {
 
 func (a *Repository) CreatedAt() time.Time {
 	return a.PopularityReachedDate
+}
+
+func (a *Repository) UpvotesCount() int {
+	return a.Repository.GetStargazersCount()
+}
+
+func (a *Repository) DownvotesCount() int {
+	return -1
+}
+
+func (a *Repository) CommentsCount() int {
+	return a.Repository.GetOpenIssuesCount()
+}
+
+func (a *Repository) AmplificationCount() int {
+	return a.Repository.GetForksCount()
+}
+
+func (a *Repository) SocialScore() float64 {
+	stars := float64(a.UpvotesCount())
+	forks := float64(a.AmplificationCount())
+	issues := float64(a.CommentsCount())
+
+	starsWeight := 0.5
+	forksWeight := 0.3
+	issuesWeight := 0.2
+
+	maxStars := 10000.0
+	maxForks := 2000.0
+	maxIssues := 500.0
+
+	return (providers.NormSocialScore(stars, maxStars) * starsWeight) +
+		(providers.NormSocialScore(forks, maxForks) * forksWeight) +
+		(providers.NormSocialScore(issues, maxIssues) * issuesWeight)
 }

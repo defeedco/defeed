@@ -35,6 +35,8 @@ const (
 	FieldRawJSON = "raw_json"
 	// FieldEmbedding holds the string denoting the embedding field in the database.
 	FieldEmbedding = "embedding"
+	// FieldSocialScore holds the string denoting the social_score field in the database.
+	FieldSocialScore = "social_score"
 	// FieldUpdateCount holds the string denoting the update_count field in the database.
 	FieldUpdateCount = "update_count"
 	// Table holds the table name of the activity in the database.
@@ -56,6 +58,7 @@ var Columns = []string{
 	FieldFullSummary,
 	FieldRawJSON,
 	FieldEmbedding,
+	FieldSocialScore,
 	FieldUpdateCount,
 }
 
@@ -70,6 +73,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultSocialScore holds the default value on creation for the "social_score" field.
+	DefaultSocialScore float64
 	// DefaultUpdateCount holds the default value on creation for the "update_count" field.
 	DefaultUpdateCount int
 )
@@ -140,6 +145,11 @@ func ByRawJSON(opts ...sql.OrderTermOption) OrderOption {
 // ByEmbedding orders the results by the embedding field.
 func ByEmbedding(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmbedding, opts...).ToFunc()
+}
+
+// BySocialScore orders the results by the social_score field.
+func BySocialScore(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSocialScore, opts...).ToFunc()
 }
 
 // ByUpdateCount orders the results by the update_count field.
