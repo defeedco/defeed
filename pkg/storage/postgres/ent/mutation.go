@@ -49,7 +49,8 @@ type ActivityMutation struct {
 	short_summary   *string
 	full_summary    *string
 	raw_json        *string
-	embedding       *pgvector.Vector
+	embedding_1536  *pgvector.Vector
+	embedding_3072  *pgvector.Vector
 	social_score    *float64
 	addsocial_score *float64
 	update_count    *int
@@ -560,53 +561,102 @@ func (m *ActivityMutation) ResetRawJSON() {
 	m.raw_json = nil
 }
 
-// SetEmbedding sets the "embedding" field.
-func (m *ActivityMutation) SetEmbedding(pg pgvector.Vector) {
-	m.embedding = &pg
+// SetEmbedding1536 sets the "embedding_1536" field.
+func (m *ActivityMutation) SetEmbedding1536(pg pgvector.Vector) {
+	m.embedding_1536 = &pg
 }
 
-// Embedding returns the value of the "embedding" field in the mutation.
-func (m *ActivityMutation) Embedding() (r pgvector.Vector, exists bool) {
-	v := m.embedding
+// Embedding1536 returns the value of the "embedding_1536" field in the mutation.
+func (m *ActivityMutation) Embedding1536() (r pgvector.Vector, exists bool) {
+	v := m.embedding_1536
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldEmbedding returns the old "embedding" field's value of the Activity entity.
+// OldEmbedding1536 returns the old "embedding_1536" field's value of the Activity entity.
 // If the Activity object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ActivityMutation) OldEmbedding(ctx context.Context) (v *pgvector.Vector, err error) {
+func (m *ActivityMutation) OldEmbedding1536(ctx context.Context) (v *pgvector.Vector, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldEmbedding is only allowed on UpdateOne operations")
+		return v, errors.New("OldEmbedding1536 is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldEmbedding requires an ID field in the mutation")
+		return v, errors.New("OldEmbedding1536 requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldEmbedding: %w", err)
+		return v, fmt.Errorf("querying old value for OldEmbedding1536: %w", err)
 	}
-	return oldValue.Embedding, nil
+	return oldValue.Embedding1536, nil
 }
 
-// ClearEmbedding clears the value of the "embedding" field.
-func (m *ActivityMutation) ClearEmbedding() {
-	m.embedding = nil
-	m.clearedFields[activity.FieldEmbedding] = struct{}{}
+// ClearEmbedding1536 clears the value of the "embedding_1536" field.
+func (m *ActivityMutation) ClearEmbedding1536() {
+	m.embedding_1536 = nil
+	m.clearedFields[activity.FieldEmbedding1536] = struct{}{}
 }
 
-// EmbeddingCleared returns if the "embedding" field was cleared in this mutation.
-func (m *ActivityMutation) EmbeddingCleared() bool {
-	_, ok := m.clearedFields[activity.FieldEmbedding]
+// Embedding1536Cleared returns if the "embedding_1536" field was cleared in this mutation.
+func (m *ActivityMutation) Embedding1536Cleared() bool {
+	_, ok := m.clearedFields[activity.FieldEmbedding1536]
 	return ok
 }
 
-// ResetEmbedding resets all changes to the "embedding" field.
-func (m *ActivityMutation) ResetEmbedding() {
-	m.embedding = nil
-	delete(m.clearedFields, activity.FieldEmbedding)
+// ResetEmbedding1536 resets all changes to the "embedding_1536" field.
+func (m *ActivityMutation) ResetEmbedding1536() {
+	m.embedding_1536 = nil
+	delete(m.clearedFields, activity.FieldEmbedding1536)
+}
+
+// SetEmbedding3072 sets the "embedding_3072" field.
+func (m *ActivityMutation) SetEmbedding3072(pg pgvector.Vector) {
+	m.embedding_3072 = &pg
+}
+
+// Embedding3072 returns the value of the "embedding_3072" field in the mutation.
+func (m *ActivityMutation) Embedding3072() (r pgvector.Vector, exists bool) {
+	v := m.embedding_3072
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmbedding3072 returns the old "embedding_3072" field's value of the Activity entity.
+// If the Activity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ActivityMutation) OldEmbedding3072(ctx context.Context) (v *pgvector.Vector, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmbedding3072 is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmbedding3072 requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmbedding3072: %w", err)
+	}
+	return oldValue.Embedding3072, nil
+}
+
+// ClearEmbedding3072 clears the value of the "embedding_3072" field.
+func (m *ActivityMutation) ClearEmbedding3072() {
+	m.embedding_3072 = nil
+	m.clearedFields[activity.FieldEmbedding3072] = struct{}{}
+}
+
+// Embedding3072Cleared returns if the "embedding_3072" field was cleared in this mutation.
+func (m *ActivityMutation) Embedding3072Cleared() bool {
+	_, ok := m.clearedFields[activity.FieldEmbedding3072]
+	return ok
+}
+
+// ResetEmbedding3072 resets all changes to the "embedding_3072" field.
+func (m *ActivityMutation) ResetEmbedding3072() {
+	m.embedding_3072 = nil
+	delete(m.clearedFields, activity.FieldEmbedding3072)
 }
 
 // SetSocialScore sets the "social_score" field.
@@ -755,7 +805,7 @@ func (m *ActivityMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ActivityMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 15)
 	if m.uid != nil {
 		fields = append(fields, activity.FieldUID)
 	}
@@ -789,8 +839,11 @@ func (m *ActivityMutation) Fields() []string {
 	if m.raw_json != nil {
 		fields = append(fields, activity.FieldRawJSON)
 	}
-	if m.embedding != nil {
-		fields = append(fields, activity.FieldEmbedding)
+	if m.embedding_1536 != nil {
+		fields = append(fields, activity.FieldEmbedding1536)
+	}
+	if m.embedding_3072 != nil {
+		fields = append(fields, activity.FieldEmbedding3072)
 	}
 	if m.social_score != nil {
 		fields = append(fields, activity.FieldSocialScore)
@@ -828,8 +881,10 @@ func (m *ActivityMutation) Field(name string) (ent.Value, bool) {
 		return m.FullSummary()
 	case activity.FieldRawJSON:
 		return m.RawJSON()
-	case activity.FieldEmbedding:
-		return m.Embedding()
+	case activity.FieldEmbedding1536:
+		return m.Embedding1536()
+	case activity.FieldEmbedding3072:
+		return m.Embedding3072()
 	case activity.FieldSocialScore:
 		return m.SocialScore()
 	case activity.FieldUpdateCount:
@@ -865,8 +920,10 @@ func (m *ActivityMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldFullSummary(ctx)
 	case activity.FieldRawJSON:
 		return m.OldRawJSON(ctx)
-	case activity.FieldEmbedding:
-		return m.OldEmbedding(ctx)
+	case activity.FieldEmbedding1536:
+		return m.OldEmbedding1536(ctx)
+	case activity.FieldEmbedding3072:
+		return m.OldEmbedding3072(ctx)
 	case activity.FieldSocialScore:
 		return m.OldSocialScore(ctx)
 	case activity.FieldUpdateCount:
@@ -957,12 +1014,19 @@ func (m *ActivityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRawJSON(v)
 		return nil
-	case activity.FieldEmbedding:
+	case activity.FieldEmbedding1536:
 		v, ok := value.(pgvector.Vector)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetEmbedding(v)
+		m.SetEmbedding1536(v)
+		return nil
+	case activity.FieldEmbedding3072:
+		v, ok := value.(pgvector.Vector)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmbedding3072(v)
 		return nil
 	case activity.FieldSocialScore:
 		v, ok := value.(float64)
@@ -1035,8 +1099,11 @@ func (m *ActivityMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *ActivityMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(activity.FieldEmbedding) {
-		fields = append(fields, activity.FieldEmbedding)
+	if m.FieldCleared(activity.FieldEmbedding1536) {
+		fields = append(fields, activity.FieldEmbedding1536)
+	}
+	if m.FieldCleared(activity.FieldEmbedding3072) {
+		fields = append(fields, activity.FieldEmbedding3072)
 	}
 	return fields
 }
@@ -1052,8 +1119,11 @@ func (m *ActivityMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *ActivityMutation) ClearField(name string) error {
 	switch name {
-	case activity.FieldEmbedding:
-		m.ClearEmbedding()
+	case activity.FieldEmbedding1536:
+		m.ClearEmbedding1536()
+		return nil
+	case activity.FieldEmbedding3072:
+		m.ClearEmbedding3072()
 		return nil
 	}
 	return fmt.Errorf("unknown Activity nullable field %s", name)
@@ -1096,8 +1166,11 @@ func (m *ActivityMutation) ResetField(name string) error {
 	case activity.FieldRawJSON:
 		m.ResetRawJSON()
 		return nil
-	case activity.FieldEmbedding:
-		m.ResetEmbedding()
+	case activity.FieldEmbedding1536:
+		m.ResetEmbedding1536()
+		return nil
+	case activity.FieldEmbedding3072:
+		m.ResetEmbedding3072()
 		return nil
 	case activity.FieldSocialScore:
 		m.ResetSocialScore()

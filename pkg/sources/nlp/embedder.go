@@ -3,6 +3,7 @@ package nlp
 import (
 	"context"
 	"fmt"
+
 	"github.com/tmc/langchaingo/embeddings"
 
 	"github.com/defeedco/defeed/pkg/sources/activities/types"
@@ -23,8 +24,8 @@ func NewEmbedder(model embedderModel) *ActivityEmbedder {
 	}
 }
 
-func (e *ActivityEmbedder) EmbedActivity(ctx context.Context, summary *types.ActivitySummary) ([]float32, error) {
-	out, err := e.embedder.EmbedQuery(ctx, summary.FullSummary)
+func (e *ActivityEmbedder) EmbedActivity(ctx context.Context, act types.Activity, summary *types.ActivitySummary) ([]float32, error) {
+	out, err := e.embedder.EmbedQuery(ctx, fmt.Sprintf("Title: %s\nSource: %s\nSummary: %s", act.Title(), act.SourceUID().String(), summary.ShortSummary))
 	if err != nil {
 		return nil, fmt.Errorf("embed activity: %w", err)
 	}

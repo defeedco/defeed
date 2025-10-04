@@ -22,16 +22,17 @@ import (
 )
 
 type Config struct {
-	SourceUIDs     []string
-	ActivityUIDs   []string
-	DryRun         bool
-	BatchSize      int
-	MaxActivities  int
-	MaxConcurrency int
-	ForceReprocess bool
-	ForceUpsert    bool
-	Period         types.Period `json:"period" validate:"required,oneof=all month week day"`
-	EnvFilePath    string       `validate:"required"`
+	SourceUIDs              []string
+	ActivityUIDs            []string
+	DryRun                  bool
+	BatchSize               int
+	MaxActivities           int
+	MaxConcurrency          int
+	ForceReprocessSummary   bool
+	ForceReprocessEmbedding bool
+	ForceUpsert             bool
+	Period                  types.Period `json:"period" validate:"required,oneof=all month week day"`
+	EnvFilePath             string       `validate:"required"`
 }
 
 func main() {
@@ -43,7 +44,8 @@ func main() {
 	flag.IntVar(&config.BatchSize, "batch-size", 50, "Number of activities to process in each batch")
 	flag.IntVar(&config.MaxActivities, "max-activities", 0, "Maximum number of activities to reprocess (0 = no limit)")
 	flag.IntVar(&config.MaxConcurrency, "max-concurrency", 100, "Maximum number of activities to reprocess (0 = no limit)")
-	flag.BoolVar(&config.ForceReprocess, "force-reprocess", false, "Force reprocess even if activity already has summary/embedding")
+	flag.BoolVar(&config.ForceReprocessSummary, "force-reprocess-summary", false, "Force reprocess full/short summary even if summary exists")
+	flag.BoolVar(&config.ForceReprocessEmbedding, "force-reprocess-embeddings", false, "Force reprocess embeddings even if activity embeddings exists")
 	flag.BoolVar(&config.ForceUpsert, "force-upsert", false, "Force upsert even if activity already exists")
 	flag.StringVar((*string)(&config.Period), "period", "all", "Time period to filter activities (all, month, week, day)")
 	flag.StringVar(&config.EnvFilePath, "env-file", ".env", "Path to .env file")
@@ -97,7 +99,7 @@ func run(ctx context.Context, config Config) error {
 	}
 
 	embeddingModel, err := openai.New(
-		openai.WithEmbeddingModel("text-embedding-3-small"),
+		openai.WithEmbeddingModel("text-embedding-3-large"),
 		openai.WithHTTPClient(limiter),
 	)
 	if err != nil {
@@ -123,7 +125,8 @@ func run(ctx context.Context, config Config) error {
 		Int("batch_size", config.BatchSize).
 		Int("max_activities", config.MaxActivities).
 		Int("max_concurrency", config.MaxConcurrency).
-		Bool("force-reprocess", config.ForceReprocess).
+		Bool("force-reprocess-summary", config.ForceReprocessSummary).
+		Bool("force-reprocess-embeddings", config.ForceReprocessEmbedding).
 		Bool("force-upsert", config.ForceUpsert).
 		Str("period", string(config.Period)).
 		Msg("Starting reprocessing")
@@ -159,9 +162,10 @@ func run(ctx context.Context, config Config) error {
 		for _, act := range result.Activities {
 			pool.Submit(func() {
 				isUpserted, err := activityRegistry.Create(ctx, activities.CreateRequest{
-					Activity:  act.Activity,
-					Reprocess: config.ForceReprocess,
-					Upsert:    config.ForceUpsert,
+					Activity:           act.Activity,
+					ReprocessSummary:   config.ForceReprocessSummary,
+					ReprocessEmbedding: config.ForceReprocessEmbedding,
+					Upsert:             config.ForceUpsert,
 				})
 				if err != nil {
 					logger.Error().

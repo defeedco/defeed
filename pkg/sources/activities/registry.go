@@ -37,7 +37,7 @@ type summarizer interface {
 }
 
 type embedder interface {
-	EmbedActivity(ctx context.Context, sum *types.ActivitySummary) ([]float32, error)
+	EmbedActivity(ctx context.Context, act types.Activity, summary *types.ActivitySummary) ([]float32, error)
 	EmbedActivityQuery(ctx context.Context, query string) ([]float32, error)
 }
 
@@ -48,9 +48,12 @@ type activityStore interface {
 
 type CreateRequest struct {
 	Activity types.Activity
-	// Reprocess recomputes the summary and embeddings.
-	// If Reprocess is true, Upsert must also be true.
-	Reprocess bool
+	// ReprocessSummary recomputes the short/full summary.
+	// If ReprocessSummary is true, Upsert must also be true.
+	ReprocessSummary bool
+	// ReprocessEmbedding recomputes the embedding.
+	// If ReprocessEmbedding is true, Upsert must also be true.
+	ReprocessEmbedding bool
 	// Upsert updates the existing record.
 	Upsert bool
 }
@@ -58,9 +61,11 @@ type CreateRequest struct {
 // Create processes a single activity and stores it in the database.
 // Returns false if activity was skipped.
 func (r *Registry) Create(ctx context.Context, req CreateRequest) (bool, error) {
-	// Reprocess requires Upsert.
-	if req.Reprocess && !req.Upsert {
-		return false, fmt.Errorf("reprocess without upsert is not allowed")
+	if req.ReprocessSummary && !req.Upsert {
+		return false, fmt.Errorf("reprocess summary without upsert is not allowed")
+	}
+	if req.ReprocessEmbedding && !req.Upsert {
+		return false, fmt.Errorf("reprocess embedding without upsert is not allowed")
 	}
 
 	// Race conditions can occur if multiple goroutines process the same activity concurrently.
@@ -91,15 +96,15 @@ func (r *Registry) Create(ctx context.Context, req CreateRequest) (bool, error) 
 		embedding = existing.Embedding
 	}
 
-	if req.Reprocess || existing == nil || existing.Summary.FullSummary == "" || existing.Summary.ShortSummary == "" {
+	if req.ReprocessSummary || existing == nil || existing.Summary.FullSummary == "" || existing.Summary.ShortSummary == "" {
 		summary, err = r.summarizer.SummarizeActivity(ctx, req.Activity)
 		if err != nil {
 			return false, fmt.Errorf("summarize activity: %w", err)
 		}
 	}
 
-	if req.Reprocess || existing == nil || len(existing.Embedding) == 0 {
-		embedding, err = r.embedder.EmbedActivity(ctx, summary)
+	if req.ReprocessEmbedding || existing == nil || len(existing.Embedding) == 0 {
+		embedding, err = r.embedder.EmbedActivity(ctx, req.Activity, summary)
 		if err != nil {
 			return false, fmt.Errorf("compute embedding: %w", err)
 		}

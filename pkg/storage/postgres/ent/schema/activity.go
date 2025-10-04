@@ -25,10 +25,15 @@ func (Activity) Fields() []ent.Field {
 		field.String("short_summary"),
 		field.String("full_summary"),
 		field.String("raw_json"),
-		field.Other("embedding", pgvector.Vector{}).
+		field.Other("embedding_1536", pgvector.Vector{}).
 			SchemaType(map[string]string{
-				// Use text-embedding-3-small output dimensions (6.5x cheaper than large)
 				dialect.Postgres: "vector(1536)",
+			}).
+			Nillable().
+			Optional(),
+		field.Other("embedding_3072", pgvector.Vector{}).
+			SchemaType(map[string]string{
+				dialect.Postgres: "vector(3072)",
 			}).
 			Nillable().
 			Optional(),

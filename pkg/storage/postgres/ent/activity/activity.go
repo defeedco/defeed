@@ -33,8 +33,10 @@ const (
 	FieldFullSummary = "full_summary"
 	// FieldRawJSON holds the string denoting the raw_json field in the database.
 	FieldRawJSON = "raw_json"
-	// FieldEmbedding holds the string denoting the embedding field in the database.
-	FieldEmbedding = "embedding"
+	// FieldEmbedding1536 holds the string denoting the embedding_1536 field in the database.
+	FieldEmbedding1536 = "embedding_1536"
+	// FieldEmbedding3072 holds the string denoting the embedding_3072 field in the database.
+	FieldEmbedding3072 = "embedding_3072"
 	// FieldSocialScore holds the string denoting the social_score field in the database.
 	FieldSocialScore = "social_score"
 	// FieldUpdateCount holds the string denoting the update_count field in the database.
@@ -57,7 +59,8 @@ var Columns = []string{
 	FieldShortSummary,
 	FieldFullSummary,
 	FieldRawJSON,
-	FieldEmbedding,
+	FieldEmbedding1536,
+	FieldEmbedding3072,
 	FieldSocialScore,
 	FieldUpdateCount,
 }
@@ -142,9 +145,14 @@ func ByRawJSON(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRawJSON, opts...).ToFunc()
 }
 
-// ByEmbedding orders the results by the embedding field.
-func ByEmbedding(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEmbedding, opts...).ToFunc()
+// ByEmbedding1536 orders the results by the embedding_1536 field.
+func ByEmbedding1536(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmbedding1536, opts...).ToFunc()
+}
+
+// ByEmbedding3072 orders the results by the embedding_3072 field.
+func ByEmbedding3072(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmbedding3072, opts...).ToFunc()
 }
 
 // BySocialScore orders the results by the social_score field.

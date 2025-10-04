@@ -120,9 +120,14 @@ func RawJSON(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldEQ(FieldRawJSON, v))
 }
 
-// Embedding applies equality check predicate on the "embedding" field. It's identical to EmbeddingEQ.
-func Embedding(v pgvector.Vector) predicate.Activity {
-	return predicate.Activity(sql.FieldEQ(FieldEmbedding, v))
+// Embedding1536 applies equality check predicate on the "embedding_1536" field. It's identical to Embedding1536EQ.
+func Embedding1536(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldEmbedding1536, v))
+}
+
+// Embedding3072 applies equality check predicate on the "embedding_3072" field. It's identical to Embedding3072EQ.
+func Embedding3072(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldEmbedding3072, v))
 }
 
 // SocialScore applies equality check predicate on the "social_score" field. It's identical to SocialScoreEQ.
@@ -825,54 +830,104 @@ func RawJSONContainsFold(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldContainsFold(FieldRawJSON, v))
 }
 
-// EmbeddingEQ applies the EQ predicate on the "embedding" field.
-func EmbeddingEQ(v pgvector.Vector) predicate.Activity {
-	return predicate.Activity(sql.FieldEQ(FieldEmbedding, v))
+// Embedding1536EQ applies the EQ predicate on the "embedding_1536" field.
+func Embedding1536EQ(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldEmbedding1536, v))
 }
 
-// EmbeddingNEQ applies the NEQ predicate on the "embedding" field.
-func EmbeddingNEQ(v pgvector.Vector) predicate.Activity {
-	return predicate.Activity(sql.FieldNEQ(FieldEmbedding, v))
+// Embedding1536NEQ applies the NEQ predicate on the "embedding_1536" field.
+func Embedding1536NEQ(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldNEQ(FieldEmbedding1536, v))
 }
 
-// EmbeddingIn applies the In predicate on the "embedding" field.
-func EmbeddingIn(vs ...pgvector.Vector) predicate.Activity {
-	return predicate.Activity(sql.FieldIn(FieldEmbedding, vs...))
+// Embedding1536In applies the In predicate on the "embedding_1536" field.
+func Embedding1536In(vs ...pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldIn(FieldEmbedding1536, vs...))
 }
 
-// EmbeddingNotIn applies the NotIn predicate on the "embedding" field.
-func EmbeddingNotIn(vs ...pgvector.Vector) predicate.Activity {
-	return predicate.Activity(sql.FieldNotIn(FieldEmbedding, vs...))
+// Embedding1536NotIn applies the NotIn predicate on the "embedding_1536" field.
+func Embedding1536NotIn(vs ...pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldNotIn(FieldEmbedding1536, vs...))
 }
 
-// EmbeddingGT applies the GT predicate on the "embedding" field.
-func EmbeddingGT(v pgvector.Vector) predicate.Activity {
-	return predicate.Activity(sql.FieldGT(FieldEmbedding, v))
+// Embedding1536GT applies the GT predicate on the "embedding_1536" field.
+func Embedding1536GT(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldGT(FieldEmbedding1536, v))
 }
 
-// EmbeddingGTE applies the GTE predicate on the "embedding" field.
-func EmbeddingGTE(v pgvector.Vector) predicate.Activity {
-	return predicate.Activity(sql.FieldGTE(FieldEmbedding, v))
+// Embedding1536GTE applies the GTE predicate on the "embedding_1536" field.
+func Embedding1536GTE(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldGTE(FieldEmbedding1536, v))
 }
 
-// EmbeddingLT applies the LT predicate on the "embedding" field.
-func EmbeddingLT(v pgvector.Vector) predicate.Activity {
-	return predicate.Activity(sql.FieldLT(FieldEmbedding, v))
+// Embedding1536LT applies the LT predicate on the "embedding_1536" field.
+func Embedding1536LT(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldLT(FieldEmbedding1536, v))
 }
 
-// EmbeddingLTE applies the LTE predicate on the "embedding" field.
-func EmbeddingLTE(v pgvector.Vector) predicate.Activity {
-	return predicate.Activity(sql.FieldLTE(FieldEmbedding, v))
+// Embedding1536LTE applies the LTE predicate on the "embedding_1536" field.
+func Embedding1536LTE(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldLTE(FieldEmbedding1536, v))
 }
 
-// EmbeddingIsNil applies the IsNil predicate on the "embedding" field.
-func EmbeddingIsNil() predicate.Activity {
-	return predicate.Activity(sql.FieldIsNull(FieldEmbedding))
+// Embedding1536IsNil applies the IsNil predicate on the "embedding_1536" field.
+func Embedding1536IsNil() predicate.Activity {
+	return predicate.Activity(sql.FieldIsNull(FieldEmbedding1536))
 }
 
-// EmbeddingNotNil applies the NotNil predicate on the "embedding" field.
-func EmbeddingNotNil() predicate.Activity {
-	return predicate.Activity(sql.FieldNotNull(FieldEmbedding))
+// Embedding1536NotNil applies the NotNil predicate on the "embedding_1536" field.
+func Embedding1536NotNil() predicate.Activity {
+	return predicate.Activity(sql.FieldNotNull(FieldEmbedding1536))
+}
+
+// Embedding3072EQ applies the EQ predicate on the "embedding_3072" field.
+func Embedding3072EQ(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldEQ(FieldEmbedding3072, v))
+}
+
+// Embedding3072NEQ applies the NEQ predicate on the "embedding_3072" field.
+func Embedding3072NEQ(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldNEQ(FieldEmbedding3072, v))
+}
+
+// Embedding3072In applies the In predicate on the "embedding_3072" field.
+func Embedding3072In(vs ...pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldIn(FieldEmbedding3072, vs...))
+}
+
+// Embedding3072NotIn applies the NotIn predicate on the "embedding_3072" field.
+func Embedding3072NotIn(vs ...pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldNotIn(FieldEmbedding3072, vs...))
+}
+
+// Embedding3072GT applies the GT predicate on the "embedding_3072" field.
+func Embedding3072GT(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldGT(FieldEmbedding3072, v))
+}
+
+// Embedding3072GTE applies the GTE predicate on the "embedding_3072" field.
+func Embedding3072GTE(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldGTE(FieldEmbedding3072, v))
+}
+
+// Embedding3072LT applies the LT predicate on the "embedding_3072" field.
+func Embedding3072LT(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldLT(FieldEmbedding3072, v))
+}
+
+// Embedding3072LTE applies the LTE predicate on the "embedding_3072" field.
+func Embedding3072LTE(v pgvector.Vector) predicate.Activity {
+	return predicate.Activity(sql.FieldLTE(FieldEmbedding3072, v))
+}
+
+// Embedding3072IsNil applies the IsNil predicate on the "embedding_3072" field.
+func Embedding3072IsNil() predicate.Activity {
+	return predicate.Activity(sql.FieldIsNull(FieldEmbedding3072))
+}
+
+// Embedding3072NotNil applies the NotNil predicate on the "embedding_3072" field.
+func Embedding3072NotNil() predicate.Activity {
+	return predicate.Activity(sql.FieldNotNull(FieldEmbedding3072))
 }
 
 // SocialScoreEQ applies the EQ predicate on the "social_score" field.

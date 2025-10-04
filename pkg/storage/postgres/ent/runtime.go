@@ -14,11 +14,11 @@ func init() {
 	activityFields := schema.Activity{}.Fields()
 	_ = activityFields
 	// activityDescSocialScore is the schema descriptor for social_score field.
-	activityDescSocialScore := activityFields[13].Descriptor()
+	activityDescSocialScore := activityFields[14].Descriptor()
 	// activity.DefaultSocialScore holds the default value on creation for the social_score field.
 	activity.DefaultSocialScore = activityDescSocialScore.Default.(float64)
 	// activityDescUpdateCount is the schema descriptor for update_count field.
-	activityDescUpdateCount := activityFields[14].Descriptor()
+	activityDescUpdateCount := activityFields[15].Descriptor()
 	// activity.DefaultUpdateCount holds the default value on creation for the update_count field.
 	activity.DefaultUpdateCount = activityDescUpdateCount.Default.(int)
 }

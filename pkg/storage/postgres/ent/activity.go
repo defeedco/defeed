@@ -40,8 +40,10 @@ type Activity struct {
 	FullSummary string `json:"full_summary,omitempty"`
 	// RawJSON holds the value of the "raw_json" field.
 	RawJSON string `json:"raw_json,omitempty"`
-	// Embedding holds the value of the "embedding" field.
-	Embedding *pgvector.Vector `json:"embedding,omitempty"`
+	// Embedding1536 holds the value of the "embedding_1536" field.
+	Embedding1536 *pgvector.Vector `json:"embedding_1536,omitempty"`
+	// Embedding3072 holds the value of the "embedding_3072" field.
+	Embedding3072 *pgvector.Vector `json:"embedding_3072,omitempty"`
 	// SocialScore holds the value of the "social_score" field.
 	SocialScore float64 `json:"social_score,omitempty"`
 	// UpdateCount holds the value of the "update_count" field.
@@ -54,7 +56,7 @@ func (*Activity) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case activity.FieldEmbedding:
+		case activity.FieldEmbedding1536, activity.FieldEmbedding3072:
 			values[i] = &sql.NullScanner{S: new(pgvector.Vector)}
 		case activity.FieldSocialScore:
 			values[i] = new(sql.NullFloat64)
@@ -151,12 +153,19 @@ func (a *Activity) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.RawJSON = value.String
 			}
-		case activity.FieldEmbedding:
+		case activity.FieldEmbedding1536:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field embedding", values[i])
+				return fmt.Errorf("unexpected type %T for field embedding_1536", values[i])
 			} else if value.Valid {
-				a.Embedding = new(pgvector.Vector)
-				*a.Embedding = *value.S.(*pgvector.Vector)
+				a.Embedding1536 = new(pgvector.Vector)
+				*a.Embedding1536 = *value.S.(*pgvector.Vector)
+			}
+		case activity.FieldEmbedding3072:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field embedding_3072", values[i])
+			} else if value.Valid {
+				a.Embedding3072 = new(pgvector.Vector)
+				*a.Embedding3072 = *value.S.(*pgvector.Vector)
 			}
 		case activity.FieldSocialScore:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
@@ -239,8 +248,13 @@ func (a *Activity) String() string {
 	builder.WriteString("raw_json=")
 	builder.WriteString(a.RawJSON)
 	builder.WriteString(", ")
-	if v := a.Embedding; v != nil {
-		builder.WriteString("embedding=")
+	if v := a.Embedding1536; v != nil {
+		builder.WriteString("embedding_1536=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := a.Embedding3072; v != nil {
+		builder.WriteString("embedding_3072=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

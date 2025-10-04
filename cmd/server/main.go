@@ -76,8 +76,7 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 	}
 
 	embeddingModel, err := openai.New(
-		// TODO: Switch batch to large embedding model, since it doesn't cost much more
-		openai.WithEmbeddingModel("text-embedding-3-small"),
+		openai.WithEmbeddingModel("text-embedding-3-large"),
 		openai.WithHTTPClient(limiter),
 	)
 	if err != nil {

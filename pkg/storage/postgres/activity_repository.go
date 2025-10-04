@@ -16,6 +16,7 @@ import (
 
 	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
 	entactivity "github.com/defeedco/defeed/pkg/storage/postgres/ent/activity"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/predicate"
 )
 
 type ActivityRepository struct {
@@ -41,7 +42,7 @@ func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.Decorat
 		return fmt.Errorf("marshal activity: %w", err)
 	}
 
-	err = r.db.Client().Activity.Create().
+	qb := r.db.Client().Activity.Create().
 		SetID(activity.Activity.UID().String()).
 		SetUID(activity.Activity.UID().String()).
 		SetSourceUID(activity.Activity.SourceUID().String()).
@@ -54,9 +55,21 @@ func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.Decorat
 		SetRawJSON(string(rawJson)).
 		SetShortSummary(activity.Summary.ShortSummary).
 		SetFullSummary(activity.Summary.FullSummary).
-		SetEmbedding(pgvector.NewVector(activity.Embedding)).
 		SetSocialScore(activity.Activity.SocialScore()).
-		SetUpdateCount(existingUpdateCount + 1).
+		SetUpdateCount(existingUpdateCount + 1)
+
+	switch len(activity.Embedding) {
+	case 1536:
+		qb = qb.SetEmbedding1536(pgvector.NewVector(activity.Embedding))
+	case 3072:
+		qb = qb.SetEmbedding3072(pgvector.NewVector(activity.Embedding))
+	case 0:
+		// Do nothing
+	default:
+		return fmt.Errorf("invalid embedding length: %d", len(activity.Embedding))
+	}
+
+	err = qb.
 		// https://github.com/ent/ent/issues/2494#issuecomment-1182015427
 		OnConflictColumns(entactivity.FieldID).
 		UpdateNewValues().
@@ -115,17 +128,29 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		query = query.Where(entactivity.CreatedAtGTE(since))
 	}
 
+	var embeddingField string
+	switch len(req.QueryEmbedding) {
+	case 1536:
+		embeddingField = entactivity.FieldEmbedding1536
+	case 3072:
+		embeddingField = entactivity.FieldEmbedding3072
+	case 0:
+		// Do nothing
+	default:
+		return nil, fmt.Errorf("invalid embedding length: %d", len(req.QueryEmbedding))
+	}
+
 	// There might be some unprocessed activities with empty embeddings from incomplete data migrations.
 	// Filter them out, or we'll get invalid similarity scores.
-	if len(req.QueryEmbedding) > 0 {
-		query = query.Where(entactivity.EmbeddingNotNil())
+	if embeddingField != "" {
+		query = query.Where(predicate.Activity(sql.FieldNotNull(embeddingField)))
 	}
 
 	query = query.Order(func(s *sql.Selector) {
 		var simExpr string
-		if len(req.QueryEmbedding) > 0 {
+		if embeddingField != "" {
 			vector := pgvector.NewVector(req.QueryEmbedding)
-			simExpr = fmt.Sprintf("(1 - (embedding <=> '%s'))", vector)
+			simExpr = fmt.Sprintf("(1 - (%s <=> '%s'))", embeddingField, vector)
 			if req.MinSimilarity > 0 {
 				s.Where(sql.GT(simExpr, req.MinSimilarity))
 			}
@@ -174,7 +199,7 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 
 	switch req.SortBy {
 	case types.SortBySimilarity:
-		if len(req.QueryEmbedding) > 0 {
+		if embeddingField != "" {
 			query = query.Order(func(s *sql.Selector) {
 				s.OrderExpr(sql.Expr("similarity DESC"))
 			})
@@ -239,7 +264,8 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		entactivity.FieldShortSummary,
 		entactivity.FieldFullSummary,
 		entactivity.FieldRawJSON,
-		entactivity.FieldEmbedding,
+		entactivity.FieldEmbedding1536,
+		entactivity.FieldEmbedding3072,
 		entactivity.FieldSocialScore,
 	}
 
@@ -258,7 +284,7 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 
 	result := make([]*types.DecoratedActivity, len(rows))
 	for i, a := range rows {
-		res, err := activityFromEnt(&a.Activity, float32(a.Similarity))
+		res, err := activityFromEnt(&a.Activity, float32(a.Similarity), len(req.QueryEmbedding))
 		if err != nil {
 			return nil, fmt.Errorf("deserialize db activity: %w", err)
 		}
@@ -343,7 +369,7 @@ func deserializeCursor(input string) (cursor, error) {
 	return cur, nil
 }
 
-func activityFromEnt(in *ent.Activity, similarity float32) (*types.DecoratedActivity, error) {
+func activityFromEnt(in *ent.Activity, similarity float32, embeddingLength int) (*types.DecoratedActivity, error) {
 	act, err := activities.NewActivity(in.SourceType)
 	if err != nil {
 		return nil, fmt.Errorf("new activity: %w", err)
@@ -356,8 +382,15 @@ func activityFromEnt(in *ent.Activity, similarity float32) (*types.DecoratedActi
 
 	// Embeddings can be null if we clear them for reprocessing
 	var embedding []float32
-	if in.Embedding != nil {
-		embedding = in.Embedding.Slice()
+	switch embeddingLength {
+	case 1536:
+		embedding = in.Embedding1536.Slice()
+	case 3072:
+		embedding = in.Embedding3072.Slice()
+	case 0:
+		// Do nothing
+	default:
+		return nil, fmt.Errorf("invalid embedding length: %d", embeddingLength)
 	}
 
 	return &types.DecoratedActivity{

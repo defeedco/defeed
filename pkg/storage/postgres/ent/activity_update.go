@@ -183,23 +183,43 @@ func (au *ActivityUpdate) SetNillableRawJSON(s *string) *ActivityUpdate {
 	return au
 }
 
-// SetEmbedding sets the "embedding" field.
-func (au *ActivityUpdate) SetEmbedding(pg pgvector.Vector) *ActivityUpdate {
-	au.mutation.SetEmbedding(pg)
+// SetEmbedding1536 sets the "embedding_1536" field.
+func (au *ActivityUpdate) SetEmbedding1536(pg pgvector.Vector) *ActivityUpdate {
+	au.mutation.SetEmbedding1536(pg)
 	return au
 }
 
-// SetNillableEmbedding sets the "embedding" field if the given value is not nil.
-func (au *ActivityUpdate) SetNillableEmbedding(pg *pgvector.Vector) *ActivityUpdate {
+// SetNillableEmbedding1536 sets the "embedding_1536" field if the given value is not nil.
+func (au *ActivityUpdate) SetNillableEmbedding1536(pg *pgvector.Vector) *ActivityUpdate {
 	if pg != nil {
-		au.SetEmbedding(*pg)
+		au.SetEmbedding1536(*pg)
 	}
 	return au
 }
 
-// ClearEmbedding clears the value of the "embedding" field.
-func (au *ActivityUpdate) ClearEmbedding() *ActivityUpdate {
-	au.mutation.ClearEmbedding()
+// ClearEmbedding1536 clears the value of the "embedding_1536" field.
+func (au *ActivityUpdate) ClearEmbedding1536() *ActivityUpdate {
+	au.mutation.ClearEmbedding1536()
+	return au
+}
+
+// SetEmbedding3072 sets the "embedding_3072" field.
+func (au *ActivityUpdate) SetEmbedding3072(pg pgvector.Vector) *ActivityUpdate {
+	au.mutation.SetEmbedding3072(pg)
+	return au
+}
+
+// SetNillableEmbedding3072 sets the "embedding_3072" field if the given value is not nil.
+func (au *ActivityUpdate) SetNillableEmbedding3072(pg *pgvector.Vector) *ActivityUpdate {
+	if pg != nil {
+		au.SetEmbedding3072(*pg)
+	}
+	return au
+}
+
+// ClearEmbedding3072 clears the value of the "embedding_3072" field.
+func (au *ActivityUpdate) ClearEmbedding3072() *ActivityUpdate {
+	au.mutation.ClearEmbedding3072()
 	return au
 }
 
@@ -319,11 +339,17 @@ func (au *ActivityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := au.mutation.RawJSON(); ok {
 		_spec.SetField(activity.FieldRawJSON, field.TypeString, value)
 	}
-	if value, ok := au.mutation.Embedding(); ok {
-		_spec.SetField(activity.FieldEmbedding, field.TypeOther, value)
+	if value, ok := au.mutation.Embedding1536(); ok {
+		_spec.SetField(activity.FieldEmbedding1536, field.TypeOther, value)
 	}
-	if au.mutation.EmbeddingCleared() {
-		_spec.ClearField(activity.FieldEmbedding, field.TypeOther)
+	if au.mutation.Embedding1536Cleared() {
+		_spec.ClearField(activity.FieldEmbedding1536, field.TypeOther)
+	}
+	if value, ok := au.mutation.Embedding3072(); ok {
+		_spec.SetField(activity.FieldEmbedding3072, field.TypeOther, value)
+	}
+	if au.mutation.Embedding3072Cleared() {
+		_spec.ClearField(activity.FieldEmbedding3072, field.TypeOther)
 	}
 	if value, ok := au.mutation.SocialScore(); ok {
 		_spec.SetField(activity.FieldSocialScore, field.TypeFloat64, value)
@@ -511,23 +537,43 @@ func (auo *ActivityUpdateOne) SetNillableRawJSON(s *string) *ActivityUpdateOne {
 	return auo
 }
 
-// SetEmbedding sets the "embedding" field.
-func (auo *ActivityUpdateOne) SetEmbedding(pg pgvector.Vector) *ActivityUpdateOne {
-	auo.mutation.SetEmbedding(pg)
+// SetEmbedding1536 sets the "embedding_1536" field.
+func (auo *ActivityUpdateOne) SetEmbedding1536(pg pgvector.Vector) *ActivityUpdateOne {
+	auo.mutation.SetEmbedding1536(pg)
 	return auo
 }
 
-// SetNillableEmbedding sets the "embedding" field if the given value is not nil.
-func (auo *ActivityUpdateOne) SetNillableEmbedding(pg *pgvector.Vector) *ActivityUpdateOne {
+// SetNillableEmbedding1536 sets the "embedding_1536" field if the given value is not nil.
+func (auo *ActivityUpdateOne) SetNillableEmbedding1536(pg *pgvector.Vector) *ActivityUpdateOne {
 	if pg != nil {
-		auo.SetEmbedding(*pg)
+		auo.SetEmbedding1536(*pg)
 	}
 	return auo
 }
 
-// ClearEmbedding clears the value of the "embedding" field.
-func (auo *ActivityUpdateOne) ClearEmbedding() *ActivityUpdateOne {
-	auo.mutation.ClearEmbedding()
+// ClearEmbedding1536 clears the value of the "embedding_1536" field.
+func (auo *ActivityUpdateOne) ClearEmbedding1536() *ActivityUpdateOne {
+	auo.mutation.ClearEmbedding1536()
+	return auo
+}
+
+// SetEmbedding3072 sets the "embedding_3072" field.
+func (auo *ActivityUpdateOne) SetEmbedding3072(pg pgvector.Vector) *ActivityUpdateOne {
+	auo.mutation.SetEmbedding3072(pg)
+	return auo
+}
+
+// SetNillableEmbedding3072 sets the "embedding_3072" field if the given value is not nil.
+func (auo *ActivityUpdateOne) SetNillableEmbedding3072(pg *pgvector.Vector) *ActivityUpdateOne {
+	if pg != nil {
+		auo.SetEmbedding3072(*pg)
+	}
+	return auo
+}
+
+// ClearEmbedding3072 clears the value of the "embedding_3072" field.
+func (auo *ActivityUpdateOne) ClearEmbedding3072() *ActivityUpdateOne {
+	auo.mutation.ClearEmbedding3072()
 	return auo
 }
 
@@ -677,11 +723,17 @@ func (auo *ActivityUpdateOne) sqlSave(ctx context.Context) (_node *Activity, err
 	if value, ok := auo.mutation.RawJSON(); ok {
 		_spec.SetField(activity.FieldRawJSON, field.TypeString, value)
 	}
-	if value, ok := auo.mutation.Embedding(); ok {
-		_spec.SetField(activity.FieldEmbedding, field.TypeOther, value)
+	if value, ok := auo.mutation.Embedding1536(); ok {
+		_spec.SetField(activity.FieldEmbedding1536, field.TypeOther, value)
 	}
-	if auo.mutation.EmbeddingCleared() {
-		_spec.ClearField(activity.FieldEmbedding, field.TypeOther)
+	if auo.mutation.Embedding1536Cleared() {
+		_spec.ClearField(activity.FieldEmbedding1536, field.TypeOther)
+	}
+	if value, ok := auo.mutation.Embedding3072(); ok {
+		_spec.SetField(activity.FieldEmbedding3072, field.TypeOther, value)
+	}
+	if auo.mutation.Embedding3072Cleared() {
+		_spec.ClearField(activity.FieldEmbedding3072, field.TypeOther)
 	}
 	if value, ok := auo.mutation.SocialScore(); ok {
 		_spec.SetField(activity.FieldSocialScore, field.TypeFloat64, value)

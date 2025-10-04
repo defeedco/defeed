@@ -90,16 +90,30 @@ func (ac *ActivityCreate) SetRawJSON(s string) *ActivityCreate {
 	return ac
 }
 
-// SetEmbedding sets the "embedding" field.
-func (ac *ActivityCreate) SetEmbedding(pg pgvector.Vector) *ActivityCreate {
-	ac.mutation.SetEmbedding(pg)
+// SetEmbedding1536 sets the "embedding_1536" field.
+func (ac *ActivityCreate) SetEmbedding1536(pg pgvector.Vector) *ActivityCreate {
+	ac.mutation.SetEmbedding1536(pg)
 	return ac
 }
 
-// SetNillableEmbedding sets the "embedding" field if the given value is not nil.
-func (ac *ActivityCreate) SetNillableEmbedding(pg *pgvector.Vector) *ActivityCreate {
+// SetNillableEmbedding1536 sets the "embedding_1536" field if the given value is not nil.
+func (ac *ActivityCreate) SetNillableEmbedding1536(pg *pgvector.Vector) *ActivityCreate {
 	if pg != nil {
-		ac.SetEmbedding(*pg)
+		ac.SetEmbedding1536(*pg)
+	}
+	return ac
+}
+
+// SetEmbedding3072 sets the "embedding_3072" field.
+func (ac *ActivityCreate) SetEmbedding3072(pg pgvector.Vector) *ActivityCreate {
+	ac.mutation.SetEmbedding3072(pg)
+	return ac
+}
+
+// SetNillableEmbedding3072 sets the "embedding_3072" field if the given value is not nil.
+func (ac *ActivityCreate) SetNillableEmbedding3072(pg *pgvector.Vector) *ActivityCreate {
+	if pg != nil {
+		ac.SetEmbedding3072(*pg)
 	}
 	return ac
 }
@@ -304,9 +318,13 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 		_spec.SetField(activity.FieldRawJSON, field.TypeString, value)
 		_node.RawJSON = value
 	}
-	if value, ok := ac.mutation.Embedding(); ok {
-		_spec.SetField(activity.FieldEmbedding, field.TypeOther, value)
-		_node.Embedding = &value
+	if value, ok := ac.mutation.Embedding1536(); ok {
+		_spec.SetField(activity.FieldEmbedding1536, field.TypeOther, value)
+		_node.Embedding1536 = &value
+	}
+	if value, ok := ac.mutation.Embedding3072(); ok {
+		_spec.SetField(activity.FieldEmbedding3072, field.TypeOther, value)
+		_node.Embedding3072 = &value
 	}
 	if value, ok := ac.mutation.SocialScore(); ok {
 		_spec.SetField(activity.FieldSocialScore, field.TypeFloat64, value)
@@ -500,21 +518,39 @@ func (u *ActivityUpsert) UpdateRawJSON() *ActivityUpsert {
 	return u
 }
 
-// SetEmbedding sets the "embedding" field.
-func (u *ActivityUpsert) SetEmbedding(v pgvector.Vector) *ActivityUpsert {
-	u.Set(activity.FieldEmbedding, v)
+// SetEmbedding1536 sets the "embedding_1536" field.
+func (u *ActivityUpsert) SetEmbedding1536(v pgvector.Vector) *ActivityUpsert {
+	u.Set(activity.FieldEmbedding1536, v)
 	return u
 }
 
-// UpdateEmbedding sets the "embedding" field to the value that was provided on create.
-func (u *ActivityUpsert) UpdateEmbedding() *ActivityUpsert {
-	u.SetExcluded(activity.FieldEmbedding)
+// UpdateEmbedding1536 sets the "embedding_1536" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateEmbedding1536() *ActivityUpsert {
+	u.SetExcluded(activity.FieldEmbedding1536)
 	return u
 }
 
-// ClearEmbedding clears the value of the "embedding" field.
-func (u *ActivityUpsert) ClearEmbedding() *ActivityUpsert {
-	u.SetNull(activity.FieldEmbedding)
+// ClearEmbedding1536 clears the value of the "embedding_1536" field.
+func (u *ActivityUpsert) ClearEmbedding1536() *ActivityUpsert {
+	u.SetNull(activity.FieldEmbedding1536)
+	return u
+}
+
+// SetEmbedding3072 sets the "embedding_3072" field.
+func (u *ActivityUpsert) SetEmbedding3072(v pgvector.Vector) *ActivityUpsert {
+	u.Set(activity.FieldEmbedding3072, v)
+	return u
+}
+
+// UpdateEmbedding3072 sets the "embedding_3072" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateEmbedding3072() *ActivityUpsert {
+	u.SetExcluded(activity.FieldEmbedding3072)
+	return u
+}
+
+// ClearEmbedding3072 clears the value of the "embedding_3072" field.
+func (u *ActivityUpsert) ClearEmbedding3072() *ActivityUpsert {
+	u.SetNull(activity.FieldEmbedding3072)
 	return u
 }
 
@@ -756,24 +792,45 @@ func (u *ActivityUpsertOne) UpdateRawJSON() *ActivityUpsertOne {
 	})
 }
 
-// SetEmbedding sets the "embedding" field.
-func (u *ActivityUpsertOne) SetEmbedding(v pgvector.Vector) *ActivityUpsertOne {
+// SetEmbedding1536 sets the "embedding_1536" field.
+func (u *ActivityUpsertOne) SetEmbedding1536(v pgvector.Vector) *ActivityUpsertOne {
 	return u.Update(func(s *ActivityUpsert) {
-		s.SetEmbedding(v)
+		s.SetEmbedding1536(v)
 	})
 }
 
-// UpdateEmbedding sets the "embedding" field to the value that was provided on create.
-func (u *ActivityUpsertOne) UpdateEmbedding() *ActivityUpsertOne {
+// UpdateEmbedding1536 sets the "embedding_1536" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateEmbedding1536() *ActivityUpsertOne {
 	return u.Update(func(s *ActivityUpsert) {
-		s.UpdateEmbedding()
+		s.UpdateEmbedding1536()
 	})
 }
 
-// ClearEmbedding clears the value of the "embedding" field.
-func (u *ActivityUpsertOne) ClearEmbedding() *ActivityUpsertOne {
+// ClearEmbedding1536 clears the value of the "embedding_1536" field.
+func (u *ActivityUpsertOne) ClearEmbedding1536() *ActivityUpsertOne {
 	return u.Update(func(s *ActivityUpsert) {
-		s.ClearEmbedding()
+		s.ClearEmbedding1536()
+	})
+}
+
+// SetEmbedding3072 sets the "embedding_3072" field.
+func (u *ActivityUpsertOne) SetEmbedding3072(v pgvector.Vector) *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetEmbedding3072(v)
+	})
+}
+
+// UpdateEmbedding3072 sets the "embedding_3072" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateEmbedding3072() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateEmbedding3072()
+	})
+}
+
+// ClearEmbedding3072 clears the value of the "embedding_3072" field.
+func (u *ActivityUpsertOne) ClearEmbedding3072() *ActivityUpsertOne {
+	return u.Update(func(s *ActivityUpsert) {
+		s.ClearEmbedding3072()
 	})
 }
 
@@ -1188,24 +1245,45 @@ func (u *ActivityUpsertBulk) UpdateRawJSON() *ActivityUpsertBulk {
 	})
 }
 
-// SetEmbedding sets the "embedding" field.
-func (u *ActivityUpsertBulk) SetEmbedding(v pgvector.Vector) *ActivityUpsertBulk {
+// SetEmbedding1536 sets the "embedding_1536" field.
+func (u *ActivityUpsertBulk) SetEmbedding1536(v pgvector.Vector) *ActivityUpsertBulk {
 	return u.Update(func(s *ActivityUpsert) {
-		s.SetEmbedding(v)
+		s.SetEmbedding1536(v)
 	})
 }
 
-// UpdateEmbedding sets the "embedding" field to the value that was provided on create.
-func (u *ActivityUpsertBulk) UpdateEmbedding() *ActivityUpsertBulk {
+// UpdateEmbedding1536 sets the "embedding_1536" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateEmbedding1536() *ActivityUpsertBulk {
 	return u.Update(func(s *ActivityUpsert) {
-		s.UpdateEmbedding()
+		s.UpdateEmbedding1536()
 	})
 }
 
-// ClearEmbedding clears the value of the "embedding" field.
-func (u *ActivityUpsertBulk) ClearEmbedding() *ActivityUpsertBulk {
+// ClearEmbedding1536 clears the value of the "embedding_1536" field.
+func (u *ActivityUpsertBulk) ClearEmbedding1536() *ActivityUpsertBulk {
 	return u.Update(func(s *ActivityUpsert) {
-		s.ClearEmbedding()
+		s.ClearEmbedding1536()
+	})
+}
+
+// SetEmbedding3072 sets the "embedding_3072" field.
+func (u *ActivityUpsertBulk) SetEmbedding3072(v pgvector.Vector) *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.SetEmbedding3072(v)
+	})
+}
+
+// UpdateEmbedding3072 sets the "embedding_3072" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateEmbedding3072() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.UpdateEmbedding3072()
+	})
+}
+
+// ClearEmbedding3072 clears the value of the "embedding_3072" field.
+func (u *ActivityUpsertBulk) ClearEmbedding3072() *ActivityUpsertBulk {
+	return u.Update(func(s *ActivityUpsert) {
+		s.ClearEmbedding3072()
 	})
 }
 
