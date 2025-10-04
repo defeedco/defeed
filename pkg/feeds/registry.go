@@ -253,26 +253,9 @@ func (r *Registry) Activities(
 		return r.searchByQuery(ctx, feed.SourceUIDs, query, sortBy, period, limit)
 	}
 
-	result, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
-		SourceUIDs: feed.SourceUIDs,
-		SortBy:     sortBy,
-		Period:     period,
-		Limit:      limit,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("search activities: %w", err)
-	}
-
-	// Fallback to grouping activities by the source type
-	topics, err := r.topicsBySourceType(result.Activities)
-	if err != nil {
-		return nil, fmt.Errorf("topics by source type: %w", err)
-	}
-
-	return &ActivitiesResponse{
-		Results: result.Activities,
-		Topics:  topics,
-	}, nil
+	// For diversity, when no query is provided and not sorting by similarity,
+	// select top activities from each source to ensure variety
+	return r.searchWithSourceDiversity(ctx, feed.SourceUIDs, sortBy, period, limit)
 }
 
 func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActivity) ([]*Topic, error) {
@@ -524,4 +507,72 @@ func (r *Registry) summarizeTopicWithCache(
 		Msg("topic summary cached")
 
 	return summary, nil
+}
+
+// searchWithSourceDiversity selects top activities from each source to ensure diversity
+func (r *Registry) searchWithSourceDiversity(
+	ctx context.Context,
+	sourceUIDs []activitytypes.TypedUID,
+	sortBy activitytypes.SortBy,
+	period activitytypes.Period,
+	limit int,
+) (*ActivitiesResponse, error) {
+
+	activitiesBySource := make(map[activitytypes.TypedUID][]*activitytypes.DecoratedActivity)
+	for _, sourceUID := range sourceUIDs {
+		result, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
+			SourceUIDs: []activitytypes.TypedUID{sourceUID},
+			SortBy:     sortBy,
+			Period:     period,
+			Limit:      limit,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("search activities for source %s: %w", sourceUID, err)
+		}
+
+		activitiesBySource[sourceUID] = result.Activities
+	}
+
+	allActivities := make([]*activitytypes.DecoratedActivity, 0)
+	remainingLimit := limit
+
+	for remainingLimit > 0 {
+		prevRemainingLimit := remainingLimit
+		limitPerSource := remainingLimit / len(activitiesBySource)
+		for sourceUID, activities := range activitiesBySource {
+			takeCount := min(limitPerSource, len(activities))
+			takeCount = min(takeCount, remainingLimit)
+
+			if takeCount > 0 {
+				allActivities = append(allActivities, activities[:takeCount]...)
+				remainingLimit -= takeCount
+				activitiesBySource[sourceUID] = activities[takeCount:]
+			}
+		}
+		if prevRemainingLimit == remainingLimit {
+			// no more activities to take
+			break
+		}
+	}
+
+	switch sortBy {
+	case activitytypes.SortByDate:
+		sort.Slice(allActivities, func(i, j int) bool {
+			return allActivities[i].Activity.CreatedAt().After(allActivities[j].Activity.CreatedAt())
+		})
+	case activitytypes.SortBySocialScore:
+		sort.Slice(allActivities, func(i, j int) bool {
+			return allActivities[i].Activity.SocialScore() > allActivities[j].Activity.SocialScore()
+		})
+	}
+
+	topics, err := r.topicsBySourceType(allActivities)
+	if err != nil {
+		return nil, fmt.Errorf("topics by source type: %w", err)
+	}
+
+	return &ActivitiesResponse{
+		Results: allActivities,
+		Topics:  topics,
+	}, nil
 }
