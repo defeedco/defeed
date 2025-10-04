@@ -16,7 +16,6 @@
 		<outline text="Startup" title="Startup">
 			<outline text="Startup methodology and entrepreneurship" title="Steve Blank" type="rss" xmlUrl="http://steveblank.com/feed/" topics="startups" />
 			<outline text="AI and technology insights from George Hotz" title="The singularity is nearer" type="rss" xmlUrl="https://geohot.github.io/blog/feed.xml" topics="startups,ai_research" faviconUrl="https://avatars.githubusercontent.com/u/72895?v=4" />
-			<outline text="Tech news and startup discussions" title="Hacker News" type="rss" xmlUrl="http://news.ycombinator.com/rss" topics="startups,devtools" />
 			<outline text="Marketing and entrepreneurship advice" title="Guy Kawasaki" type="rss" xmlUrl="http://guykawasaki.com/feed/" topics="startups,growth_engineering" />
 			<outline text="Technology strategy and market analysis" title="Essays - Benedict Evans" type="rss" xmlUrl="http://ben-evans.com/benedictevans?format=rss" topics="startups,product_management" />
 			<outline text="Startup insights and best practices" title="First Round Review" type="rss" xmlUrl="http://firstround.com/review/feed.xml" topics="startups" />

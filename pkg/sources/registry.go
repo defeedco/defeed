@@ -180,9 +180,12 @@ func fuzzyReRank(input []types.Source, query string) []types.Source {
 		return sourcesWithScore[i].score > sourcesWithScore[j].score
 	})
 
-	result := make([]types.Source, len(sourcesWithScore))
-	for i, item := range sourcesWithScore {
-		result[i] = item.source
+	result := make([]types.Source, 0)
+	for _, item := range sourcesWithScore {
+		// Exclude less relevant search results
+		if item.score > 20 {
+			result = append(result, item.source)
+		}
 	}
 
 	return result
