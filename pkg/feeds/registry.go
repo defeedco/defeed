@@ -497,19 +497,34 @@ func (r *Registry) searchWithSourceDiversity(
 	limit int,
 ) (*ActivitiesResponse, error) {
 
-	activitiesBySource := make(map[activitytypes.TypedUID][]*activitytypes.DecoratedActivity)
-	for _, sourceUID := range sourceUIDs {
-		result, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
-			SourceUIDs: []activitytypes.TypedUID{sourceUID},
-			SortBy:     sortBy,
-			Period:     period,
-			Limit:      limit,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("search activities for source %s: %w", sourceUID, err)
-		}
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(10)
 
-		activitiesBySource[sourceUID] = result.Activities
+	activitiesBySourceIndex := make([][]*activitytypes.DecoratedActivity, len(sourceUIDs))
+	for i, sourceUID := range sourceUIDs {
+		g.Go(func() error {
+			result, err := r.activityRegistry.Search(gctx, activities.SearchRequest{
+				SourceUIDs: []activitytypes.TypedUID{sourceUID},
+				SortBy:     sortBy,
+				Period:     period,
+				Limit:      limit,
+			})
+			if err != nil {
+				return fmt.Errorf("search activities for source %s: %w", sourceUID, err)
+			}
+
+			activitiesBySourceIndex[i] = result.Activities
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("wait search: %w", err)
+	}
+
+	activitiesBySource := make(map[activitytypes.TypedUID][]*activitytypes.DecoratedActivity)
+	for i, activities := range activitiesBySourceIndex {
+		activitiesBySource[sourceUIDs[i]] = activities
 	}
 
 	allActivities := make([]*activitytypes.DecoratedActivity, 0)
