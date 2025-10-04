@@ -3,6 +3,7 @@ package lobsters
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/defeedco/defeed/pkg/lib"
@@ -69,7 +70,14 @@ func (p *Post) Body() string {
 }
 
 func (p *Post) URL() string {
-	return p.Post.URL
+	if p.Post.ShortIDURL == "" {
+		// Old entries are missing ShortIDURL,
+		// so we need to extract it from the CommentsURL.
+		parts := strings.Split(p.Post.CommentsURL, "/")
+		lastIndex := len(parts) - 1
+		return strings.Join(parts[:lastIndex], "/")
+	}
+	return p.Post.ShortIDURL
 }
 
 func (p *Post) ImageURL() string {

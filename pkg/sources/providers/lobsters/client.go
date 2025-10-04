@@ -30,14 +30,17 @@ func NewLobstersClient(baseURL string) *LobstersClient {
 }
 
 type Story struct {
-	ID           string    `json:"short_id"`
-	CreatedAt    time.Time `json:"created_at"`
-	Title        string    `json:"title"`
-	URL          string    `json:"url"`
-	Score        int       `json:"score"`
-	CommentCount int       `json:"comment_count"`
-	CommentsURL  string    `json:"comments_url"`
-	Tags         []string  `json:"tags"`
+	ID        string    `json:"short_id"`
+	CreatedAt time.Time `json:"created_at"`
+	Title     string    `json:"title"`
+	// URL is the link to the external content mentioned in the story.
+	URL          string `json:"url"`
+	Score        int    `json:"score"`
+	CommentCount int    `json:"comment_count"`
+	// ShortIDURL is the URL of the story on lobste.rs
+	ShortIDURL  string   `json:"short_id_url"`
+	CommentsURL string   `json:"comments_url"`
+	Tags        []string `json:"tags"`
 }
 
 func (c *LobstersClient) GetStoriesByFeed(ctx context.Context, feed string) ([]*Story, error) {
