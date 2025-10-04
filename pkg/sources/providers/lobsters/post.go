@@ -97,15 +97,15 @@ func (p *Post) AmplificationCount() int {
 }
 
 func (p *Post) SocialScore() float64 {
-	score := float64(p.UpvotesCount())
+	upvotes := float64(p.UpvotesCount())
 	comments := float64(p.CommentsCount())
 
 	scoreWeight := 0.6
 	commentsWeight := 0.4
 
-	maxScore := 500.0
+	maxUpvotes := 500.0
 	maxComments := 100.0
 
-	return (providers.NormSocialScore(score, maxScore) * scoreWeight) +
+	return (providers.NormSocialScore(upvotes, maxUpvotes) * scoreWeight) +
 		(providers.NormSocialScore(comments, maxComments) * commentsWeight)
 }

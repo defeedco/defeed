@@ -96,7 +96,7 @@
 			<outline text="Visual explanations of machine learning concepts" title="Jay Alammar" type="rss" xmlUrl="https://jalammar.github.io/feed.xml" topics="ai_research" />
 			<outline text="Interactive machine learning explanations" title="Distill" type="rss" xmlUrl="http://distill.pub/rss.xml" topics="ai_research" />
 			<outline text="Deep learning and AI research insights" title="Lil'Log" type="rss" xmlUrl="https://lilianweng.github.io/lil-log/feed.xml" topics="ai_research" />
-			<outline text="AI research news from MIT" title="MIT News - Artificial intelligence" type="rss" xmlUrl="http://news.mit.edu/rss/topic/artificial-intelligence2" topics="ai_research" />
+			<outline text="AI research news from MIT" title="MIT News - Artificial intelligence" type="rss" xmlUrl="http://news.mit.edu/rss/topic/artificial-intelligence2" topics="ai_research" faviconUrl="https://sts-program.mit.edu/wp-content/uploads/2023/12/mit-favicon-white-on-black-512x512-1.png" />
 			<outline text="AI research and academic insights" title="The Berkeley Artificial Intelligence Research Blog" type="rss" xmlUrl="http://bair.berkeley.edu/blog/feed.xml" topics="ai_research" />
 			<outline text="Deep learning education and tutorials" title="DeepLearningAI" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCcIXc5mJsHVYTZR1maL5l9w" topics="ai_research" />
 			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="http://blog.evjang.com/feeds/posts/default?alt=rss" topics="ai_research" />
@@ -144,8 +144,8 @@
 			<outline text="Science, culture, and philosophy" title="Nautilus" type="rss" xmlUrl="http://nautil.us/rss/all" topics="ai_research" />
 			<outline text="Mathematics and physics research" title="Quanta Magazine" type="rss" xmlUrl="http://www.quantamagazine.org/feed/" topics="ai_research" />
 			<outline text="Scientific research and discoveries" title="Nature" type="rss" xmlUrl="http://www.nature.com/nature/current_issue/rss" topics="ai_research" />
-			<outline text="Science, technology, and society research" title="MIT News - Science, Technology, and Society | Technology and society | Program in STS | History of science | History of MIT" type="rss" xmlUrl="https://news.mit.edu/rss/topic/science-technology-and-society" topics="ai_research" />
-			<outline text="MIT research news and discoveries" title="MIT News" type="rss" xmlUrl="https://news.mit.edu/rss/research" topics="ai_research" />
+			<outline text="Science, technology, and society research" title="MIT News - Science, Technology, and Society | Technology and society | Program in STS | History of science | History of MIT" type="rss" xmlUrl="https://news.mit.edu/rss/topic/science-technology-and-society" topics="ai_research" faviconUrl="https://sts-program.mit.edu/wp-content/uploads/2023/12/mit-favicon-white-on-black-512x512-1.png" />
+			<outline text="MIT research news and discoveries" title="MIT News" type="rss" xmlUrl="https://news.mit.edu/rss/research" topics="ai_research" faviconUrl="https://sts-program.mit.edu/wp-content/uploads/2023/12/mit-favicon-white-on-black-512x512-1.png" />
 			<outline text="Science news and discoveries" title="ScienceAlert" type="rss" xmlUrl="https://www.sciencealert.com/rss" topics="ai_research" />
 			<outline text="Future technology and innovation" title="Singularity Hub" type="rss" xmlUrl="https://singularityhub.com/feed/" topics="ai_research,robotics" />
 			<outline text="Engineering and technology explanations" title="Lesics" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCqZQJ4600a9wIfMPbYc60OQ" topics="devtools" />
