@@ -191,6 +191,7 @@ func fuzzyReRank(input []types.Source, query string) []types.Source {
 	return result
 }
 
+// TODO: Optimise this for more consistent results (e.g. "hacker news" vs "hackernews" return different results)
 // calculateRelevanceScore calculates a relevance score for a source based on the query
 func calculateRelevanceScore(source types.Source, query string) float64 {
 	score := 0.0
