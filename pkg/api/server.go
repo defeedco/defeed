@@ -146,6 +146,11 @@ func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid 
 		limit = *params.Limit
 	}
 
+	rewriteQuery := false
+	if params.RewriteQuery != nil {
+		rewriteQuery = *params.RewriteQuery
+	}
+
 	sortBy, err := deserializeSortBy(params.SortBy)
 	if err != nil {
 		s.badRequest(w, err, "deserialize sort by")
@@ -154,7 +159,7 @@ func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid 
 
 	period := deserializePeriod(params.Period)
 
-	out, err := s.feedRegistry.Activities(r.Context(), uid, user.UserID, sortBy, limit, queryOverride, period)
+	out, err := s.feedRegistry.Activities(r.Context(), uid, user.UserID, sortBy, limit, queryOverride, period, rewriteQuery)
 	if err != nil {
 		s.internalError(w, err, "list feed activities")
 		return

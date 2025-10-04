@@ -242,6 +242,7 @@ func (r *Registry) Activities(
 	limit int,
 	query string,
 	period activitytypes.Period,
+	rewriteQuery bool,
 ) (*ActivitiesResponse, error) {
 	feed, err := r.feedRepository.GetByID(ctx, feedID)
 	if err != nil {
@@ -256,15 +257,50 @@ func (r *Registry) Activities(
 	// Do not fallback to feed.Query,
 	// so that consumer can purposefully set an empty query.
 	if query != "" {
-		// Only if user provides the query, we can rewrite it to sub-queries and return results in topics.
-		return r.searchByQuery(ctx, feed.SourceUIDs, query, sortBy, period, limit)
+		if rewriteQuery && r.config.AllowQueryRewrite {
+			return r.searchByRewrittenQueries(ctx, feed.SourceUIDs, query, sortBy, period, limit)
+		}
+		// Fallback to a cheaper and lower-latency method.
+		return r.searchByUserQuery(ctx, feed.SourceUIDs, query, sortBy, period, limit)
 	}
 
 	// Select top activities from each source to ensure variety
 	return r.searchWithSourceDiversity(ctx, feed.SourceUIDs, sortBy, period, limit)
 }
 
-func (r *Registry) searchByQuery(
+func (r *Registry) searchByUserQuery(
+	ctx context.Context,
+	sourceUIDs []activitytypes.TypedUID,
+	query string,
+	sortBy activitytypes.SortBy,
+	period activitytypes.Period,
+	limit int,
+) (*ActivitiesResponse, error) {
+	res, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
+		Query:      query,
+		SourceUIDs: sourceUIDs,
+		// TODO: Set min similarity filter?
+		MinSimilarity: 0.0,
+		Limit:         limit,
+		SortBy:        sortBy,
+		Period:        period,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("search activities: %w", err)
+	}
+
+	topics, err := r.topicsBySourceType(res.Activities)
+	if err != nil {
+		return nil, fmt.Errorf("topics by source type: %w", err)
+	}
+
+	return &ActivitiesResponse{
+		Results: res.Activities,
+		Topics:  topics,
+	}, nil
+}
+
+func (r *Registry) searchByRewrittenQueries(
 	ctx context.Context,
 	sourceUIDs []activitytypes.TypedUID,
 	query string,

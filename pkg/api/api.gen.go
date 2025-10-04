@@ -183,6 +183,9 @@ type ListFeedActivitiesParams struct {
 
 	// Limit Maximum number of activities to return.
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// RewriteQuery Whether to rewrite the query to sub-queries and return results by topics.
+	RewriteQuery *bool `form:"rewriteQuery,omitempty" json:"rewriteQuery,omitempty"`
 }
 
 // ListSourcesParams defines parameters for ListSources.
@@ -388,6 +391,14 @@ func (siw *ServerInterfaceWrapper) ListFeedActivities(w http.ResponseWriter, r *
 	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "rewriteQuery" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "rewriteQuery", r.URL.Query(), &params.RewriteQuery)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "rewriteQuery", Err: err})
 		return
 	}
 

@@ -205,6 +205,12 @@ paths:
           schema:
             type: integer
             default: 20
+        - name: rewriteQuery
+          in: query
+          description: Whether to rewrite the query to sub-queries and return results by topics.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Activities list
