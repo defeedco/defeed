@@ -5,10 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/defeedco/defeed/pkg/lib"
 	"github.com/defeedco/defeed/pkg/sources/activities"
+	"github.com/defeedco/defeed/pkg/sources/providers/github"
+	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
+	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
+	"github.com/defeedco/defeed/pkg/sources/providers/mastodon"
+	"github.com/defeedco/defeed/pkg/sources/providers/reddit"
+	"github.com/defeedco/defeed/pkg/sources/providers/rss"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 
 	"golang.org/x/sync/errgroup"
@@ -253,36 +260,8 @@ func (r *Registry) Activities(
 		return r.searchByQuery(ctx, feed.SourceUIDs, query, sortBy, period, limit)
 	}
 
-	// For diversity, when no query is provided and not sorting by similarity,
-	// select top activities from each source to ensure variety
+	// Select top activities from each source to ensure variety
 	return r.searchWithSourceDiversity(ctx, feed.SourceUIDs, sortBy, period, limit)
-}
-
-func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActivity) ([]*Topic, error) {
-	sourceTypeToActivities := make(map[string][]string)
-	for _, activity := range activities {
-		srcType := activity.Activity.SourceUID().Type()
-		sourceTypeToActivities[srcType] = append(sourceTypeToActivities[srcType], activity.Activity.UID().String())
-	}
-
-	topics := make([]*Topic, 0, len(sourceTypeToActivities))
-	for srcType, activityIDs := range sourceTypeToActivities {
-		label, err := sources.SourceTypeToLabel(srcType)
-		if err != nil {
-			return nil, fmt.Errorf("source type to label: %w", err)
-		}
-		emoji, err := sources.SourceTypeToEmoji(srcType)
-		if err != nil {
-			return nil, fmt.Errorf("source type to emoji: %w", err)
-		}
-		topics = append(topics, &Topic{
-			Title:       label,
-			Emoji:       emoji,
-			ActivityIDs: activityIDs,
-		})
-	}
-
-	return topics, nil
 }
 
 func (r *Registry) searchByQuery(
@@ -575,4 +554,64 @@ func (r *Registry) searchWithSourceDiversity(
 		Results: allActivities,
 		Topics:  topics,
 	}, nil
+}
+
+func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActivity) ([]*Topic, error) {
+	activitiesByTopic := make(map[topicKey][]string)
+	for _, activity := range activities {
+		label, err := sourceTypeToTopicKey(activity.Activity.SourceUID().Type())
+		if err != nil {
+			return nil, fmt.Errorf("source type to topic key: %w", err)
+		}
+		activitiesByTopic[label] = append(activitiesByTopic[label], activity.Activity.UID().String())
+	}
+
+	topics := make([]*Topic, 0, len(activitiesByTopic))
+	for label, activityIDs := range activitiesByTopic {
+		topics = append(topics, &Topic{
+			Title:       label.Title(),
+			Emoji:       label.Emoji(),
+			ActivityIDs: activityIDs,
+		})
+	}
+
+	return topics, nil
+}
+
+type topicKey string
+
+func newTopicKey(emoji string, title string) topicKey {
+	return topicKey(fmt.Sprintf("%s|%s", emoji, title))
+}
+
+func (t topicKey) Emoji() string {
+	return strings.Split(string(t), "|")[0]
+}
+
+func (t topicKey) Title() string {
+	return strings.Split(string(t), "|")[1]
+}
+
+func sourceTypeToTopicKey(in string) (topicKey, error) {
+	switch in {
+	case mastodon.TypeMastodonAccount, mastodon.TypeMastodonTag:
+		return newTopicKey("🐘", "Mastodon"), nil
+	case hackernews.TypeHackerNewsPosts:
+		return newTopicKey("🧑‍💻", "HackerNews"), nil
+	case reddit.TypeRedditSubreddit:
+		return newTopicKey("🔥", "Reddit"), nil
+	case lobsters.TypeLobstersTag, lobsters.TypeLobstersFeed:
+		return newTopicKey("🐙", "Lobsters"), nil
+	case rss.TypeRSSFeed:
+		return newTopicKey("📰", "RSS Feeds"), nil
+	case github.TypeGithubReleases, github.TypeGithubIssues:
+		return newTopicKey("🔘", "Github Releases, Issues & PRs"), nil
+	case github.TypeGithubTopic:
+		return newTopicKey("⭐", "Github Repositories"), nil
+		// Note: temporarily removed in commit a8c728a86cefadd20f67a424363dc6f61c41cf66
+		// case changedetection.TypeChangedetectionWebsite:
+		// return ChangedetectionWebsite, nil
+	}
+
+	return "", fmt.Errorf("unknown source type: %s", in)
 }
