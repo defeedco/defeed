@@ -6,4 +6,6 @@ type Config struct {
 	// AllowQueryRewrite controls whether the userquery can be rewritten to sub-queries.
 	// Note: query rewrites add cost and latency to the request.
 	AllowQueryRewrite bool `env:"ALLOW_QUERY_REWRITE,default=true"`
+	// MinSimilarity controls the minimum similarity score threeshold, when searching by query embedding.
+	MinSimilarity float32 `env:"MIN_SIMILARITY,default=0.3"`
 }

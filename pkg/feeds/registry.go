@@ -277,10 +277,9 @@ func (r *Registry) searchByUserQuery(
 	limit int,
 ) (*ActivitiesResponse, error) {
 	res, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
-		Query:      query,
-		SourceUIDs: sourceUIDs,
-		// TODO: Set min similarity filter?
-		MinSimilarity: 0.0,
+		Query:         query,
+		SourceUIDs:    sourceUIDs,
+		MinSimilarity: r.config.MinSimilarity,
 		Limit:         limit,
 		SortBy:        sortBy,
 		Period:        period,
@@ -392,10 +391,9 @@ func (r *Registry) searchByTopicQueryGroups(
 		for qi, query := range topic.Queries {
 			g.Go(func() error {
 				res, err := r.activityRegistry.Search(gctx, activities.SearchRequest{
-					Query:      query,
-					SourceUIDs: sourceUIDs,
-					// TODO: Set min similarity filter?
-					MinSimilarity: 0.0,
+					Query:         query,
+					SourceUIDs:    sourceUIDs,
+					MinSimilarity: r.config.MinSimilarity,
 					Limit:         limitPerTopic,
 					SortBy:        sortBy,
 					Period:        period,

@@ -164,7 +164,7 @@ func (r *Registry) Search(ctx context.Context, req SearchRequest) (*types.Search
 	recencyWeight := 0.0
 	// We only care about recency when viewing today's activities.
 	if req.Period == types.PeriodDay {
-		recencyWeight = 0.2
+		recencyWeight = 1
 	}
 
 	return r.activityRepo.Search(ctx, types.SearchRequest{
@@ -176,8 +176,8 @@ func (r *Registry) Search(ctx context.Context, req SearchRequest) (*types.Search
 		SortBy:            req.SortBy,
 		Period:            req.Period,
 		QueryEmbedding:    queryEmbedding,
-		SocialScoreWeight: 0.4,
-		SimilarityWeight:  0.4,
+		SocialScoreWeight: 3,
+		SimilarityWeight:  4,
 		RecencyWeight:     recencyWeight,
 	})
 }
