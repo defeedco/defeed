@@ -44,7 +44,6 @@
 		</outline>
 		<outline text="Products &amp; Ideas" title="Products &amp; Ideas">
 			<outline text="Daily discovery of new products and startups" title="Product Hunt — The best new products, every day" type="rss" xmlUrl="http://www.producthunt.com/feed" topics="startups,product_management" faviconUrl="https://www.producthunt.com/favicon.ico" />
-			<outline text="Developer projects and demos" title="Hacker News: Show HN" type="rss" xmlUrl="http://hnrss.org/show" topics="devtools,open_source" faviconUrl="https://news.ycombinator.com/favicon.ico" />
 			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" topics="startups,product_management" faviconUrl="https://news.ycombinator.com/favicon.ico" />
 			<outline text="Product management and entrepreneurship insights" title="Sachin Rekhi's Blog" type="rss" xmlUrl="http://feeds.feedburner.com/sachinrekhiblog" topics="product_management,startups" />
 		</outline>

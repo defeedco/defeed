@@ -37,6 +37,15 @@ var feedSources = []types.Source{
 	&SourcePosts{
 		FeedName: "best",
 	},
+	&SourcePosts{
+		FeedName: "ask",
+	},
+	&SourcePosts{
+		FeedName: "show",
+	},
+	&SourcePosts{
+		FeedName: "job",
+	},
 }
 
 func (f *PostsFetcher) FindByID(ctx context.Context, id activitytypes.TypedUID, config *types.ProviderConfig) (types.Source, error) {

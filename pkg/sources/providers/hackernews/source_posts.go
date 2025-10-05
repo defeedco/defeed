@@ -19,7 +19,7 @@ import (
 const TypeHackerNewsPosts = "hackernewsposts"
 
 type SourcePosts struct {
-	FeedName string `json:"feedName" validate:"required,oneof=top new best"`
+	FeedName string `json:"feedName" validate:"required,oneof=top new best ask show job"`
 	client   *gohn.Client
 	logger   *zerolog.Logger
 }
@@ -44,6 +44,12 @@ func (s *SourcePosts) Description() string {
 		return "Latest new stories from Hacker News"
 	case "best":
 		return "Best stories from Hacker News"
+	case "ask":
+		return "Ask HN stories from Hacker News"
+	case "show":
+		return "Show HN stories from Hacker News"
+	case "job":
+		return "Job stories from Hacker News"
 	default:
 		return fmt.Sprintf("%s stories from Hacker News", lib.Capitalize(s.FeedName))
 	}
@@ -196,6 +202,7 @@ func (s *SourcePosts) Initialize(logger *zerolog.Logger, config *sourcetypes.Pro
 }
 
 func (s *SourcePosts) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
+	// Future note: we can detect post changes using https://github.com/HackerNews/API?tab=readme-ov-file#changed-items-and-profiles
 	s.fetchHackerNewsPosts(ctx, since, feed, errs)
 }
 
@@ -278,6 +285,14 @@ func (s *SourcePosts) fetchStoryIDs(ctx context.Context) ([]*int, error) {
 		storyIDs, err = s.client.Stories.GetNewIDs(ctx)
 	case "best":
 		storyIDs, err = s.client.Stories.GetBestIDs(ctx)
+	case "ask":
+		storyIDs, err = s.client.Stories.GetAskIDs(ctx)
+	case "show":
+		storyIDs, err = s.client.Stories.GetShowIDs(ctx)
+	case "job":
+		storyIDs, err = s.client.Stories.GetJobIDs(ctx)
+	// Note: launches (https://news.ycombinator.com/launches) is not supported by the HackerNews API,
+	// so we use a RSS feed instead (https://hnrss.org/launches).
 	default:
 		return nil, fmt.Errorf("invalid feed name: %s", s.FeedName)
 	}
