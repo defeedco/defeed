@@ -145,13 +145,17 @@ func authMiddleware(config *config.Config) (*auth.RouteAuthMiddleware, error) {
 
 	// Per-route configuration
 	authMiddleware.
-		SetRouteAuthProvider("GET /sources", apiKeyProvider, true).
-		SetRouteAuthProvider("GET /sources/{uid}", apiKeyProvider, true).
-		SetRouteAuthProvider("GET /feeds", apiKeyProvider, true).
+		// Source info can be fetched from public feeds
+		SetRouteAuthProvider("GET /sources/{uid}", apiKeyProvider, false).
+		// Feeds can be public, so no auth required
+		SetRouteAuthProvider("GET /feeds", apiKeyProvider, false).
+		SetRouteAuthProvider("GET /feeds/{uid}/activities", apiKeyProvider, false).
+		// Creating, updating, deleting feeds requires auth
 		SetRouteAuthProvider("POST /feeds", apiKeyProvider, true).
 		SetRouteAuthProvider("PUT /feeds/{uid}", apiKeyProvider, true).
 		SetRouteAuthProvider("DELETE /feeds/{uid}", apiKeyProvider, true).
-		SetRouteAuthProvider("GET /feeds/{uid}/activities", apiKeyProvider, true)
+		// Sources are listed on feed details, which requires auth
+		SetRouteAuthProvider("GET /sources", apiKeyProvider, true)
 
 	return authMiddleware, nil
 }

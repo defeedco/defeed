@@ -19,7 +19,7 @@ const UserContextKey_ UserContextKey = "user"
 type Provider interface {
 	// Authenticate is called to authenticate the request.
 	// Provider must update the context with the user and call next.ServeHTTP or return a http error.
-	Authenticate(next http.Handler) http.Handler
+	Authenticate(next http.Handler, required bool) http.Handler
 }
 
 type User struct {
@@ -86,7 +86,7 @@ func (m *RouteAuthMiddleware) Middleware(next http.Handler) http.Handler {
 		}
 
 		// Apply the auth middleware
-		authMiddleware := authConfig.Provider.Authenticate(next)
+		authMiddleware := authConfig.Provider.Authenticate(next, authConfig.Required)
 		authMiddleware.ServeHTTP(w, r)
 	})
 }

@@ -254,6 +254,11 @@ func (r *Registry) Activities(
 		return nil, errors.New("feed not found")
 	}
 
+	// Unauthenticated users can't override the query to prevent (costly) abuse.
+	if userID == "" && feed.Query != "" {
+		return r.searchByRewrittenQueries(ctx, feed.SourceUIDs, feed.Query, sortBy, period, limit)
+	}
+
 	// Do not fallback to feed.Query,
 	// so that consumer can purposefully set an empty query.
 	if query != "" {
