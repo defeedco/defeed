@@ -21,9 +21,8 @@
 			<outline text="Startup insights and best practices" title="First Round Review" type="rss" xmlUrl="http://firstround.com/review/feed.xml" topics="startups" />
 			<outline text="AI and startup insights from OpenAI CEO" title="Sam Altman" type="rss" xmlUrl="http://blog.samaltman.com/posts.atom" topics="startups,llms,ai_research" />
 			<outline text="Growth marketing and product strategy" title="Andrew Chen" type="rss" xmlUrl="http://andrewchen.co/feed/" topics="startups,growth_engineering,product_management" />
-			<outline text="Venture capital and startup perspectives" title="Both Sides of the Table - Medium" type="rss" xmlUrl="https://bothsidesofthetable.com/feed" topics="startups" />
-			<outline text="Venture capital and startup perspectives" title="Both Sides of the Table" type="rss" xmlUrl="http://feeds.feedburner.com/BothSidesOfTheTable" topics="startups" />
-			<outline text="Product management insights and strategies" title="The Black Box of Product Management - Medium" type="rss" xmlUrl="https://medium.com/feed/the-black-box-of-product-management" topics="product_management" />
+			<outline text="Venture capital and startup perspectives" title="Both Sides of the Table" type="rss" xmlUrl="https://bothsidesofthetable.com/feed" topics="startups" />
+			<outline text="Product management insights and strategies" title="The Black Box of Product Management" type="rss" xmlUrl="https://medium.com/feed/the-black-box-of-product-management" topics="product_management" />
 			<outline text="Product management and strategy" title="Product Life" type="rss" xmlUrl="https://productlife.to/feed" topics="product_management" />
 			<outline text="Engineering leadership and scaling" title="Irrational Exuberance" type="rss" xmlUrl="https://lethain.com/feeds/" topics="devtools,distributed_systems" />
 			<!-- https://www.indiehackers.com/post/an-unofficial-feed-of-indie-hackers-2413a17623 -->
