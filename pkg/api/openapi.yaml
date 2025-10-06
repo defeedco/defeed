@@ -444,7 +444,7 @@ components:
       type: object
       required:
         - uid
-        - sourceUid
+        - sourceUids
         - sourceType
         - title
         - shortSummary
@@ -459,8 +459,10 @@ components:
       properties:
         uid:
           type: string
-        sourceUid:
-          type: string
+        sourceUids:
+          type: array
+          items:
+            type: string
         sourceType:
           $ref: '#/components/schemas/SourceType'
         title:

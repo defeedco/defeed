@@ -168,7 +168,7 @@ func parseRateLimitHeaders(resp *http.Response) *rateLimitHeaders {
 }
 
 func (r *OpenAILimiter) attemptEvent(headers *rateLimitHeaders, body []byte, statusCode int, attempt int) *zerolog.Event {
-	event := r.logger.Debug().
+	event := r.logger.Trace().
 		Int("remaining_requests", headers.RemainingRequests).
 		Dur("reset_requests", headers.ResetRequests).
 		Int("remaining_tokens", headers.RemainingTokens).

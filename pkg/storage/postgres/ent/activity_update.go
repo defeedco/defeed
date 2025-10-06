@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/defeedco/defeed/pkg/storage/postgres/ent/activity"
 	"github.com/defeedco/defeed/pkg/storage/postgres/ent/predicate"
@@ -43,17 +44,15 @@ func (au *ActivityUpdate) SetNillableUID(s *string) *ActivityUpdate {
 	return au
 }
 
-// SetSourceUID sets the "source_uid" field.
-func (au *ActivityUpdate) SetSourceUID(s string) *ActivityUpdate {
-	au.mutation.SetSourceUID(s)
+// SetSourceUids sets the "source_uids" field.
+func (au *ActivityUpdate) SetSourceUids(s []string) *ActivityUpdate {
+	au.mutation.SetSourceUids(s)
 	return au
 }
 
-// SetNillableSourceUID sets the "source_uid" field if the given value is not nil.
-func (au *ActivityUpdate) SetNillableSourceUID(s *string) *ActivityUpdate {
-	if s != nil {
-		au.SetSourceUID(*s)
-	}
+// AppendSourceUids appends s to the "source_uids" field.
+func (au *ActivityUpdate) AppendSourceUids(s []string) *ActivityUpdate {
+	au.mutation.AppendSourceUids(s)
 	return au
 }
 
@@ -309,8 +308,13 @@ func (au *ActivityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := au.mutation.UID(); ok {
 		_spec.SetField(activity.FieldUID, field.TypeString, value)
 	}
-	if value, ok := au.mutation.SourceUID(); ok {
-		_spec.SetField(activity.FieldSourceUID, field.TypeString, value)
+	if value, ok := au.mutation.SourceUids(); ok {
+		_spec.SetField(activity.FieldSourceUids, field.TypeJSON, value)
+	}
+	if value, ok := au.mutation.AppendedSourceUids(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, activity.FieldSourceUids, value)
+		})
 	}
 	if value, ok := au.mutation.SourceType(); ok {
 		_spec.SetField(activity.FieldSourceType, field.TypeString, value)
@@ -397,17 +401,15 @@ func (auo *ActivityUpdateOne) SetNillableUID(s *string) *ActivityUpdateOne {
 	return auo
 }
 
-// SetSourceUID sets the "source_uid" field.
-func (auo *ActivityUpdateOne) SetSourceUID(s string) *ActivityUpdateOne {
-	auo.mutation.SetSourceUID(s)
+// SetSourceUids sets the "source_uids" field.
+func (auo *ActivityUpdateOne) SetSourceUids(s []string) *ActivityUpdateOne {
+	auo.mutation.SetSourceUids(s)
 	return auo
 }
 
-// SetNillableSourceUID sets the "source_uid" field if the given value is not nil.
-func (auo *ActivityUpdateOne) SetNillableSourceUID(s *string) *ActivityUpdateOne {
-	if s != nil {
-		auo.SetSourceUID(*s)
-	}
+// AppendSourceUids appends s to the "source_uids" field.
+func (auo *ActivityUpdateOne) AppendSourceUids(s []string) *ActivityUpdateOne {
+	auo.mutation.AppendSourceUids(s)
 	return auo
 }
 
@@ -693,8 +695,13 @@ func (auo *ActivityUpdateOne) sqlSave(ctx context.Context) (_node *Activity, err
 	if value, ok := auo.mutation.UID(); ok {
 		_spec.SetField(activity.FieldUID, field.TypeString, value)
 	}
-	if value, ok := auo.mutation.SourceUID(); ok {
-		_spec.SetField(activity.FieldSourceUID, field.TypeString, value)
+	if value, ok := auo.mutation.SourceUids(); ok {
+		_spec.SetField(activity.FieldSourceUids, field.TypeJSON, value)
+	}
+	if value, ok := auo.mutation.AppendedSourceUids(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, activity.FieldSourceUids, value)
+		})
 	}
 	if value, ok := auo.mutation.SourceType(); ok {
 		_spec.SetField(activity.FieldSourceType, field.TypeString, value)

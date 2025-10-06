@@ -43,7 +43,7 @@ func (c *Cache) Get(key string) (any, bool) {
 		return nil, false
 	}
 
-	c.logger.Debug().
+	c.logger.Trace().
 		Str("key", key).
 		Msg("cache hit")
 

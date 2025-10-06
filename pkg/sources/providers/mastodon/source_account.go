@@ -141,7 +141,7 @@ outer:
 			post := &Post{
 				Status:    status,
 				SourceTyp: TypeMastodonAccount,
-				SourceID:  s.UID(),
+				SourceIDs: []activitytypes.TypedUID{s.UID()},
 			}
 			feed <- post
 		}
@@ -174,7 +174,7 @@ func (s *SourceAccount) fetchLatestPosts(ctx context.Context, accountID mastodon
 		post := &Post{
 			Status:    status,
 			SourceTyp: TypeMastodonAccount,
-			SourceID:  s.UID(),
+			SourceIDs: []activitytypes.TypedUID{s.UID()},
 		}
 		feed <- post
 	}

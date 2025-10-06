@@ -68,10 +68,10 @@ export interface Activity {
     'uid': string;
     /**
      * 
-     * @type {string}
+     * @type {Array<string>}
      * @memberof Activity
      */
-    'sourceUid': string;
+    'sourceUids': Array<string>;
     /**
      * 
      * @type {SourceType}

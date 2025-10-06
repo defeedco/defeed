@@ -451,7 +451,15 @@ func serializeTopics(in []*feeds.Topic) (*[]ActivityTopic, error) {
 }
 
 func serializeActivity(in *activitytypes.DecoratedActivity) (*Activity, error) {
-	sourceType, err := serializeSourceType(in.Activity.SourceUID().Type())
+	sourceUIDs := in.Activity.SourceUIDs()
+
+	// Assume all sources are of the same type.
+	var sourceTypeStr string
+	if len(sourceUIDs) > 0 {
+		sourceTypeStr = sourceUIDs[0].Type()
+	}
+
+	sourceType, err := serializeSourceType(sourceTypeStr)
 	if err != nil {
 		return nil, fmt.Errorf("serialize source type: %w", err)
 	}
@@ -462,7 +470,7 @@ func serializeActivity(in *activitytypes.DecoratedActivity) (*Activity, error) {
 		ImageUrl:           in.Activity.ImageURL(),
 		FullSummary:        in.Summary.FullSummary,
 		ShortSummary:       in.Summary.ShortSummary,
-		SourceUid:          in.Activity.SourceUID().String(),
+		SourceUids:         serializeSourceUIDs(sourceUIDs),
 		SourceType:         sourceType,
 		Title:              in.Activity.Title(),
 		Uid:                in.Activity.UID().String(),

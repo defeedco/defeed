@@ -48,12 +48,12 @@ type activityStore interface {
 
 type CreateRequest struct {
 	Activity types.Activity
-	// ReprocessSummary recomputes the short/full summary.
-	// If ReprocessSummary is true, Upsert must also be true.
-	ReprocessSummary bool
-	// ReprocessEmbedding recomputes the embedding.
-	// If ReprocessEmbedding is true, Upsert must also be true.
-	ReprocessEmbedding bool
+	// ForceReprocessSummary recomputes the short/full summary.
+	// If ForceReprocessSummary is true, Upsert must also be true.
+	ForceReprocessSummary bool
+	// ForceReprocessEmbedding recomputes the embedding.
+	// If ForceReprocessEmbedding is true, Upsert must also be true.
+	ForceReprocessEmbedding bool
 	// Upsert updates the existing record.
 	Upsert bool
 }
@@ -61,10 +61,10 @@ type CreateRequest struct {
 // Create processes a single activity and stores it in the database.
 // Returns false if activity was skipped.
 func (r *Registry) Create(ctx context.Context, req CreateRequest) (bool, error) {
-	if req.ReprocessSummary && !req.Upsert {
+	if req.ForceReprocessSummary && !req.Upsert {
 		return false, fmt.Errorf("reprocess summary without upsert is not allowed")
 	}
-	if req.ReprocessEmbedding && !req.Upsert {
+	if req.ForceReprocessEmbedding && !req.Upsert {
 		return false, fmt.Errorf("reprocess embedding without upsert is not allowed")
 	}
 
@@ -96,14 +96,14 @@ func (r *Registry) Create(ctx context.Context, req CreateRequest) (bool, error) 
 		embedding = existing.Embedding
 	}
 
-	if req.ReprocessSummary || existing == nil || existing.Summary.FullSummary == "" || existing.Summary.ShortSummary == "" {
+	if req.ForceReprocessSummary || existing == nil || existing.Summary.FullSummary == "" || existing.Summary.ShortSummary == "" {
 		summary, err = r.summarizer.SummarizeActivity(ctx, req.Activity)
 		if err != nil {
 			return false, fmt.Errorf("summarize activity: %w", err)
 		}
 	}
 
-	if req.ReprocessEmbedding || existing == nil || len(existing.Embedding) == 0 {
+	if req.ForceReprocessEmbedding || existing == nil || len(existing.Embedding) == 0 {
 		embedding, err = r.embedder.EmbedActivity(ctx, req.Activity, summary)
 		if err != nil {
 			return false, fmt.Errorf("compute embedding: %w", err)

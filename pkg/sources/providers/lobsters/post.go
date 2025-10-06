@@ -12,10 +12,10 @@ import (
 )
 
 type Post struct {
-	Post            *Story         `json:"post"`
-	SourceID        types.TypedUID `json:"source_id"`
-	SourceTyp       string         `json:"source_type"`
-	ExternalContent string         `json:"external_content"`
+	Post            *Story           `json:"post"`
+	SourceIDs       []types.TypedUID `json:"source_ids"`
+	SourceTyp       string           `json:"source_type"`
+	ExternalContent string           `json:"external_content"`
 }
 
 func NewPost() *Post {
@@ -39,7 +39,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
-		SourceID *lib.TypedUID `json:"source_id"`
+		SourceIDs []*lib.TypedUID `json:"source_ids"`
 	}{
 		Alias: (*Alias)(p),
 	}
@@ -47,9 +47,15 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if aux.SourceID != nil {
-		p.SourceID = aux.SourceID
+	if len(aux.SourceIDs) == 0 {
+		return fmt.Errorf("source_ids is required")
 	}
+
+	p.SourceIDs = make([]types.TypedUID, len(aux.SourceIDs))
+	for i, uid := range aux.SourceIDs {
+		p.SourceIDs[i] = uid
+	}
+
 	return nil
 }
 
@@ -57,8 +63,8 @@ func (p *Post) UID() types.TypedUID {
 	return lib.NewTypedUID(p.SourceTyp, p.Post.ID)
 }
 
-func (p *Post) SourceUID() types.TypedUID {
-	return p.SourceID
+func (p *Post) SourceUIDs() []types.TypedUID {
+	return p.SourceIDs
 }
 
 func (p *Post) Title() string {

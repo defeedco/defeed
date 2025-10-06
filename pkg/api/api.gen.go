@@ -95,7 +95,7 @@ type Activity struct {
 	ShortSummary string     `json:"shortSummary"`
 	Similarity   *float32   `json:"similarity,omitempty"`
 	SourceType   SourceType `json:"sourceType"`
-	SourceUid    string     `json:"sourceUid"`
+	SourceUids   []string   `json:"sourceUids"`
 	Title        string     `json:"title"`
 	Uid          string     `json:"uid"`
 

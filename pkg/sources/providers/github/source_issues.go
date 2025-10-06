@@ -81,10 +81,10 @@ func (s *SourceIssues) UnmarshalJSON(data []byte) error {
 }
 
 type Issue struct {
-	Owner    string        `json:"owner"`
-	Repo     string        `json:"repo"`
-	Issue    *github.Issue `json:"issue"`
-	SourceID *TypedUID     `json:"source_id"`
+	Owner     string        `json:"owner"`
+	Repo      string        `json:"repo"`
+	Issue     *github.Issue `json:"issue"`
+	SourceIDs []*TypedUID   `json:"source_ids"`
 }
 
 func NewIssue() *Issue {
@@ -108,7 +108,7 @@ func (i *Issue) UnmarshalJSON(data []byte) error {
 	type Alias Issue
 	aux := &struct {
 		*Alias
-		SourceID *TypedUID `json:"source_id"`
+		SourceIDs []*TypedUID `json:"source_ids"`
 	}{
 		Alias: (*Alias)(i),
 	}
@@ -116,11 +116,11 @@ func (i *Issue) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if aux.SourceID == nil {
-		return fmt.Errorf("source_id is required")
+	if len(aux.SourceIDs) == 0 {
+		return fmt.Errorf("source_ids is required")
 	}
 
-	i.SourceID = aux.SourceID
+	i.SourceIDs = aux.SourceIDs
 	return nil
 }
 
@@ -128,8 +128,12 @@ func (i *Issue) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeGithubIssues, fmt.Sprintf("%d", i.Issue.GetNumber()))
 }
 
-func (i *Issue) SourceUID() activitytypes.TypedUID {
-	return i.SourceID
+func (i *Issue) SourceUIDs() []activitytypes.TypedUID {
+	result := make([]activitytypes.TypedUID, len(i.SourceIDs))
+	for idx, uid := range i.SourceIDs {
+		result[idx] = uid
+	}
+	return result
 }
 
 func (i *Issue) Title() string {
@@ -234,10 +238,10 @@ func (s *SourceIssues) fetchIssueActivities(ctx context.Context, since activityt
 
 	for _, issue := range issues {
 		activity := &Issue{
-			Issue:    issue,
-			SourceID: s.UID().(*TypedUID),
-			Owner:    s.Owner,
-			Repo:     s.Repo,
+			Issue:     issue,
+			SourceIDs: []*TypedUID{s.UID().(*TypedUID)},
+			Owner:     s.Owner,
+			Repo:      s.Repo,
 		}
 		feed <- activity
 	}

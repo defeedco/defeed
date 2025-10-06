@@ -184,10 +184,12 @@ func (r *Scheduler) processActivity(activity activitytypes.Activity) {
 		// Do not force reprocessing or upsert if activity already exists,
 		// since some sources might return already processed activities (e.g. GitHub topic).
 		isCreated, err := r.activityRegistry.Create(ctx, activities.CreateRequest{
-			Activity:           activity,
-			ReprocessSummary:   false,
-			ReprocessEmbedding: false,
-			Upsert:             false,
+			Activity: activity,
+			// Skip all reprocessing to save costs.
+			// Only upsert the db record to update social stats.
+			ForceReprocessSummary:   false,
+			ForceReprocessEmbedding: false,
+			Upsert:                  true,
 		})
 		if err != nil {
 			// TODO: Better error handling (retry or track the failures)

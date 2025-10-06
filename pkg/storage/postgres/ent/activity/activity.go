@@ -13,8 +13,8 @@ const (
 	FieldID = "id"
 	// FieldUID holds the string denoting the uid field in the database.
 	FieldUID = "uid"
-	// FieldSourceUID holds the string denoting the source_uid field in the database.
-	FieldSourceUID = "source_uid"
+	// FieldSourceUids holds the string denoting the source_uids field in the database.
+	FieldSourceUids = "source_uids"
 	// FieldSourceType holds the string denoting the source_type field in the database.
 	FieldSourceType = "source_type"
 	// FieldTitle holds the string denoting the title field in the database.
@@ -49,7 +49,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldUID,
-	FieldSourceUID,
+	FieldSourceUids,
 	FieldSourceType,
 	FieldTitle,
 	FieldBody,
@@ -93,11 +93,6 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByUID orders the results by the uid field.
 func ByUID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUID, opts...).ToFunc()
-}
-
-// BySourceUID orders the results by the source_uid field.
-func BySourceUID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSourceUID, opts...).ToFunc()
 }
 
 // BySourceType orders the results by the source_type field.

@@ -107,7 +107,7 @@ func (s *SourceFeed) fetchAndSendNewStories(ctx context.Context, since activityt
 }
 
 func (s *SourceFeed) buildPost(ctx context.Context, story *Story) (*Post, error) {
-	post := &Post{Post: story, SourceTyp: TypeLobstersFeed, SourceID: s.UID()}
+	post := &Post{Post: story, SourceTyp: TypeLobstersFeed, SourceIDs: []activitytypes.TypedUID{s.UID()}}
 	if story.URL != "" {
 		externalContent, err := lib.FetchTextFromURL(ctx, s.logger, story.URL)
 		if err != nil && !errors.Is(err, lib.ErrUnsupportedContentType) {

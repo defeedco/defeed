@@ -15,7 +15,7 @@ func (Activity) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("id").Unique(),
 		field.String("uid").Unique(),
-		field.String("source_uid"),
+		field.JSON("source_uids", []string{}),
 		field.String("source_type"),
 		field.String("title"),
 		field.String("body"),

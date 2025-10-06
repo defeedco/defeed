@@ -12,7 +12,7 @@ var (
 	ActivitiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "uid", Type: field.TypeString, Unique: true},
-		{Name: "source_uid", Type: field.TypeString},
+		{Name: "source_uids", Type: field.TypeJSON},
 		{Name: "source_type", Type: field.TypeString},
 		{Name: "title", Type: field.TypeString},
 		{Name: "body", Type: field.TypeString},

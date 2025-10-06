@@ -70,9 +70,9 @@ func (s *SourcePosts) Topics() []sourcetypes.TopicTag {
 func (s *SourcePosts) Validate() error { return lib.ValidateStruct(s) }
 
 type Post struct {
-	Post            *gohn.Item             `json:"post"`
-	ArticleTextBody string                 `json:"article_text_body"`
-	SourceID        activitytypes.TypedUID `json:"source_id"`
+	Post            *gohn.Item               `json:"post"`
+	ArticleTextBody string                   `json:"article_text_body"`
+	SourceIDs       []activitytypes.TypedUID `json:"source_ids"`
 }
 
 func NewPost() *Post {
@@ -96,7 +96,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
-		SourceID *lib.TypedUID `json:"source_id"`
+		SourceIDs []*lib.TypedUID `json:"source_ids"`
 	}{
 		Alias: (*Alias)(p),
 	}
@@ -104,11 +104,15 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if aux.SourceID == nil {
-		return fmt.Errorf("source_id is required")
+	if len(aux.SourceIDs) == 0 {
+		return fmt.Errorf("source_ids is required")
 	}
 
-	p.SourceID = aux.SourceID
+	p.SourceIDs = make([]activitytypes.TypedUID, len(aux.SourceIDs))
+	for i, uid := range aux.SourceIDs {
+		p.SourceIDs[i] = uid
+	}
+
 	return nil
 }
 
@@ -116,8 +120,8 @@ func (p *Post) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeHackerNewsPosts, fmt.Sprintf("%d", *p.Post.ID))
 }
 
-func (p *Post) SourceUID() activitytypes.TypedUID {
-	return p.SourceID
+func (p *Post) SourceUIDs() []activitytypes.TypedUID {
+	return p.SourceIDs
 }
 
 func (p *Post) Title() string {
@@ -224,7 +228,7 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, _ activitytypes.
 	// The order on "best" or "top" is not chronological and can change over time.
 	// So for now just fetch all stories, the scheduler will skip the already processed ones.
 
-	pool := pond.NewPool(10)
+	pool := pond.NewPool(20)
 
 	for _, id := range storyIDs {
 		if id == nil {
@@ -264,7 +268,7 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, _ activitytypes.
 			post := &Post{
 				Post:            story,
 				ArticleTextBody: textContent,
-				SourceID:        s.UID(),
+				SourceIDs:       []activitytypes.TypedUID{s.UID()},
 			}
 
 			feed <- post

@@ -172,7 +172,7 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytyp
 			Item:      item,
 			FeedURL:   s.FeedURL,
 			SourceTyp: TypeRSSFeed,
-			SourceID:  s.UID(),
+			SourceIDs: []activitytypes.TypedUID{s.UID()},
 		}
 
 		feed <- feedItem
@@ -180,10 +180,10 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytyp
 }
 
 type FeedItem struct {
-	Item      *gofeed.Item           `json:"item"`
-	FeedURL   string                 `json:"feed_url"`
-	SourceID  activitytypes.TypedUID `json:"source_id"`
-	SourceTyp string                 `json:"source_type"`
+	Item      *gofeed.Item             `json:"item"`
+	FeedURL   string                   `json:"feed_url"`
+	SourceIDs []activitytypes.TypedUID `json:"source_ids"`
+	SourceTyp string                   `json:"source_type"`
 }
 
 func NewFeedItem() *FeedItem {
@@ -203,7 +203,7 @@ func (e *FeedItem) UnmarshalJSON(data []byte) error {
 	type Alias FeedItem
 	aux := &struct {
 		*Alias
-		SourceID *lib.TypedUID `json:"source_id"`
+		SourceIDs []*lib.TypedUID `json:"source_ids"`
 	}{
 		Alias: (*Alias)(e),
 	}
@@ -211,11 +211,15 @@ func (e *FeedItem) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if aux.SourceID == nil {
-		return fmt.Errorf("source_id is required")
+	if len(aux.SourceIDs) == 0 {
+		return fmt.Errorf("source_ids is required")
 	}
 
-	e.SourceID = aux.SourceID
+	e.SourceIDs = make([]activitytypes.TypedUID, len(aux.SourceIDs))
+	for i, uid := range aux.SourceIDs {
+		e.SourceIDs[i] = uid
+	}
+
 	return nil
 }
 
@@ -227,8 +231,8 @@ func (e *FeedItem) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(e.SourceTyp, id)
 }
 
-func (e *FeedItem) SourceUID() activitytypes.TypedUID {
-	return e.SourceID
+func (e *FeedItem) SourceUIDs() []activitytypes.TypedUID {
+	return e.SourceIDs
 }
 
 func (e *FeedItem) Title() string {

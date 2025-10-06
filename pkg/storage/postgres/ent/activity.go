@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -20,8 +21,8 @@ type Activity struct {
 	ID string `json:"id,omitempty"`
 	// UID holds the value of the "uid" field.
 	UID string `json:"uid,omitempty"`
-	// SourceUID holds the value of the "source_uid" field.
-	SourceUID string `json:"source_uid,omitempty"`
+	// SourceUids holds the value of the "source_uids" field.
+	SourceUids []string `json:"source_uids,omitempty"`
 	// SourceType holds the value of the "source_type" field.
 	SourceType string `json:"source_type,omitempty"`
 	// Title holds the value of the "title" field.
@@ -58,11 +59,13 @@ func (*Activity) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case activity.FieldEmbedding1536, activity.FieldEmbedding3072:
 			values[i] = &sql.NullScanner{S: new(pgvector.Vector)}
+		case activity.FieldSourceUids:
+			values[i] = new([]byte)
 		case activity.FieldSocialScore:
 			values[i] = new(sql.NullFloat64)
 		case activity.FieldUpdateCount:
 			values[i] = new(sql.NullInt64)
-		case activity.FieldID, activity.FieldUID, activity.FieldSourceUID, activity.FieldSourceType, activity.FieldTitle, activity.FieldBody, activity.FieldURL, activity.FieldImageURL, activity.FieldShortSummary, activity.FieldFullSummary, activity.FieldRawJSON:
+		case activity.FieldID, activity.FieldUID, activity.FieldSourceType, activity.FieldTitle, activity.FieldBody, activity.FieldURL, activity.FieldImageURL, activity.FieldShortSummary, activity.FieldFullSummary, activity.FieldRawJSON:
 			values[i] = new(sql.NullString)
 		case activity.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -93,11 +96,13 @@ func (a *Activity) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.UID = value.String
 			}
-		case activity.FieldSourceUID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field source_uid", values[i])
-			} else if value.Valid {
-				a.SourceUID = value.String
+		case activity.FieldSourceUids:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field source_uids", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &a.SourceUids); err != nil {
+					return fmt.Errorf("unmarshal field source_uids: %w", err)
+				}
 			}
 		case activity.FieldSourceType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -218,8 +223,8 @@ func (a *Activity) String() string {
 	builder.WriteString("uid=")
 	builder.WriteString(a.UID)
 	builder.WriteString(", ")
-	builder.WriteString("source_uid=")
-	builder.WriteString(a.SourceUID)
+	builder.WriteString("source_uids=")
+	builder.WriteString(fmt.Sprintf("%v", a.SourceUids))
 	builder.WriteString(", ")
 	builder.WriteString("source_type=")
 	builder.WriteString(a.SourceType)

@@ -183,7 +183,7 @@ func (ut *UsageTracker) calculateCosts(res response, pricing ModelPricing) Usage
 }
 
 func (ut *UsageTracker) logUsage(metrics UsageMetrics) {
-	ut.logger.Info().
+	ut.logger.Trace().
 		Str("model", metrics.Model).
 		Int("prompt_tokens", metrics.PromptTokens).
 		Int("reasoning_tokens", metrics.ReasoningTokens).

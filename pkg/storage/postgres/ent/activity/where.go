@@ -70,11 +70,6 @@ func UID(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldEQ(FieldUID, v))
 }
 
-// SourceUID applies equality check predicate on the "source_uid" field. It's identical to SourceUIDEQ.
-func SourceUID(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldEQ(FieldSourceUID, v))
-}
-
 // SourceType applies equality check predicate on the "source_type" field. It's identical to SourceTypeEQ.
 func SourceType(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldEQ(FieldSourceType, v))
@@ -203,71 +198,6 @@ func UIDEqualFold(v string) predicate.Activity {
 // UIDContainsFold applies the ContainsFold predicate on the "uid" field.
 func UIDContainsFold(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldContainsFold(FieldUID, v))
-}
-
-// SourceUIDEQ applies the EQ predicate on the "source_uid" field.
-func SourceUIDEQ(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldEQ(FieldSourceUID, v))
-}
-
-// SourceUIDNEQ applies the NEQ predicate on the "source_uid" field.
-func SourceUIDNEQ(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldNEQ(FieldSourceUID, v))
-}
-
-// SourceUIDIn applies the In predicate on the "source_uid" field.
-func SourceUIDIn(vs ...string) predicate.Activity {
-	return predicate.Activity(sql.FieldIn(FieldSourceUID, vs...))
-}
-
-// SourceUIDNotIn applies the NotIn predicate on the "source_uid" field.
-func SourceUIDNotIn(vs ...string) predicate.Activity {
-	return predicate.Activity(sql.FieldNotIn(FieldSourceUID, vs...))
-}
-
-// SourceUIDGT applies the GT predicate on the "source_uid" field.
-func SourceUIDGT(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldGT(FieldSourceUID, v))
-}
-
-// SourceUIDGTE applies the GTE predicate on the "source_uid" field.
-func SourceUIDGTE(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldGTE(FieldSourceUID, v))
-}
-
-// SourceUIDLT applies the LT predicate on the "source_uid" field.
-func SourceUIDLT(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldLT(FieldSourceUID, v))
-}
-
-// SourceUIDLTE applies the LTE predicate on the "source_uid" field.
-func SourceUIDLTE(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldLTE(FieldSourceUID, v))
-}
-
-// SourceUIDContains applies the Contains predicate on the "source_uid" field.
-func SourceUIDContains(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldContains(FieldSourceUID, v))
-}
-
-// SourceUIDHasPrefix applies the HasPrefix predicate on the "source_uid" field.
-func SourceUIDHasPrefix(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldHasPrefix(FieldSourceUID, v))
-}
-
-// SourceUIDHasSuffix applies the HasSuffix predicate on the "source_uid" field.
-func SourceUIDHasSuffix(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldHasSuffix(FieldSourceUID, v))
-}
-
-// SourceUIDEqualFold applies the EqualFold predicate on the "source_uid" field.
-func SourceUIDEqualFold(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldEqualFold(FieldSourceUID, v))
-}
-
-// SourceUIDContainsFold applies the ContainsFold predicate on the "source_uid" field.
-func SourceUIDContainsFold(v string) predicate.Activity {
-	return predicate.Activity(sql.FieldContainsFold(FieldSourceUID, v))
 }
 
 // SourceTypeEQ applies the EQ predicate on the "source_type" field.

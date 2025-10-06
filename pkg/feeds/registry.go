@@ -613,7 +613,12 @@ func (r *Registry) searchWithSourceDiversity(
 func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActivity) ([]*Topic, error) {
 	activitiesByTopic := make(map[topicKey][]string)
 	for _, activity := range activities {
-		label, err := sourceTypeToTopicKey(activity.Activity.SourceUID().Type())
+		sourceUIDs := activity.Activity.SourceUIDs()
+		if len(sourceUIDs) == 0 {
+			continue
+		}
+		// Assume all sources are of the same type.
+		label, err := sourceTypeToTopicKey(sourceUIDs[0].Type())
 		if err != nil {
 			return nil, fmt.Errorf("source type to topic key: %w", err)
 		}

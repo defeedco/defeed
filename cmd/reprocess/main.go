@@ -162,10 +162,10 @@ func run(ctx context.Context, config Config) error {
 		for _, act := range result.Activities {
 			pool.Submit(func() {
 				isUpserted, err := activityRegistry.Create(ctx, activities.CreateRequest{
-					Activity:           act.Activity,
-					ReprocessSummary:   config.ForceReprocessSummary,
-					ReprocessEmbedding: config.ForceReprocessEmbedding,
-					Upsert:             config.ForceUpsert,
+					Activity:                act.Activity,
+					ForceReprocessSummary:   config.ForceReprocessSummary,
+					ForceReprocessEmbedding: config.ForceReprocessEmbedding,
+					Upsert:                  config.ForceUpsert,
 				})
 				if err != nil {
 					logger.Error().

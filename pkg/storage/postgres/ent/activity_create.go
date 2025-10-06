@@ -30,9 +30,9 @@ func (ac *ActivityCreate) SetUID(s string) *ActivityCreate {
 	return ac
 }
 
-// SetSourceUID sets the "source_uid" field.
-func (ac *ActivityCreate) SetSourceUID(s string) *ActivityCreate {
-	ac.mutation.SetSourceUID(s)
+// SetSourceUids sets the "source_uids" field.
+func (ac *ActivityCreate) SetSourceUids(s []string) *ActivityCreate {
+	ac.mutation.SetSourceUids(s)
 	return ac
 }
 
@@ -202,8 +202,8 @@ func (ac *ActivityCreate) check() error {
 	if _, ok := ac.mutation.UID(); !ok {
 		return &ValidationError{Name: "uid", err: errors.New(`ent: missing required field "Activity.uid"`)}
 	}
-	if _, ok := ac.mutation.SourceUID(); !ok {
-		return &ValidationError{Name: "source_uid", err: errors.New(`ent: missing required field "Activity.source_uid"`)}
+	if _, ok := ac.mutation.SourceUids(); !ok {
+		return &ValidationError{Name: "source_uids", err: errors.New(`ent: missing required field "Activity.source_uids"`)}
 	}
 	if _, ok := ac.mutation.SourceType(); !ok {
 		return &ValidationError{Name: "source_type", err: errors.New(`ent: missing required field "Activity.source_type"`)}
@@ -278,9 +278,9 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 		_spec.SetField(activity.FieldUID, field.TypeString, value)
 		_node.UID = value
 	}
-	if value, ok := ac.mutation.SourceUID(); ok {
-		_spec.SetField(activity.FieldSourceUID, field.TypeString, value)
-		_node.SourceUID = value
+	if value, ok := ac.mutation.SourceUids(); ok {
+		_spec.SetField(activity.FieldSourceUids, field.TypeJSON, value)
+		_node.SourceUids = value
 	}
 	if value, ok := ac.mutation.SourceType(); ok {
 		_spec.SetField(activity.FieldSourceType, field.TypeString, value)
@@ -398,15 +398,15 @@ func (u *ActivityUpsert) UpdateUID() *ActivityUpsert {
 	return u
 }
 
-// SetSourceUID sets the "source_uid" field.
-func (u *ActivityUpsert) SetSourceUID(v string) *ActivityUpsert {
-	u.Set(activity.FieldSourceUID, v)
+// SetSourceUids sets the "source_uids" field.
+func (u *ActivityUpsert) SetSourceUids(v []string) *ActivityUpsert {
+	u.Set(activity.FieldSourceUids, v)
 	return u
 }
 
-// UpdateSourceUID sets the "source_uid" field to the value that was provided on create.
-func (u *ActivityUpsert) UpdateSourceUID() *ActivityUpsert {
-	u.SetExcluded(activity.FieldSourceUID)
+// UpdateSourceUids sets the "source_uids" field to the value that was provided on create.
+func (u *ActivityUpsert) UpdateSourceUids() *ActivityUpsert {
+	u.SetExcluded(activity.FieldSourceUids)
 	return u
 }
 
@@ -652,17 +652,17 @@ func (u *ActivityUpsertOne) UpdateUID() *ActivityUpsertOne {
 	})
 }
 
-// SetSourceUID sets the "source_uid" field.
-func (u *ActivityUpsertOne) SetSourceUID(v string) *ActivityUpsertOne {
+// SetSourceUids sets the "source_uids" field.
+func (u *ActivityUpsertOne) SetSourceUids(v []string) *ActivityUpsertOne {
 	return u.Update(func(s *ActivityUpsert) {
-		s.SetSourceUID(v)
+		s.SetSourceUids(v)
 	})
 }
 
-// UpdateSourceUID sets the "source_uid" field to the value that was provided on create.
-func (u *ActivityUpsertOne) UpdateSourceUID() *ActivityUpsertOne {
+// UpdateSourceUids sets the "source_uids" field to the value that was provided on create.
+func (u *ActivityUpsertOne) UpdateSourceUids() *ActivityUpsertOne {
 	return u.Update(func(s *ActivityUpsert) {
-		s.UpdateSourceUID()
+		s.UpdateSourceUids()
 	})
 }
 
@@ -1105,17 +1105,17 @@ func (u *ActivityUpsertBulk) UpdateUID() *ActivityUpsertBulk {
 	})
 }
 
-// SetSourceUID sets the "source_uid" field.
-func (u *ActivityUpsertBulk) SetSourceUID(v string) *ActivityUpsertBulk {
+// SetSourceUids sets the "source_uids" field.
+func (u *ActivityUpsertBulk) SetSourceUids(v []string) *ActivityUpsertBulk {
 	return u.Update(func(s *ActivityUpsert) {
-		s.SetSourceUID(v)
+		s.SetSourceUids(v)
 	})
 }
 
-// UpdateSourceUID sets the "source_uid" field to the value that was provided on create.
-func (u *ActivityUpsertBulk) UpdateSourceUID() *ActivityUpsertBulk {
+// UpdateSourceUids sets the "source_uids" field to the value that was provided on create.
+func (u *ActivityUpsertBulk) UpdateSourceUids() *ActivityUpsertBulk {
 	return u.Update(func(s *ActivityUpsert) {
-		s.UpdateSourceUID()
+		s.UpdateSourceUids()
 	})
 }
 

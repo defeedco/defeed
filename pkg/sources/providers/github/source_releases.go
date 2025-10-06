@@ -112,10 +112,10 @@ func (s *SourceRelease) UnmarshalJSON(data []byte) error {
 }
 
 type Release struct {
-	Owner    string                    `json:"owner"`
-	Repo     string                    `json:"repo"`
-	Release  *github.RepositoryRelease `json:"release"`
-	SourceID *TypedUID                 `json:"source_id"`
+	Owner     string                    `json:"owner"`
+	Repo      string                    `json:"repo"`
+	Release   *github.RepositoryRelease `json:"release"`
+	SourceIDs []*TypedUID               `json:"source_ids"`
 }
 
 func NewRelease() *Release {
@@ -139,7 +139,7 @@ func (r *Release) UnmarshalJSON(data []byte) error {
 	type Alias Release
 	aux := &struct {
 		*Alias
-		SourceID *TypedUID `json:"source_id"`
+		SourceIDs []*TypedUID `json:"source_ids"`
 	}{
 		Alias: (*Alias)(r),
 	}
@@ -147,11 +147,11 @@ func (r *Release) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if aux.SourceID == nil {
-		return fmt.Errorf("source_id is required")
+	if len(aux.SourceIDs) == 0 {
+		return fmt.Errorf("source_ids is required")
 	}
 
-	r.SourceID = aux.SourceID
+	r.SourceIDs = aux.SourceIDs
 	return nil
 }
 
@@ -159,8 +159,12 @@ func (r *Release) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeGithubReleases, fmt.Sprintf("%d", r.Release.GetID()))
 }
 
-func (r *Release) SourceUID() activitytypes.TypedUID {
-	return r.SourceID
+func (r *Release) SourceUIDs() []activitytypes.TypedUID {
+	result := make([]activitytypes.TypedUID, len(r.SourceIDs))
+	for idx, uid := range r.SourceIDs {
+		result[idx] = uid
+	}
+	return result
 }
 
 func (r *Release) Title() string {
@@ -251,10 +255,10 @@ outer:
 			}
 
 			releaseActivity := &Release{
-				Release:  release,
-				Owner:    s.Owner,
-				Repo:     s.Repo,
-				SourceID: s.UID().(*TypedUID),
+				Release:   release,
+				Owner:     s.Owner,
+				Repo:      s.Repo,
+				SourceIDs: []*TypedUID{s.UID().(*TypedUID)},
 			}
 
 			feed <- releaseActivity

@@ -35,30 +35,31 @@ const (
 // ActivityMutation represents an operation that mutates the Activity nodes in the graph.
 type ActivityMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *string
-	uid             *string
-	source_uid      *string
-	source_type     *string
-	title           *string
-	body            *string
-	url             *string
-	image_url       *string
-	created_at      *time.Time
-	short_summary   *string
-	full_summary    *string
-	raw_json        *string
-	embedding_1536  *pgvector.Vector
-	embedding_3072  *pgvector.Vector
-	social_score    *float64
-	addsocial_score *float64
-	update_count    *int
-	addupdate_count *int
-	clearedFields   map[string]struct{}
-	done            bool
-	oldValue        func(context.Context) (*Activity, error)
-	predicates      []predicate.Activity
+	op                Op
+	typ               string
+	id                *string
+	uid               *string
+	source_uids       *[]string
+	appendsource_uids []string
+	source_type       *string
+	title             *string
+	body              *string
+	url               *string
+	image_url         *string
+	created_at        *time.Time
+	short_summary     *string
+	full_summary      *string
+	raw_json          *string
+	embedding_1536    *pgvector.Vector
+	embedding_3072    *pgvector.Vector
+	social_score      *float64
+	addsocial_score   *float64
+	update_count      *int
+	addupdate_count   *int
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*Activity, error)
+	predicates        []predicate.Activity
 }
 
 var _ ent.Mutation = (*ActivityMutation)(nil)
@@ -201,40 +202,55 @@ func (m *ActivityMutation) ResetUID() {
 	m.uid = nil
 }
 
-// SetSourceUID sets the "source_uid" field.
-func (m *ActivityMutation) SetSourceUID(s string) {
-	m.source_uid = &s
+// SetSourceUids sets the "source_uids" field.
+func (m *ActivityMutation) SetSourceUids(s []string) {
+	m.source_uids = &s
+	m.appendsource_uids = nil
 }
 
-// SourceUID returns the value of the "source_uid" field in the mutation.
-func (m *ActivityMutation) SourceUID() (r string, exists bool) {
-	v := m.source_uid
+// SourceUids returns the value of the "source_uids" field in the mutation.
+func (m *ActivityMutation) SourceUids() (r []string, exists bool) {
+	v := m.source_uids
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSourceUID returns the old "source_uid" field's value of the Activity entity.
+// OldSourceUids returns the old "source_uids" field's value of the Activity entity.
 // If the Activity object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ActivityMutation) OldSourceUID(ctx context.Context) (v string, err error) {
+func (m *ActivityMutation) OldSourceUids(ctx context.Context) (v []string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSourceUID is only allowed on UpdateOne operations")
+		return v, errors.New("OldSourceUids is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSourceUID requires an ID field in the mutation")
+		return v, errors.New("OldSourceUids requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSourceUID: %w", err)
+		return v, fmt.Errorf("querying old value for OldSourceUids: %w", err)
 	}
-	return oldValue.SourceUID, nil
+	return oldValue.SourceUids, nil
 }
 
-// ResetSourceUID resets all changes to the "source_uid" field.
-func (m *ActivityMutation) ResetSourceUID() {
-	m.source_uid = nil
+// AppendSourceUids adds s to the "source_uids" field.
+func (m *ActivityMutation) AppendSourceUids(s []string) {
+	m.appendsource_uids = append(m.appendsource_uids, s...)
+}
+
+// AppendedSourceUids returns the list of values that were appended to the "source_uids" field in this mutation.
+func (m *ActivityMutation) AppendedSourceUids() ([]string, bool) {
+	if len(m.appendsource_uids) == 0 {
+		return nil, false
+	}
+	return m.appendsource_uids, true
+}
+
+// ResetSourceUids resets all changes to the "source_uids" field.
+func (m *ActivityMutation) ResetSourceUids() {
+	m.source_uids = nil
+	m.appendsource_uids = nil
 }
 
 // SetSourceType sets the "source_type" field.
@@ -809,8 +825,8 @@ func (m *ActivityMutation) Fields() []string {
 	if m.uid != nil {
 		fields = append(fields, activity.FieldUID)
 	}
-	if m.source_uid != nil {
-		fields = append(fields, activity.FieldSourceUID)
+	if m.source_uids != nil {
+		fields = append(fields, activity.FieldSourceUids)
 	}
 	if m.source_type != nil {
 		fields = append(fields, activity.FieldSourceType)
@@ -861,8 +877,8 @@ func (m *ActivityMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case activity.FieldUID:
 		return m.UID()
-	case activity.FieldSourceUID:
-		return m.SourceUID()
+	case activity.FieldSourceUids:
+		return m.SourceUids()
 	case activity.FieldSourceType:
 		return m.SourceType()
 	case activity.FieldTitle:
@@ -900,8 +916,8 @@ func (m *ActivityMutation) OldField(ctx context.Context, name string) (ent.Value
 	switch name {
 	case activity.FieldUID:
 		return m.OldUID(ctx)
-	case activity.FieldSourceUID:
-		return m.OldSourceUID(ctx)
+	case activity.FieldSourceUids:
+		return m.OldSourceUids(ctx)
 	case activity.FieldSourceType:
 		return m.OldSourceType(ctx)
 	case activity.FieldTitle:
@@ -944,12 +960,12 @@ func (m *ActivityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUID(v)
 		return nil
-	case activity.FieldSourceUID:
-		v, ok := value.(string)
+	case activity.FieldSourceUids:
+		v, ok := value.([]string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSourceUID(v)
+		m.SetSourceUids(v)
 		return nil
 	case activity.FieldSourceType:
 		v, ok := value.(string)
@@ -1136,8 +1152,8 @@ func (m *ActivityMutation) ResetField(name string) error {
 	case activity.FieldUID:
 		m.ResetUID()
 		return nil
-	case activity.FieldSourceUID:
-		m.ResetSourceUID()
+	case activity.FieldSourceUids:
+		m.ResetSourceUids()
 		return nil
 	case activity.FieldSourceType:
 		m.ResetSourceType()

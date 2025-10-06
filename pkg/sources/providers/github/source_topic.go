@@ -130,7 +130,7 @@ func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, _ activitytype
 			}
 			activity := &Repository{
 				Repository:            repo,
-				SourceID:              s.UID(),
+				SourceIDs:             []activitytypes.TypedUID{s.UID()},
 				PopularityReachedDate: time.Now(),
 			}
 			feed <- activity
@@ -171,10 +171,9 @@ func (s *SourceTopic) UnmarshalJSON(data []byte) error {
 
 // Repository represents a repository result as an activity
 type Repository struct {
-	Repository *github.Repository     `json:"repository"`
-	SourceID   activitytypes.TypedUID `json:"source_id"`
-	// PopularityReachedDate is the date when the repository reached the stars threshold
-	PopularityReachedDate time.Time `json:"popularity_reached_date"`
+	Repository            *github.Repository       `json:"repository"`
+	SourceIDs             []activitytypes.TypedUID `json:"source_ids"`
+	PopularityReachedDate time.Time                `json:"popularity_reached_date"`
 }
 
 func NewRepository() *Repository {
@@ -182,7 +181,10 @@ func NewRepository() *Repository {
 }
 
 func (a *Repository) SourceType() string {
-	return a.SourceID.Type()
+	if len(a.SourceIDs) > 0 {
+		return a.SourceIDs[0].Type()
+	}
+	return ""
 }
 
 func (a *Repository) MarshalJSON() ([]byte, error) {
@@ -198,17 +200,23 @@ func (a *Repository) UnmarshalJSON(data []byte) error {
 	type Alias Repository
 	aux := &struct {
 		*Alias
-		SourceID *lib.TypedUID `json:"source_id"`
+		SourceIDs []*lib.TypedUID `json:"source_ids"`
 	}{
 		Alias: (*Alias)(a),
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	if aux.SourceID == nil {
-		return fmt.Errorf("source_id is required")
+
+	if len(aux.SourceIDs) == 0 {
+		return fmt.Errorf("source_ids is required")
 	}
-	a.SourceID = aux.SourceID
+
+	a.SourceIDs = make([]activitytypes.TypedUID, len(aux.SourceIDs))
+	for i, uid := range aux.SourceIDs {
+		a.SourceIDs[i] = uid
+	}
+
 	return nil
 }
 
@@ -220,8 +228,8 @@ func (a *Repository) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(TypeGithubTopic, fullName)
 }
 
-func (a *Repository) SourceUID() activitytypes.TypedUID {
-	return a.SourceID
+func (a *Repository) SourceUIDs() []activitytypes.TypedUID {
+	return a.SourceIDs
 }
 
 func (a *Repository) Title() string {

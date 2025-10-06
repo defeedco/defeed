@@ -17,7 +17,7 @@ import (
 
 type Post struct {
 	Status    *mastodon.Status `json:"status"`
-	SourceID  types.TypedUID   `json:"source_id"`
+	SourceIDs []types.TypedUID `json:"source_ids"`
 	SourceTyp string           `json:"source_type"`
 }
 
@@ -42,7 +42,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
-		SourceID *lib.TypedUID `json:"source_id"`
+		SourceIDs []*lib.TypedUID `json:"source_ids"`
 	}{
 		Alias: (*Alias)(p),
 	}
@@ -50,11 +50,15 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if aux.SourceID == nil {
-		return fmt.Errorf("source_id is required")
+	if len(aux.SourceIDs) == 0 {
+		return fmt.Errorf("source_ids is required")
 	}
 
-	p.SourceID = aux.SourceID
+	p.SourceIDs = make([]types.TypedUID, len(aux.SourceIDs))
+	for i, uid := range aux.SourceIDs {
+		p.SourceIDs[i] = uid
+	}
+
 	return nil
 }
 
@@ -62,8 +66,8 @@ func (p *Post) UID() types.TypedUID {
 	return lib.NewTypedUID(p.SourceTyp, string(p.Status.ID))
 }
 
-func (p *Post) SourceUID() types.TypedUID {
-	return p.SourceID
+func (p *Post) SourceUIDs() []types.TypedUID {
+	return p.SourceIDs
 }
 
 func (p *Post) Title() string {

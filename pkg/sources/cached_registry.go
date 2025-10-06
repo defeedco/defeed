@@ -39,7 +39,7 @@ func (c *CachedRegistry) FindByUID(ctx context.Context, uid activitytypes.TypedU
 
 	if cached, found := c.sourceCache.Get(cacheKey); found {
 		if source, ok := cached.(types.Source); ok {
-			c.logger.Debug().
+			c.logger.Trace().
 				Str("uid", uid.String()).
 				Msg("source cache hit")
 			return source, nil
@@ -52,7 +52,7 @@ func (c *CachedRegistry) FindByUID(ctx context.Context, uid activitytypes.TypedU
 	}
 
 	c.sourceCache.Set(cacheKey, source)
-	c.logger.Debug().
+	c.logger.Trace().
 		Str("uid", uid.String()).
 		Msg("cached source")
 
@@ -65,7 +65,7 @@ func (c *CachedRegistry) Search(ctx context.Context, params SearchRequest) ([]ty
 
 	if cached, found := c.searchCache.Get(cacheKey); found {
 		if results, ok := cached.([]types.Source); ok {
-			c.logger.Debug().
+			c.logger.Trace().
 				Str("query", params.Query).
 				Int("topics", len(params.Topics)).
 				Int("count", len(results)).
@@ -81,7 +81,7 @@ func (c *CachedRegistry) Search(ctx context.Context, params SearchRequest) ([]ty
 
 	// Cache the final results
 	c.searchCache.Set(cacheKey, results)
-	c.logger.Debug().
+	c.logger.Trace().
 		Str("query", params.Query).
 		Int("topics", len(params.Topics)).
 		Int("count", len(results)).

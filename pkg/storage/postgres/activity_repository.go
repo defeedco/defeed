@@ -27,14 +27,28 @@ func NewActivityRepository(db *DB) *ActivityRepository {
 	return &ActivityRepository{db: db}
 }
 
+type partialActivity struct {
+	UpdateCount int      `json:"update_count"`
+	SourceUids  []string `json:"source_uids"`
+}
+
 func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.DecoratedActivity) error {
-	// Get existing update count if activity exists
-	existingUpdateCount, err := r.db.Client().Activity.Query().
+	// TODO: Test this
+	existingPartialActivities := []partialActivity{}
+	err := r.db.Client().Activity.Query().
 		Where(entactivity.ID(activity.Activity.UID().String())).
-		Select(entactivity.FieldUpdateCount).
-		Int(ctx)
+		Select(entactivity.FieldUpdateCount, entactivity.FieldSourceUids).
+		Scan(ctx, &existingPartialActivities)
 	if err != nil && !ent.IsNotFound(err) {
 		return fmt.Errorf("get existing update count: %w", err)
+	}
+
+	existingPartialActivity := partialActivity{
+		UpdateCount: 0,
+		SourceUids:  []string{},
+	}
+	if len(existingPartialActivities) == 1 {
+		existingPartialActivity = existingPartialActivities[0]
 	}
 
 	rawJson, err := activity.Activity.MarshalJSON()
@@ -42,21 +56,32 @@ func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.Decorat
 		return fmt.Errorf("marshal activity: %w", err)
 	}
 
+	sourceUIDs := existingPartialActivity.SourceUids
+	for _, uid := range activity.Activity.SourceUIDs() {
+		sourceUIDs = append(sourceUIDs, uid.String())
+	}
+
+	// Assume all sources are of the same type.
+	var sourceType string
+	if len(sourceUIDs) > 0 {
+		sourceType = activity.Activity.SourceUIDs()[0].Type()
+	}
+
 	qb := r.db.Client().Activity.Create().
 		SetID(activity.Activity.UID().String()).
 		SetUID(activity.Activity.UID().String()).
-		SetSourceUID(activity.Activity.SourceUID().String()).
+		SetSourceUids(sourceUIDs).
 		SetTitle(activity.Activity.Title()).
 		SetBody(activity.Activity.Body()).
 		SetURL(activity.Activity.URL()).
 		SetImageURL(activity.Activity.ImageURL()).
 		SetCreatedAt(activity.Activity.CreatedAt()).
-		SetSourceType(activity.Activity.SourceUID().Type()).
+		SetSourceType(sourceType).
 		SetRawJSON(string(rawJson)).
 		SetShortSummary(activity.Summary.ShortSummary).
 		SetFullSummary(activity.Summary.FullSummary).
 		SetSocialScore(activity.Activity.SocialScore()).
-		SetUpdateCount(existingUpdateCount + 1)
+		SetUpdateCount(existingPartialActivity.UpdateCount + 1)
 
 	switch len(activity.Embedding) {
 	case 1536:
@@ -93,7 +118,17 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		for i, uid := range req.SourceUIDs {
 			sourceUIDs[i] = uid.String()
 		}
-		query = query.Where(entactivity.SourceUIDIn(sourceUIDs...))
+		predicates := make([]*sql.Predicate, len(sourceUIDs))
+		for i, uid := range sourceUIDs {
+			predicates[i] = sql.P(func(b *sql.Builder) {
+				b.WriteString(entactivity.FieldSourceUids)
+				b.WriteString(" @> ")
+				b.Arg(fmt.Sprintf(`["%s"]`, uid))
+			})
+		}
+		query = query.Where(func(s *sql.Selector) {
+			s.Where(sql.Or(predicates...))
+		})
 	}
 
 	if len(req.ActivityUIDs) > 0 {
@@ -254,7 +289,7 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 	fields := []string{
 		entactivity.FieldID,
 		entactivity.FieldUID,
-		entactivity.FieldSourceUID,
+		entactivity.FieldSourceUids,
 		entactivity.FieldSourceType,
 		entactivity.FieldTitle,
 		entactivity.FieldBody,
@@ -284,7 +319,7 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 
 	result := make([]*types.DecoratedActivity, len(rows))
 	for i, a := range rows {
-		res, err := activityFromEnt(&a.Activity, float32(a.Similarity), len(req.QueryEmbedding))
+		res, err := activityFromEnt(&a.Activity, float32(a.Similarity), len(req.QueryEmbedding), a.SourceUids)
 		if err != nil {
 			return nil, fmt.Errorf("deserialize db activity: %w", err)
 		}
@@ -369,13 +404,19 @@ func deserializeCursor(input string) (cursor, error) {
 	return cur, nil
 }
 
-func activityFromEnt(in *ent.Activity, similarity float32, embeddingLength int) (*types.DecoratedActivity, error) {
+func activityFromEnt(in *ent.Activity, similarity float32, embeddingLength int, sourceUIDs []string) (*types.DecoratedActivity, error) {
 	act, err := activities.NewActivity(in.SourceType)
 	if err != nil {
 		return nil, fmt.Errorf("new activity: %w", err)
 	}
 
-	err = act.UnmarshalJSON([]byte(in.RawJSON))
+	// TODO: Update how source foreign keys are tracked within the activity implementation.
+	modifiedJSON, err := syncJSONSourceUIDs(in, sourceUIDs)
+	if err != nil {
+		return nil, fmt.Errorf("sync json source uids: %w", err)
+	}
+
+	err = act.UnmarshalJSON(modifiedJSON)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal activity: %w", err)
 	}
@@ -402,4 +443,22 @@ func activityFromEnt(in *ent.Activity, similarity float32, embeddingLength int) 
 			FullSummary:  in.FullSummary,
 		},
 	}, nil
+}
+
+func syncJSONSourceUIDs(in *ent.Activity, sourceUIDs []string) ([]byte, error) {
+	// Hack: only top-level source_uids column is updated on write,
+	// but source implementations depend on the source_uids field in the raw JSON.
+	// For now just make sure the JSON field is in sync with the top-level column value.
+	var rawActivity map[string]any
+	if err := json.Unmarshal([]byte(in.RawJSON), &rawActivity); err != nil {
+		return nil, fmt.Errorf("unmarshal raw json: %w", err)
+	}
+	rawActivity["source_ids"] = sourceUIDs
+
+	modifiedJSON, err := json.Marshal(rawActivity)
+	if err != nil {
+		return nil, fmt.Errorf("marshal modified json: %w", err)
+	}
+
+	return modifiedJSON, nil
 }

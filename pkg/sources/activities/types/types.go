@@ -11,7 +11,10 @@ type Activity interface {
 	// UID is the unique identifier for the activity.
 	// It should not contain any slashes.
 	UID() TypedUID
-	SourceUID() TypedUID
+	// SourceUIDs are all the sources (of the same type) that the activity is from.
+	// Example: a Hacker News post can be from both "show HN" and "best of HN" sources.
+	// Idea: In the future, we can group duplicated activities across different sources.
+	SourceUIDs() []TypedUID
 	Title() string
 	Body() string
 	URL() string

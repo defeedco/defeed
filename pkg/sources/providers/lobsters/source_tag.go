@@ -93,7 +93,11 @@ func (s *SourceTag) fetchAndSendNewStories(ctx context.Context, since activityty
 	}
 
 	for _, story := range stories {
-		post := &Post{Post: story, SourceTyp: TypeLobstersTag, SourceID: s.UID()}
+		post := &Post{
+			Post:      story,
+			SourceTyp: TypeLobstersTag,
+			SourceIDs: []activitytypes.TypedUID{s.UID()},
+		}
 		if since == nil || post.CreatedAt().After(sinceTime) {
 			feed <- post
 		}

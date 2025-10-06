@@ -93,10 +93,10 @@ func (s *SourceSubreddit) Topics() []sourcetypes.TopicTag {
 }
 
 type Post struct {
-	Post            *reddit.Post           `json:"post"`
-	ExternalContent string                 `json:"external_content"`
-	SourceID        activitytypes.TypedUID `json:"source_id"`
-	SourceTyp       string                 `json:"source_type"`
+	Post            *reddit.Post             `json:"post"`
+	ExternalContent string                   `json:"external_content"`
+	SourceIDs       []activitytypes.TypedUID `json:"source_ids"`
+	SourceTyp       string                   `json:"source_type"`
 }
 
 func NewPost() *Post {
@@ -120,7 +120,7 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
-		SourceID *lib.TypedUID `json:"source_id"`
+		SourceIDs []*lib.TypedUID `json:"source_ids"`
 	}{
 		Alias: (*Alias)(p),
 	}
@@ -128,11 +128,15 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if aux.SourceID == nil {
-		return fmt.Errorf("source_id is required")
+	if len(aux.SourceIDs) == 0 {
+		return fmt.Errorf("source_ids is required")
 	}
 
-	p.SourceID = aux.SourceID
+	p.SourceIDs = make([]activitytypes.TypedUID, len(aux.SourceIDs))
+	for i, uid := range aux.SourceIDs {
+		p.SourceIDs[i] = uid
+	}
+
 	return nil
 }
 
@@ -140,8 +144,8 @@ func (p *Post) UID() activitytypes.TypedUID {
 	return lib.NewTypedUID(p.SourceTyp, p.Post.ID)
 }
 
-func (p *Post) SourceUID() activitytypes.TypedUID {
-	return p.SourceID
+func (p *Post) SourceUIDs() []activitytypes.TypedUID {
+	return p.SourceIDs
 }
 
 func (p *Post) Title() string {
@@ -319,7 +323,7 @@ func (s *SourceSubreddit) buildPost(ctx context.Context, post *reddit.Post) (*Po
 		Post:            post,
 		ExternalContent: externalContent,
 		SourceTyp:       TypeRedditSubreddit,
-		SourceID:        s.UID(),
+		SourceIDs:       []activitytypes.TypedUID{s.UID()},
 	}, nil
 }
 
