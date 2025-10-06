@@ -2,9 +2,9 @@
 
 <img width="1511" height="711" alt="Screenshot 2025-10-06 at 14 10 19" src="https://github.com/user-attachments/assets/f322b9d8-95a1-4ff6-bead-c8f7c60225f7" />
 
-</div>
+<h1>Defeat the noise. Never miss what happens.</h1>
 
----
+</div>
 
 Defeed is a personal newspaper that keeps you informed about the updates you genuinely care about—across code repos, product changelogs, social feeds, industry news, markets, and more. 
 
