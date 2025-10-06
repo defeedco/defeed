@@ -6,7 +6,7 @@
 
 ---
 
-Defeed is a personal “signal-over-noise” dashboard that keeps you instantly informed about the updates you genuinely care about—across code repos, product changelogs, social feeds, industry news, markets, and more. Think of it as a live, auto-curated newspaper you design yourself.
+Defeed is a personal newspaper that keeps you informed about the updates you genuinely care about—across code repos, product changelogs, social feeds, industry news, markets, and more. 
 
 ## ✨ Features
 
