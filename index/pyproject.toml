@@ -1,0 +1,24 @@
+[project]
+name = "defeed-index"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Bart", email = "bartolomej.kozorog@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "bertopic>=0.17.3",
+    "numpy>=2.3.3",
+    "pandas>=2.3.2",
+    "scikit-learn>=1.7.2",
+    "psycopg2-binary>=2.9.9",
+    "python-dotenv>=1.0.0",
+    "datamapplot>=0.6.4",
+]
+
+[project.scripts]
+defeed-index = "defeed_index:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
