@@ -243,20 +243,20 @@ func (r *Scheduler) Add(source sourcetypes.Source) error {
 func (r *Scheduler) Remove(uid string) error {
 	existing, _ := r.activeSourceRepo.GetByID(uid)
 
-	if existing != nil {
-		return fmt.Errorf("source '%s' not found", uid)
+	if existing == nil {
+		return nil
 	}
-
-	cancel, ok := r.cancelBySourceID.Load(uid)
-	if !ok {
-		return fmt.Errorf("source '%s' cancel func not found", uid)
-	}
-	cancel.(context.CancelFunc)()
-	r.cancelBySourceID.Delete(uid)
 
 	err := r.activeSourceRepo.Remove(uid)
 	if err != nil {
 		return fmt.Errorf("remove source: %w", err)
+	}
+
+	cancel, ok := r.cancelBySourceID.Load(uid)
+	// When the source wasn't registered, there is no cancel func (e.g. when SOURCE_INITIALIZATION=false).
+	if ok {
+		cancel.(context.CancelFunc)()
+		r.cancelBySourceID.Delete(uid)
 	}
 
 	return nil

@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/defeedco/defeed/pkg/sources/activities/types"
 
 	"github.com/defeedco/defeed/pkg/feeds"
 	"github.com/defeedco/defeed/pkg/sources"
 	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
 	entfeed "github.com/defeedco/defeed/pkg/storage/postgres/ent/feed"
+	"github.com/defeedco/defeed/pkg/storage/postgres/ent/predicate"
 )
 
 type FeedRepository struct {
@@ -76,6 +78,45 @@ func (r *FeedRepository) GetByID(ctx context.Context, uid string) (*feeds.Feed, 
 	}
 
 	return feedFromEnt(f)
+}
+
+func (r *FeedRepository) FindBySourceUIDs(ctx context.Context, sourceUIDs []types.TypedUID) ([]*feeds.Feed, error) {
+	if len(sourceUIDs) == 0 {
+		return []*feeds.Feed{}, nil
+	}
+
+	sourceUIDStrings := make([]string, len(sourceUIDs))
+	for i, uid := range sourceUIDs {
+		sourceUIDStrings[i] = uid.String()
+	}
+
+	predicates := make([]predicate.Feed, len(sourceUIDStrings))
+	for i, uid := range sourceUIDStrings {
+		predicates[i] = func(s *sql.Selector) {
+			s.Where(sql.P(func(b *sql.Builder) {
+				b.WriteString(entfeed.FieldSourceUids)
+				b.WriteString(" @> ")
+				b.Arg(fmt.Sprintf(`["%s"]`, uid))
+			}))
+		}
+	}
+
+	feedsEnt, err := r.db.Client().Feed.Query().
+		Where(entfeed.Or(predicates...)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*feeds.Feed, len(feedsEnt))
+	for i, f := range feedsEnt {
+		result[i], err = feedFromEnt(f)
+		if err != nil {
+			return nil, fmt.Errorf("deserialize feed: %w", err)
+		}
+	}
+
+	return result, nil
 }
 
 func feedFromEnt(in *ent.Feed) (*feeds.Feed, error) {

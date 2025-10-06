@@ -48,6 +48,7 @@ type feedStore interface {
 	Remove(ctx context.Context, uid string) error
 	List(ctx context.Context) ([]*Feed, error)
 	GetByID(ctx context.Context, uid string) (*Feed, error)
+	FindBySourceUIDs(ctx context.Context, sourceUIDs []activitytypes.TypedUID) ([]*Feed, error)
 }
 
 type summarizer interface {
@@ -156,8 +157,8 @@ func (r *Registry) Update(ctx context.Context, req UpdateRequest) (*Feed, error)
 		return nil, errors.New("feed not found")
 	}
 
-	// Update the customizable fields,
-	// but preserve the internal state (Public, Summary,...)
+	oldSourceUIDs := feed.SourceUIDs
+
 	feed.Name = req.Name
 	feed.Icon = req.Icon
 	feed.Query = req.Query
@@ -167,6 +168,12 @@ func (r *Registry) Update(ctx context.Context, req UpdateRequest) (*Feed, error)
 	err = r.executeAndUpsert(ctx, *feed)
 	if err != nil {
 		return nil, fmt.Errorf("execute and upsert feed: %w", err)
+	}
+
+	removedSourceUIDs := findRemovedSourceUIDs(oldSourceUIDs, req.SourceUIDs)
+	err = r.cleanupUnusedSources(ctx, removedSourceUIDs)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to cleanup unused sources")
 	}
 
 	return feed, nil
@@ -199,8 +206,17 @@ func (r *Registry) Remove(ctx context.Context, uid string, userID string) error 
 		return errors.New("feed not found")
 	}
 
-	// TODO(optimisation): Remove the source from executor if no other feeds are using it
-	return r.feedRepository.Remove(ctx, uid)
+	err = r.feedRepository.Remove(ctx, uid)
+	if err != nil {
+		return err
+	}
+
+	err = r.cleanupUnusedSources(ctx, feed.SourceUIDs)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to cleanup unused sources")
+	}
+
+	return nil
 }
 
 // ListByUserID returns both the feeds that the user owns and public ones.
@@ -637,6 +653,49 @@ func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActiv
 	return topics, nil
 }
 
+func (r *Registry) cleanupUnusedSources(ctx context.Context, sourceUIDs []activitytypes.TypedUID) error {
+	if len(sourceUIDs) == 0 {
+		return nil
+	}
+
+	feedsUsingSource, err := r.feedRepository.FindBySourceUIDs(ctx, sourceUIDs)
+	if err != nil {
+		return fmt.Errorf("find feeds by source UIDs: %w", err)
+	}
+
+	usedSourceUIDs := make(map[string]bool)
+	for _, feed := range feedsUsingSource {
+		for _, uid := range feed.SourceUIDs {
+			usedSourceUIDs[uid.String()] = true
+		}
+	}
+
+	for _, uid := range sourceUIDs {
+		if !usedSourceUIDs[uid.String()] {
+			err := r.sourceScheduler.Remove(uid.String())
+			if err != nil {
+				r.logger.Warn().
+					Err(err).
+					Str("source_uid", uid.String()).
+					Msg("failed to remove source from scheduler")
+			} else {
+				r.logger.Info().
+					Str("source_uid", uid.String()).
+					Msg("removed unused source from scheduler")
+			}
+		} else {
+			r.logger.Info().
+				Str("source_uid", uid.String()).
+				Msg("source is still in use")
+		}
+	}
+
+	// Note: do not remove associated activities,
+	// since these sources could be used again in the future.
+
+	return nil
+}
+
 type topicKey string
 
 func newTopicKey(emoji string, title string) topicKey {
@@ -667,10 +726,23 @@ func sourceTypeToTopicKey(in string) (topicKey, error) {
 		return newTopicKey("🔘", "Github Releases, Issues & PRs"), nil
 	case github.TypeGithubTopic:
 		return newTopicKey("⭐", "Github Repositories"), nil
-		// Note: temporarily removed in commit a8c728a86cefadd20f67a424363dc6f61c41cf66
-		// case changedetection.TypeChangedetectionWebsite:
-		// return ChangedetectionWebsite, nil
 	}
 
 	return "", fmt.Errorf("unknown source type: %s", in)
+}
+
+func findRemovedSourceUIDs(oldUIDs, newUIDs []activitytypes.TypedUID) []activitytypes.TypedUID {
+	newUIDSet := make(map[string]bool)
+	for _, uid := range newUIDs {
+		newUIDSet[uid.String()] = true
+	}
+
+	var removed []activitytypes.TypedUID
+	for _, uid := range oldUIDs {
+		if !newUIDSet[uid.String()] {
+			removed = append(removed, uid)
+		}
+	}
+
+	return removed
 }
