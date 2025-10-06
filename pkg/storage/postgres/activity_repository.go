@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -59,7 +60,9 @@ func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.Decorat
 
 	sourceUIDs := existingPartialActivity.SourceUids
 	for _, uid := range activity.Activity.SourceUIDs() {
-		sourceUIDs = append(sourceUIDs, uid.String())
+		if !slices.Contains(sourceUIDs, uid.String()) {
+			sourceUIDs = append(sourceUIDs, uid.String())
+		}
 	}
 
 	// Assume all sources are of the same type.
