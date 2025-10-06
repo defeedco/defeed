@@ -116,11 +116,7 @@ func (r *Registry) Create(ctx context.Context, req CreateRequest) (bool, error) 
 		Embedding: embedding,
 	})
 	if err != nil {
-		r.logger.Error().
-			Err(err).
-			Any("activity", req.Activity).
-			Msg("store activity")
-		return false, fmt.Errorf("store activity: %w", err)
+		return false, fmt.Errorf("upsert activity: %w", err)
 	}
 
 	return true, nil

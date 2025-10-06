@@ -110,7 +110,7 @@ func run(ctx context.Context, config Config) error {
 
 	embedder := nlp.NewEmbedder(embeddingModel)
 
-	activityRepo := postgres.NewActivityRepository(db)
+	activityRepo := postgres.NewActivityRepository(db, logger)
 	activityRegistry := activities.NewRegistry(logger, activityRepo, summarizer, embedder)
 
 	searchReq, err := buildSearchRequest(config)

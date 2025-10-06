@@ -286,7 +286,7 @@ func (r *Registry) Activities(
 	}
 
 	// Select top activities from each source to ensure variety
-	return r.searchWithSourceDiversity(ctx, feed.SourceUIDs, sortBy, period, limit)
+	return r.searchWithSourceDiversity(ctx, feed.SourceUIDs, activitytypes.SortBySocialScore, period, limit)
 }
 
 func (r *Registry) searchByUserQuery(

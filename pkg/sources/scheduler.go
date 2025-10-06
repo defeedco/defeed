@@ -8,6 +8,7 @@ import (
 
 	"github.com/alitto/pond/v2"
 	"github.com/defeedco/defeed/pkg/sources/activities"
+	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
@@ -58,6 +59,10 @@ func (r *Scheduler) Initialize(ctx context.Context) error {
 	sources, err := r.activeSourceRepo.List()
 	if err != nil {
 		return fmt.Errorf("list sources: %w", err)
+	}
+
+	sources = []sourcetypes.Source{
+		&hackernews.SourcePosts{FeedName: "best"},
 	}
 
 	r.logger.Info().Int("count", len(sources)).Msg("Initializing sources")
@@ -183,7 +188,7 @@ func (r *Scheduler) processActivity(activity activitytypes.Activity) {
 	r.activityWorkerPool.Submit(func() {
 		// Do not force reprocessing or upsert if activity already exists,
 		// since some sources might return already processed activities (e.g. GitHub topic).
-		isCreated, err := r.activityRegistry.Create(ctx, activities.CreateRequest{
+		isUpserted, err := r.activityRegistry.Create(ctx, activities.CreateRequest{
 			Activity: activity,
 			// Skip all reprocessing to save costs.
 			// Only upsert the db record to update social stats.
@@ -201,7 +206,7 @@ func (r *Scheduler) processActivity(activity activitytypes.Activity) {
 
 		r.logger.Debug().
 			Str("activity_uid", activity.UID().String()).
-			Bool("created", isCreated).
+			Bool("upserted", isUpserted).
 			Msg("Activity processed")
 	})
 

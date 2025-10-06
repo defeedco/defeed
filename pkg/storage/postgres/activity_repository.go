@@ -17,14 +17,16 @@ import (
 	"github.com/defeedco/defeed/pkg/storage/postgres/ent"
 	entactivity "github.com/defeedco/defeed/pkg/storage/postgres/ent/activity"
 	"github.com/defeedco/defeed/pkg/storage/postgres/ent/predicate"
+	"github.com/rs/zerolog"
 )
 
 type ActivityRepository struct {
-	db *DB
+	db     *DB
+	logger *zerolog.Logger
 }
 
-func NewActivityRepository(db *DB) *ActivityRepository {
-	return &ActivityRepository{db: db}
+func NewActivityRepository(db *DB, logger *zerolog.Logger) *ActivityRepository {
+	return &ActivityRepository{db: db, logger: logger}
 }
 
 type partialActivity struct {
@@ -33,7 +35,6 @@ type partialActivity struct {
 }
 
 func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.DecoratedActivity) error {
-	// TODO: Test this
 	existingPartialActivities := []partialActivity{}
 	err := r.db.Client().Activity.Query().
 		Where(entactivity.ID(activity.Activity.UID().String())).
@@ -100,7 +101,15 @@ func (r *ActivityRepository) Upsert(ctx context.Context, activity *types.Decorat
 		UpdateNewValues().
 		Exec(ctx)
 
-	return err
+	if err != nil {
+		r.logger.Error().
+			Err(err).
+			Any("activity", activity).
+			Any("existing_activity", existingPartialActivity).
+			Msg("upsert activity")
+	}
+
+	return nil
 }
 
 type activityWithSimilarity struct {

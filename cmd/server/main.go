@@ -92,7 +92,7 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 	queryRewriter := nlp.NewQueryRewriter(cachedCompletionModel, logger)
 	embedder := nlp.NewEmbedder(cachedEmbeddingModel)
 
-	activityRepo := postgres.NewActivityRepository(db)
+	activityRepo := postgres.NewActivityRepository(db, logger)
 	sourceRepo := postgres.NewSourceRepository(db)
 
 	activityRegistry := activities.NewRegistry(logger, activityRepo, summarizer, embedder)
@@ -106,6 +106,13 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 			}
 		}()
 	}
+
+	// Don't block the server startup
+	go func() {
+		if err := sourceScheduler.Initialize(ctx); err != nil {
+			logger.Error().Err(err).Msg("failed to initialize source scheduler")
+		}
+	}()
 
 	// Cache source results to avoid hitting the 3rd party APIs for every FindByUID call
 	sourceRegistry := sources.NewCachedRegistry(sources.NewRegistry(logger, &config.SourceProviders), logger)
