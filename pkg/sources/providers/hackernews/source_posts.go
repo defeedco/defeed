@@ -3,8 +3,8 @@ package hackernews
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/alexferrari88/gohn/pkg/gohn"
@@ -70,9 +70,11 @@ func (s *SourcePosts) Topics() []sourcetypes.TopicTag {
 func (s *SourcePosts) Validate() error { return lib.ValidateStruct(s) }
 
 type Post struct {
-	Post            *gohn.Item               `json:"post"`
-	ArticleTextBody string                   `json:"article_text_body"`
-	SourceIDs       []activitytypes.TypedUID `json:"source_ids"`
+	Post                *gohn.Item               `json:"post"`
+	ArticleTextBody     string                   `json:"article_text_body"`
+	ArticleThumbnailURL string                   `json:"article_thumbnail_url"`
+	ArticleFaviconURL   string                   `json:"article_favicon_url"`
+	SourceIDs           []activitytypes.TypedUID `json:"source_ids"`
 }
 
 func NewPost() *Post {
@@ -133,16 +135,22 @@ func (p *Post) Title() string {
 }
 
 func (p *Post) Body() string {
-	if p.ArticleTextBody != "" {
-		return p.ArticleTextBody
-	}
+	body := strings.Builder{}
 
-	// Note: this is usually empty.
+	body.WriteString(p.Title())
+	body.WriteString("\n\n")
+
 	if p.Post.Text != nil {
-		return *p.Post.Text
+		body.WriteString(*p.Post.Text)
+		body.WriteString("\n\n")
 	}
 
-	return p.Title()
+	if p.ArticleTextBody != "" {
+		body.WriteString("Referenced article: \n")
+		body.WriteString(p.ArticleTextBody)
+	}
+
+	return body.String()
 }
 
 func (p *Post) URL() string {
@@ -151,7 +159,11 @@ func (p *Post) URL() string {
 }
 
 func (p *Post) ImageURL() string {
-	return ""
+	if p.ArticleThumbnailURL != "" {
+		return p.ArticleThumbnailURL
+	}
+
+	return p.ArticleFaviconURL
 }
 
 func (p *Post) UpvotesCount() int {
@@ -253,22 +265,43 @@ func (s *SourcePosts) fetchHackerNewsPosts(ctx context.Context, _ activitytypes.
 				return
 			}
 
-			textContent := ""
-			if story.Text != nil {
-				textContent = *story.Text
-			} else if story.URL != nil {
-				content, err := lib.FetchTextFromURL(ctx, s.logger, *story.URL)
-				if err != nil && !errors.Is(err, lib.ErrUnsupportedContentType) {
+			post := &Post{
+				Post:                story,
+				ArticleTextBody:     "",
+				ArticleThumbnailURL: "",
+				ArticleFaviconURL:   "",
+				SourceIDs:           []activitytypes.TypedUID{s.UID()},
+			}
+
+			if story.URL != nil {
+				resp, err := lib.FetchURL(ctx, s.logger, *story.URL)
+				if err != nil {
 					storyLogger.Error().Err(err).Msg("Failed to fetch external article")
 					return
 				}
-				textContent = content
-			}
 
-			post := &Post{
-				Post:            story,
-				ArticleTextBody: textContent,
-				SourceIDs:       []activitytypes.TypedUID{s.UID()},
+				defer resp.Body.Close()
+
+				faviconURL, err := lib.FaviconFromHTTPResponse(ctx, s.logger, resp)
+				if err == nil {
+					post.ArticleFaviconURL = faviconURL
+				} else {
+					storyLogger.Error().Err(err).Msg("Failed to get article favicon")
+				}
+
+				thumbnailURL, err := lib.ThumbnailURLFromHTTPResponse(ctx, s.logger, resp)
+				if err == nil {
+					post.ArticleThumbnailURL = thumbnailURL
+				} else {
+					storyLogger.Error().Err(err).Msg("Failed to get article thumbnail")
+				}
+
+				content, err := lib.TextFromHTTPResponse(ctx, s.logger, resp)
+				if err == nil {
+					post.ArticleTextBody = content
+				} else {
+					storyLogger.Error().Err(err).Msg("Failed to get article text")
+				}
 			}
 
 			feed <- post

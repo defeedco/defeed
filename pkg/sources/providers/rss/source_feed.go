@@ -114,7 +114,16 @@ func (s *SourceFeed) fetchIcon(ctx context.Context, logger *zerolog.Logger) erro
 	// Otherwise, try to fetch it automatically
 	websiteURL := s.getWebsiteURL()
 	if websiteURL != "" {
-		s.IconURL = lib.FetchFaviconURL(ctx, logger, websiteURL)
+		resp, err := lib.FetchURL(ctx, logger, websiteURL)
+		if err != nil {
+			return fmt.Errorf("fetch url: %w", err)
+		}
+		defer resp.Body.Close()
+
+		s.IconURL, err = lib.FaviconFromHTTPResponse(ctx, logger, resp)
+		if err != nil {
+			return fmt.Errorf("favicon from http response: %w", err)
+		}
 	}
 	return nil
 }

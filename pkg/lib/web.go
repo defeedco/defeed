@@ -24,26 +24,53 @@ var (
 )
 
 func FetchTextFromURL(ctx context.Context, logger *zerolog.Logger, url string) (string, error) {
-	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := FetchURL(ctx, logger, url)
+	if err != nil {
+		return "", fmt.Errorf("fetch url: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	text, err := TextFromHTTPResponse(ctx, logger, resp)
+	if err != nil {
+		return "", fmt.Errorf("text from http response: %w", err)
+	}
+
+	return text, nil
+}
+
+// FetchURL fetches a URL and returns the http response.
+// The response body should be closed by the caller.
+func FetchURL(ctx context.Context, logger *zerolog.Logger, url string) (*http.Response, error) {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		return "", fmt.Errorf("create request: %w", err)
+		return nil, fmt.Errorf("create request: %w", err)
 	}
 
 	req.Header.Set("User-Agent", DefeedUserAgentString)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("fetch url: %w", err)
+		return nil, fmt.Errorf("fetch url: %w", err)
 	}
-	defer resp.Body.Close()
 
+	return resp, nil
+}
+
+func TextFromHTTPResponse(ctx context.Context, logger *zerolog.Logger, resp *http.Response) (string, error) {
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("http status: %d", resp.StatusCode)
 	}
 
 	contentType := resp.Header.Get("Content-Type")
+	url := resp.Request.URL.String()
 
 	if strings.Contains(contentType, "application/pdf") || strings.HasSuffix(url, ".pdf") {
 		return extractTextFromPDF(resp.Body)
@@ -132,13 +159,13 @@ func StripURLHost(url string) (string, error) {
 	return strings.TrimPrefix(parsedURL.Host, "www."), nil
 }
 
-// FetchFaviconURL attempts to find the favicon URL for a given website URL.
+// FaviconFromHTTPResponse attempts to find the favicon URL for a given website URL.
 // It tries common favicon locations and parses HTML to find favicon links.
-func FetchFaviconURL(ctx context.Context, logger *zerolog.Logger, websiteURL string) string {
-	parsedURL, err := neturl.Parse(websiteURL)
-	if err != nil {
-		logger.Warn().Str("url", websiteURL).Msg("failed to parse URL for favicon")
-		return ""
+// If no favicon is found, it returns an empty string (not an error).
+func FaviconFromHTTPResponse(ctx context.Context, logger *zerolog.Logger, resp *http.Response) (string, error) {
+	faviconURL := findFaviconInHTML(ctx, logger, resp)
+	if faviconURL != "" {
+		return faviconURL, nil
 	}
 
 	// Try common favicon locations first
@@ -150,14 +177,13 @@ func FetchFaviconURL(ctx context.Context, logger *zerolog.Logger, websiteURL str
 	}
 
 	for _, path := range commonFaviconPaths {
-		faviconURL := parsedURL.Scheme + "://" + parsedURL.Host + path
+		faviconURL := resp.Request.URL.Scheme + "://" + resp.Request.URL.Host + path
 		if checkFaviconExists(ctx, faviconURL) {
-			return faviconURL
+			return faviconURL, nil
 		}
 	}
 
-	// If common locations don't work, try to parse HTML for favicon links
-	return findFaviconInHTML(ctx, logger, websiteURL)
+	return "", nil
 }
 
 func checkFaviconExists(ctx context.Context, faviconURL string) bool {
@@ -176,32 +202,12 @@ func checkFaviconExists(ctx context.Context, faviconURL string) bool {
 	return resp.StatusCode == http.StatusOK
 }
 
-func findFaviconInHTML(ctx context.Context, logger *zerolog.Logger, websiteURL string) string {
-	req, err := http.NewRequestWithContext(ctx, "GET", websiteURL, nil)
-	if err != nil {
-		logger.Warn().Str("url", websiteURL).Msg("failed to create request for favicon")
-		return ""
-	}
-
-	req.Header.Set("User-Agent", DefeedUserAgentString)
-
-	// Skip certificate verification to avoid occasional "failed to verify certificate" errors
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		logger.Error().Err(err).Str("url", websiteURL).Msg("failed to fetch HTML for favicon")
-		return ""
-	}
-	defer resp.Body.Close()
+func findFaviconInHTML(ctx context.Context, logger *zerolog.Logger, resp *http.Response) string {
+	websiteURL := resp.Request.URL.String()
 
 	if resp.StatusCode != http.StatusOK {
 		logger.Warn().Str("url", websiteURL).Int("status", resp.StatusCode).Msg("Non 200 status code for favicon request")
+		return ""
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
@@ -249,4 +255,83 @@ func findFaviconInHTML(ctx context.Context, logger *zerolog.Logger, websiteURL s
 	}
 
 	return foundFavicon
+}
+
+func ThumbnailURLFromHTTPResponse(ctx context.Context, logger *zerolog.Logger, resp *http.Response) (string, error) {
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("http status: %d", resp.StatusCode)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("parse html: %w", err)
+	}
+
+	thumbnailURL := findThumbnailInHTML(doc, resp.Request.URL)
+	if thumbnailURL != "" {
+		return thumbnailURL, nil
+	}
+
+	return "", fmt.Errorf("no thumbnail found")
+}
+
+func findThumbnailInHTML(doc *goquery.Document, url *neturl.URL) string {
+	thumbnailSelectors := []string{
+		"meta[property='og:image']",
+		"meta[name='twitter:image']",
+		"meta[property='twitter:image']",
+		"meta[name='og:image']",
+		"link[rel='image_src']",
+	}
+
+	var foundThumbnail string
+	for _, selector := range thumbnailSelectors {
+		doc.Find(selector).Each(func(i int, s *goquery.Selection) {
+			if foundThumbnail != "" {
+				return
+			}
+
+			var content string
+			var exists bool
+
+			if content, exists = s.Attr("content"); !exists {
+				if content, exists = s.Attr("href"); !exists {
+					return
+				}
+			}
+
+			if content != "" {
+				resolvedURL := resolveThumbnailURL(content, url)
+				if resolvedURL != "" {
+					foundThumbnail = resolvedURL
+				}
+			}
+		})
+		if foundThumbnail != "" {
+			break
+		}
+	}
+
+	return foundThumbnail
+}
+
+func resolveThumbnailURL(content string, url *neturl.URL) string {
+	content = strings.TrimSpace(content)
+	if content == "" {
+		return ""
+	}
+
+	if strings.HasPrefix(content, "http://") || strings.HasPrefix(content, "https://") {
+		return content
+	}
+
+	if strings.HasPrefix(content, "//") {
+		return url.Scheme + ":" + content
+	}
+
+	if strings.HasPrefix(content, "/") {
+		return url.Scheme + "://" + url.Host + content
+	}
+
+	return url.Scheme + "://" + url.Host + "/" + content
 }
