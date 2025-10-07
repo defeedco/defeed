@@ -11,6 +11,7 @@ import (
 	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
 	"github.com/defeedco/defeed/pkg/sources/providers/mastodon"
+	"github.com/defeedco/defeed/pkg/sources/providers/producthunt"
 	"github.com/defeedco/defeed/pkg/sources/providers/reddit"
 	"github.com/defeedco/defeed/pkg/sources/providers/rss"
 	sourcestypes "github.com/defeedco/defeed/pkg/sources/types"
@@ -50,6 +51,8 @@ func NewSource(sourceType string) (sourcestypes.Source, error) {
 		s = github.NewIssuesSource()
 	case github.TypeGithubTopic:
 		s = github.NewSourceTopic()
+	case producthunt.TypeProductHuntPosts:
+		s = producthunt.NewSourcePosts()
 	default:
 		return nil, fmt.Errorf("unknown source type: %s", sourceType)
 	}

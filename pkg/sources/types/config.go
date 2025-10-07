@@ -9,5 +9,5 @@ type ProviderConfig struct {
 	MastodonClientID     string `env:"MASTODON_CLIENT_ID,default="`
 	MastodonClientSecret string `env:"MASTODON_CLIENT_SECRET,default="`
 
-	ChangedetectionKey string `env:"CHANGEDETECTION_API_KEY,default="`
+	ProductHuntAPIToken string `env:"PRODUCTHUNT_API_TOKEN,default="`
 }

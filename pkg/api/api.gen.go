@@ -43,6 +43,7 @@ const (
 	LobstersTag            SourceType = "lobstersTag"
 	MastodonAccount        SourceType = "mastodonAccount"
 	MastodonTag            SourceType = "mastodonTag"
+	ProductHuntPosts       SourceType = "productHuntPosts"
 	RedditSubreddit        SourceType = "redditSubreddit"
 	RssFeed                SourceType = "rssFeed"
 )

@@ -14,6 +14,7 @@ Defeed is a personal newspaper that keeps you informed about the updates you gen
 - **GitHub**: issues, releases, and topics
 - **Mastodon**: accounts and hashtags
 - **HackerNews**: new, best, top posts
+- **Product Hunt**: top and new products
 - **Lobsters**: feeds and tags
 - **Reddit**: subreddits
 - **RSS/Atom**: Any RSS or Atom feed

@@ -352,7 +352,7 @@ components:
         - githubIssues
         - githubTopics
         - changedetectionWebsite
-
+        - productHuntPosts
     ActivitySortBy:
       type: string
       enum:

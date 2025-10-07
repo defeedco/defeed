@@ -8,7 +8,6 @@ import (
 
 	"github.com/alitto/pond/v2"
 	"github.com/defeedco/defeed/pkg/sources/activities"
-	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
@@ -59,10 +58,6 @@ func (r *Scheduler) Initialize(ctx context.Context) error {
 	sources, err := r.activeSourceRepo.List()
 	if err != nil {
 		return fmt.Errorf("list sources: %w", err)
-	}
-
-	sources = []sourcetypes.Source{
-		&hackernews.SourcePosts{FeedName: "best"},
 	}
 
 	r.logger.Info().Int("count", len(sources)).Msg("Initializing sources")

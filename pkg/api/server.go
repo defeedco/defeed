@@ -18,6 +18,7 @@ import (
 	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
 	"github.com/defeedco/defeed/pkg/sources/providers/mastodon"
+	"github.com/defeedco/defeed/pkg/sources/providers/producthunt"
 	"github.com/defeedco/defeed/pkg/sources/providers/reddit"
 	"github.com/defeedco/defeed/pkg/sources/providers/rss"
 
@@ -541,6 +542,8 @@ func serializeSourceType(in string) (SourceType, error) {
 		return GithubIssues, nil
 	case github.TypeGithubTopic:
 		return GithubTopics, nil
+	case producthunt.TypeProductHuntPosts:
+		return ProductHuntPosts, nil
 		// Note: temporarily removed in commit a8c728a86cefadd20f67a424363dc6f61c41cf66
 		// case changedetection.TypeChangedetectionWebsite:
 		// return ChangedetectionWebsite, nil

@@ -17,6 +17,7 @@ import (
 	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
 	"github.com/defeedco/defeed/pkg/sources/providers/mastodon"
+	"github.com/defeedco/defeed/pkg/sources/providers/producthunt"
 	"github.com/defeedco/defeed/pkg/sources/providers/reddit"
 	"github.com/defeedco/defeed/pkg/sources/providers/rss"
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -55,6 +56,7 @@ func (r *Registry) Initialize() error {
 	r.fetchers = append(r.fetchers, lobsters.NewTagFetcher(r.logger))
 	r.fetchers = append(r.fetchers, mastodon.NewAccountFetcher(r.logger))
 	r.fetchers = append(r.fetchers, mastodon.NewTagFetcher(r.logger))
+	r.fetchers = append(r.fetchers, producthunt.NewPostsFetcher(r.logger))
 
 	r.logger.Info().
 		Int("count", len(r.fetchers)).
@@ -256,6 +258,8 @@ func curatedDefaultSort(input []types.Source) []types.Source {
 			return 100
 		case hackernews.TypeHackerNewsPosts:
 			return 95
+		case producthunt.TypeProductHuntPosts:
+			return 93
 		case lobsters.TypeLobstersTag, lobsters.TypeLobstersFeed:
 			return 90
 		case github.TypeGithubIssues, github.TypeGithubReleases:

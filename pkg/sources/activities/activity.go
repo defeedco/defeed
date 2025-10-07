@@ -2,11 +2,13 @@ package activities
 
 import (
 	"fmt"
+
 	"github.com/defeedco/defeed/pkg/sources/activities/types"
 	"github.com/defeedco/defeed/pkg/sources/providers/github"
 	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
 	"github.com/defeedco/defeed/pkg/sources/providers/mastodon"
+	"github.com/defeedco/defeed/pkg/sources/providers/producthunt"
 	"github.com/defeedco/defeed/pkg/sources/providers/reddit"
 	"github.com/defeedco/defeed/pkg/sources/providers/rss"
 )
@@ -35,6 +37,8 @@ func NewActivity(sourceType string) (types.Activity, error) {
 		a = github.NewIssue()
 	case github.TypeGithubTopic:
 		a = github.NewRepository()
+	case producthunt.TypeProductHuntPosts:
+		a = producthunt.NewPost()
 	default:
 		return nil, fmt.Errorf("unknown source type: %s", sourceType)
 	}

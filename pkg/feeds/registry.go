@@ -14,6 +14,7 @@ import (
 	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
 	"github.com/defeedco/defeed/pkg/sources/providers/mastodon"
+	"github.com/defeedco/defeed/pkg/sources/providers/producthunt"
 	"github.com/defeedco/defeed/pkg/sources/providers/reddit"
 	"github.com/defeedco/defeed/pkg/sources/providers/rss"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
@@ -577,6 +578,10 @@ func (r *Registry) searchWithSourceDiversity(
 		return nil, fmt.Errorf("wait search: %w", err)
 	}
 
+	if len(activitiesBySourceIndex) == 0 {
+		return &ActivitiesResponse{}, nil
+	}
+
 	activitiesBySource := make(map[activitytypes.TypedUID][]*activitytypes.DecoratedActivity)
 	for i, activities := range activitiesBySourceIndex {
 		activitiesBySource[sourceUIDs[i]] = activities
@@ -726,6 +731,8 @@ func sourceTypeToTopicKey(in string) (topicKey, error) {
 		return newTopicKey("🔘", "Github Releases, Issues & PRs"), nil
 	case github.TypeGithubTopic:
 		return newTopicKey("⭐", "Github Repositories"), nil
+	case producthunt.TypeProductHuntPosts:
+		return newTopicKey("🚀", "Product Hunt"), nil
 	}
 
 	return "", fmt.Errorf("unknown source type: %s", in)

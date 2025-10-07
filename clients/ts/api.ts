@@ -400,7 +400,8 @@ export const SourceType = {
     GithubReleases: 'githubReleases',
     GithubIssues: 'githubIssues',
     GithubTopics: 'githubTopics',
-    ChangedetectionWebsite: 'changedetectionWebsite'
+    ChangedetectionWebsite: 'changedetectionWebsite',
+    ProductHuntPosts: 'productHuntPosts'
 } as const;
 
 export type SourceType = typeof SourceType[keyof typeof SourceType];
