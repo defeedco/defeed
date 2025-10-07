@@ -28,20 +28,19 @@ type FeedFetcher struct {
 	Logger *zerolog.Logger
 }
 
-func NewFeedFetcher(logger *zerolog.Logger) (*FeedFetcher, error) {
+func NewFeedFetcher(logger *zerolog.Logger) *FeedFetcher {
 	feeds, err := loadOPMLSources(logger)
 	if err != nil {
-		return nil, fmt.Errorf("load OPML sources: %w", err)
+		logger.Error().Err(err).Msg("load OPML sources")
+		return nil
 	}
 
-	if err := fetchIcons(context.Background(), logger, feeds); err != nil {
-		return nil, fmt.Errorf("initialize feed sources: %w", err)
-	}
+	fetchIcons(context.Background(), logger, feeds)
 
 	return &FeedFetcher{
 		Feeds:  feeds,
 		Logger: logger,
-	}, nil
+	}
 }
 
 func (f *FeedFetcher) SourceType() string {
@@ -128,7 +127,7 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 	return result, nil
 }
 
-func fetchIcons(ctx context.Context, logger *zerolog.Logger, sources []types.Source) error {
+func fetchIcons(ctx context.Context, logger *zerolog.Logger, sources []types.Source) {
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(len(sources))
 
@@ -139,14 +138,14 @@ func fetchIcons(ctx context.Context, logger *zerolog.Logger, sources []types.Sou
 
 			feedSource := source.(*SourceFeed)
 			if err := feedSource.fetchIcon(ctx, logger); err != nil {
-				return fmt.Errorf("fetch icon for feed source: %w", err)
+				logger.Error().Err(err).
+					Str("source", feedSource.UID().String()).
+					Msg("fetch icon for feed source")
 			}
 			return nil
 		})
 	}
 
-	if err := g.Wait(); err != nil {
-		return fmt.Errorf("fetch icons for feed sources: %w", err)
-	}
-	return nil
+	// Ignore errors
+	_ = g.Wait()
 }

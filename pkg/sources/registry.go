@@ -42,11 +42,7 @@ func NewRegistry(logger *zerolog.Logger, sourceConfig *types.ProviderConfig) *Re
 
 // Initialize sets up the fetchers for each source type
 func (r *Registry) Initialize() error {
-	rssFetcher, err := rss.NewFeedFetcher(r.logger)
-	if err != nil {
-		return fmt.Errorf("initialize RSS fetcher: %w", err)
-	}
-	r.fetchers = append(r.fetchers, rssFetcher)
+	r.fetchers = append(r.fetchers, rss.NewFeedFetcher(r.logger))
 	r.fetchers = append(r.fetchers, github.NewIssuesFetcher(r.logger))
 	r.fetchers = append(r.fetchers, github.NewReleasesFetcher(r.logger))
 	r.fetchers = append(r.fetchers, github.NewTopicFetcher(r.logger))
