@@ -35,9 +35,9 @@ Missing a source? [Submit a feature request](https://github.com/defeed/defeed/is
 
 ## Demo
 
-<img width="500" alt="Screenshot 2025-10-08 at 12 08 03" src="https://github.com/user-attachments/assets/301e6e29-dd09-48ee-80f1-d049159b2c0f" />
+<img width="400" alt="Screenshot 2025-10-08 at 12 08 03" src="https://github.com/user-attachments/assets/301e6e29-dd09-48ee-80f1-d049159b2c0f" />
 
-<img width="500" alt="Screenshot 2025-10-08 at 12 08 54" src="https://github.com/user-attachments/assets/821eea6f-65b7-43d6-a1c6-219efde1e4fe" />
+<img width="400" alt="Screenshot 2025-10-08 at 12 08 54" src="https://github.com/user-attachments/assets/821eea6f-65b7-43d6-a1c6-219efde1e4fe" />
 
 
 ## 🙏 Credits
