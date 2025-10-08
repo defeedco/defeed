@@ -582,9 +582,19 @@ func (r *Registry) searchWithSourceDiversity(
 		return &ActivitiesResponse{}, nil
 	}
 
+	// Activity can be associated with multiple sources,
+	// so we need to deduplicate them.
 	activitiesBySource := make(map[activitytypes.TypedUID][]*activitytypes.DecoratedActivity)
+	seenActivities := make(map[string]bool)
 	for i, activities := range activitiesBySourceIndex {
-		activitiesBySource[sourceUIDs[i]] = activities
+		unseenActivities := make([]*activitytypes.DecoratedActivity, 0)
+		for _, activity := range activities {
+			if !seenActivities[activity.Activity.UID().String()] {
+				unseenActivities = append(unseenActivities, activity)
+				seenActivities[activity.Activity.UID().String()] = true
+			}
+		}
+		activitiesBySource[sourceUIDs[i]] = unseenActivities
 	}
 
 	allActivities := make([]*activitytypes.DecoratedActivity, 0)
