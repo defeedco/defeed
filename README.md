@@ -1,6 +1,6 @@
 <div align="center">
 
-<img width="1511" height="711" alt="Screenshot 2025-10-06 at 14 10 19" src="https://github.com/user-attachments/assets/f322b9d8-95a1-4ff6-bead-c8f7c60225f7" />
+<img width="300" alt="Defeed logo" src="https://github.com/user-attachments/assets/a38e498a-6e13-47c7-81b1-ab2531db46a7" />
 
 <h1>Defeat the noise. Never miss what happens.</h1>
 
@@ -32,6 +32,12 @@ Missing a source? [Submit a feature request](https://github.com/defeed/defeed/is
 - **Custom Feeds**: Create feeds with custom sources and filter queries
 - **Real-time Updates**: Automatic content fetching and processing
 - **Flexible Filtering**: Time-based and similarity-based content sorting
+
+## Demo
+
+<img width="500" alt="Screenshot 2025-10-08 at 12 08 03" src="https://github.com/user-attachments/assets/301e6e29-dd09-48ee-80f1-d049159b2c0f" />
+
+<img width="500" alt="Screenshot 2025-10-08 at 12 08 54" src="https://github.com/user-attachments/assets/821eea6f-65b7-43d6-a1c6-219efde1e4fe" />
 
 
 ## 🙏 Credits
