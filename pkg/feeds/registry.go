@@ -272,52 +272,26 @@ func (r *Registry) Activities(
 	}
 
 	// Unauthenticated users can't override the query to prevent (costly) abuse.
-	if userID == "" && feed.Query != "" {
-		return r.searchByRewrittenQueries(ctx, feed.SourceUIDs, feed.Query, sortBy, period, limit)
+	// Fallback to default query if override is empty.
+	if userID == "" || query == "" {
+		query = feed.Query
 	}
 
 	// Do not fallback to feed.Query,
 	// so that consumer can purposefully set an empty query.
-	if query != "" {
-		if rewriteQuery && r.config.AllowQueryRewrite {
-			return r.searchByRewrittenQueries(ctx, feed.SourceUIDs, query, sortBy, period, limit)
-		}
-		// Fallback to a cheaper and lower-latency method.
-		return r.searchByUserQuery(ctx, feed.SourceUIDs, query, sortBy, period, limit)
+	if query != "" && rewriteQuery && r.config.AllowQueryRewrite {
+		return r.searchByRewrittenQueries(ctx, feed.SourceUIDs, query, sortBy, period, limit)
 	}
 
 	// Select top activities from each source to ensure variety
-	return r.searchWithSourceDiversity(ctx, feed.SourceUIDs, activitytypes.SortBySocialScore, period, limit)
-}
-
-func (r *Registry) searchByUserQuery(
-	ctx context.Context,
-	sourceUIDs []activitytypes.TypedUID,
-	query string,
-	sortBy activitytypes.SortBy,
-	period activitytypes.Period,
-	limit int,
-) (*ActivitiesResponse, error) {
-	res, err := r.activityRegistry.Search(ctx, activities.SearchRequest{
-		Query:         query,
-		SourceUIDs:    sourceUIDs,
-		MinSimilarity: r.config.MinSimilarity,
-		Limit:         limit,
-		SortBy:        sortBy,
-		Period:        period,
-	})
+	acts, err := r.search(ctx, feed.SourceUIDs, activitytypes.SortBySocialScore, period, query, limit)
 	if err != nil {
-		return nil, fmt.Errorf("search activities: %w", err)
-	}
-
-	topics, err := r.topicsBySourceType(res.Activities)
-	if err != nil {
-		return nil, fmt.Errorf("topics by source type: %w", err)
+		return nil, fmt.Errorf("search: %w", err)
 	}
 
 	return &ActivitiesResponse{
-		Results: res.Activities,
-		Topics:  topics,
+		Results: acts,
+		Topics:  r.topicsBySourceType(acts),
 	}, nil
 }
 
@@ -544,14 +518,15 @@ func (r *Registry) summarizeTopicWithCache(
 	return summary, nil
 }
 
-// searchWithSourceDiversity selects top activities from each source to ensure diversity
-func (r *Registry) searchWithSourceDiversity(
+// search selects top activities from each source to ensure diversity
+func (r *Registry) search(
 	ctx context.Context,
 	sourceUIDs []activitytypes.TypedUID,
 	sortBy activitytypes.SortBy,
 	period activitytypes.Period,
+	query string,
 	limit int,
-) (*ActivitiesResponse, error) {
+) ([]*activitytypes.DecoratedActivity, error) {
 
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(10)
@@ -560,10 +535,12 @@ func (r *Registry) searchWithSourceDiversity(
 	for i, sourceUID := range sourceUIDs {
 		g.Go(func() error {
 			result, err := r.activityRegistry.Search(gctx, activities.SearchRequest{
-				SourceUIDs: []activitytypes.TypedUID{sourceUID},
-				SortBy:     sortBy,
-				Period:     period,
-				Limit:      limit,
+				SourceUIDs:    []activitytypes.TypedUID{sourceUID},
+				SortBy:        sortBy,
+				Period:        period,
+				Limit:         limit,
+				Query:         query,
+				MinSimilarity: r.config.MinSimilarity,
 			})
 			if err != nil {
 				return fmt.Errorf("search activities for source %s: %w", sourceUID, err)
@@ -579,7 +556,7 @@ func (r *Registry) searchWithSourceDiversity(
 	}
 
 	if len(activitiesBySourceIndex) == 0 {
-		return &ActivitiesResponse{}, nil
+		return nil, nil
 	}
 
 	// Activity can be associated with multiple sources,
@@ -630,18 +607,10 @@ func (r *Registry) searchWithSourceDiversity(
 		})
 	}
 
-	topics, err := r.topicsBySourceType(allActivities)
-	if err != nil {
-		return nil, fmt.Errorf("topics by source type: %w", err)
-	}
-
-	return &ActivitiesResponse{
-		Results: allActivities,
-		Topics:  topics,
-	}, nil
+	return allActivities, nil
 }
 
-func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActivity) ([]*Topic, error) {
+func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActivity) []*Topic {
 	activitiesByTopic := make(map[topicKey][]string)
 	for _, activity := range activities {
 		sourceUIDs := activity.Activity.SourceUIDs()
@@ -651,7 +620,11 @@ func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActiv
 		// Assume all sources are of the same type.
 		label, err := sourceTypeToTopicKey(sourceUIDs[0].Type())
 		if err != nil {
-			return nil, fmt.Errorf("source type to topic key: %w", err)
+			r.logger.Error().
+				Err(err).
+				Str("source_uid", sourceUIDs[0].String()).
+				Msg("failed to get source type to topic key")
+			continue
 		}
 		activitiesByTopic[label] = append(activitiesByTopic[label], activity.Activity.UID().String())
 	}
@@ -665,7 +638,7 @@ func (r *Registry) topicsBySourceType(activities []*activitytypes.DecoratedActiv
 		})
 	}
 
-	return topics, nil
+	return topics
 }
 
 func (r *Registry) cleanupUnusedSources(ctx context.Context, sourceUIDs []activitytypes.TypedUID) error {
