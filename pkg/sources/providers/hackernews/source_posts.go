@@ -56,7 +56,16 @@ func (s *SourcePosts) Description() string {
 }
 
 func (s *SourcePosts) URL() string {
-	return fmt.Sprintf("https://news.ycombinator.com/%s", s.FeedName)
+	switch s.FeedName {
+	case "top":
+		return "https://news.ycombinator.com"
+	case "new":
+		return "https://news.ycombinator.com/newest"
+	case "job":
+		return "https://news.ycombinator.com/jobs"
+	default:
+		return fmt.Sprintf("https://news.ycombinator.com/%s", s.FeedName)
+	}
 }
 
 func (s *SourcePosts) Icon() string {
