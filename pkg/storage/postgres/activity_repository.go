@@ -151,6 +151,7 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 		query = query.Where(entactivity.IDIn(activityUIDs...))
 	}
 
+	// TODO: Consider moving this logic to the service layer and only "since time" as a param.
 	// Add time-based filtering based on period
 	if req.Period != types.PeriodAll {
 		var since time.Time
@@ -168,8 +169,8 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 			}
 			since = now.AddDate(0, 0, -daysSinceMonday-7).Truncate(24 * time.Hour)
 		case types.PeriodDay:
-			// Start of yesterday
-			since = now.AddDate(0, 0, -1).Truncate(24 * time.Hour)
+			// Start of today
+			since = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 		}
 
 		query = query.Where(entactivity.CreatedAtGTE(since))
