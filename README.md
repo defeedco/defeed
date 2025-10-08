@@ -10,28 +10,15 @@ Defeed is a personal newspaper that keeps you informed about the updates you gen
 
 ## ✨ Features
 
-### **Any Source**
-- **GitHub**: issues, releases, and topics
-- **Mastodon**: accounts and hashtags
-- **HackerNews**: new, best, top posts
-- **Product Hunt**: top and new products
-- **Lobsters**: feeds and tags
-- **Reddit**: subreddits
-- **RSS/Atom**: Any RSS or Atom feed
+- content-based AI recommendation
+- activity previews & summaries
+- social data (upvotes, comments, reposts,...)
+- curated public & custom private feeds
+- any sources (Github, Mastodon, Hacker News, Lobsters, Product Hunt, Reddit, RSS,...)
+- flexible time periods (all time, week, day)
+- customizable feed views (grid, list, topics)
 
-Missing a source? [Submit a feature request](https://github.com/defeed/defeed/issues/new?labels=enhancement&template=feature_request.md)!
-
-### **Smart Aggregation**
-- **Smart Summarization**: AI activity and topic summaries for quick overview
-- **Semantic Search**: Find content by meaning, not just keywords  
-- **Topic Clustering**: Automatically group related activities
-- **Query Expansion**: More breath of search with user query expansion
-
-### **Feeds**
-- **Public/Private Feeds**: Share feeds or keep them personal
-- **Custom Feeds**: Create feeds with custom sources and filter queries
-- **Real-time Updates**: Automatic content fetching and processing
-- **Flexible Filtering**: Time-based and similarity-based content sorting
+Missing a feature? [Submit feedback](https://github.com/defeed/defeed/issues/new?labels=enhancement&template=feature_request.md)!
 
 ## Demo
 
