@@ -23,6 +23,22 @@ var (
 	ErrHTMLParsingFailed      = errors.New("html parsing failed")
 )
 
+func FetchThumbnailFromURL(ctx context.Context, logger *zerolog.Logger, url string) (string, error) {
+	resp, err := FetchURL(ctx, logger, url)
+	if err != nil {
+		return "", fmt.Errorf("fetch url: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	thumbnailURL, err := ThumbnailURLFromHTTPResponse(ctx, logger, resp)
+	if err != nil {
+		return "", fmt.Errorf("thumbnail from http response: %w", err)
+	}
+
+	return thumbnailURL, nil
+}
+
 func FetchTextFromURL(ctx context.Context, logger *zerolog.Logger, url string) (string, error) {
 	resp, err := FetchURL(ctx, logger, url)
 	if err != nil {

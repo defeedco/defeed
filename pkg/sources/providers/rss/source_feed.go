@@ -178,10 +178,20 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytyp
 		}
 
 		feedItem := &FeedItem{
-			Item:      item,
-			FeedURL:   s.FeedURL,
-			SourceTyp: TypeRSSFeed,
-			SourceIDs: []activitytypes.TypedUID{s.UID()},
+			Item:         item,
+			FeedURL:      s.FeedURL,
+			ThumbnailURL: "",
+			SourceTyp:    TypeRSSFeed,
+			SourceIDs:    []activitytypes.TypedUID{s.UID()},
+		}
+
+		thumbnailURL, err := lib.FetchThumbnailFromURL(ctx, s.logger, item.Link)
+		if err == nil {
+			feedItem.ThumbnailURL = thumbnailURL
+		} else {
+			s.logger.Warn().Err(err).
+				Str("link", item.Link).
+				Msgf("fetch rss item thumbnail")
 		}
 
 		feed <- feedItem
@@ -189,10 +199,11 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytyp
 }
 
 type FeedItem struct {
-	Item      *gofeed.Item             `json:"item"`
-	FeedURL   string                   `json:"feed_url"`
-	SourceIDs []activitytypes.TypedUID `json:"source_ids"`
-	SourceTyp string                   `json:"source_type"`
+	Item         *gofeed.Item             `json:"item"`
+	FeedURL      string                   `json:"feed_url"`
+	ThumbnailURL string                   `json:"thumbnail_url"`
+	SourceIDs    []activitytypes.TypedUID `json:"source_ids"`
+	SourceTyp    string                   `json:"source_type"`
 }
 
 func NewFeedItem() *FeedItem {
@@ -275,6 +286,9 @@ func (e *FeedItem) URL() string {
 }
 
 func (e *FeedItem) ImageURL() string {
+	if e.ThumbnailURL != "" {
+		return e.ThumbnailURL
+	}
 	if e.Item.Image != nil && e.Item.Image.URL != "" {
 		return e.Item.Image.URL
 	}
