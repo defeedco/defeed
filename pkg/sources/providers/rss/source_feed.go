@@ -157,7 +157,6 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytyp
 	}
 
 	if len(rssFeed.Items) == 0 {
-		errs <- fmt.Errorf("feed has no items")
 		return
 	}
 
@@ -180,7 +179,7 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytyp
 		feedItem := &FeedItem{
 			Item:         item,
 			FeedURL:      s.FeedURL,
-			ThumbnailURL: "",
+			ThumbnailURL: s.IconURL,
 			SourceTyp:    TypeRSSFeed,
 			SourceIDs:    []activitytypes.TypedUID{s.UID()},
 		}

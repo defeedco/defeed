@@ -13,6 +13,7 @@ import (
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
 	"github.com/defeedco/defeed/pkg/sources/providers"
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
+	"github.com/mmcdole/gofeed"
 	"github.com/rs/zerolog"
 	"github.com/vartanbeno/go-reddit/v2/reddit"
 )
@@ -34,11 +35,14 @@ func NewSourceSubreddit() *SourceSubreddit {
 }
 
 func (s *SourceSubreddit) UID() activitytypes.TypedUID {
-	return lib.NewTypedUID(TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
+	if s.Search != "" {
+		return lib.NewTypedUID(TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod, s.Search)
+	}
+	return lib.NewTypedUID(TypeRedditSubreddit, s.Subreddit, s.SortBy, s.TopPeriod)
 }
 
 func (s *SourceSubreddit) Name() string {
-	return fmt.Sprintf("%s subreddit", lib.Capitalize(s.Subreddit))
+	return fmt.Sprintf("%s on r/%s", lib.Capitalize(s.SortBy), s.Subreddit)
 }
 
 func (s *SourceSubreddit) Description() string {
@@ -94,6 +98,7 @@ func (s *SourceSubreddit) Topics() []sourcetypes.TopicTag {
 
 type Post struct {
 	Post            *reddit.Post             `json:"post"`
+	ThumbnailURL    string                   `json:"thumbnail_url"`
 	ExternalContent string                   `json:"external_content"`
 	SourceIDs       []activitytypes.TypedUID `json:"source_ids"`
 	SourceTyp       string                   `json:"source_type"`
@@ -153,7 +158,13 @@ func (p *Post) Title() string {
 }
 
 func (p *Post) Body() string {
-	return fmt.Sprintf("%s\n\nExternal link content:\n%s", p.Post.Body, p.ExternalContent)
+	sb := strings.Builder{}
+	sb.WriteString(p.Post.Body)
+	if p.ExternalContent != "" {
+		sb.WriteString("\n\nExternal link content:\n")
+		sb.WriteString(p.ExternalContent)
+	}
+	return sb.String()
 }
 
 func (p *Post) URL() string {
@@ -162,7 +173,7 @@ func (p *Post) URL() string {
 }
 
 func (p *Post) ImageURL() string {
-	return ""
+	return p.ThumbnailURL
 }
 
 func (p *Post) CreatedAt() time.Time {
@@ -224,7 +235,62 @@ func (s *SourceSubreddit) Initialize(logger *zerolog.Logger, config *sourcetypes
 }
 
 func (s *SourceSubreddit) Stream(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
-	s.fetchSubredditPosts(ctx, since, feed, errs)
+	// Fetch posts from subreddit RSS feed until we get access to the Reddit API to avoid rate limit issues.
+	useRSS := true
+	if useRSS {
+		s.fetchSubredditPostsWithRSS(ctx, since, feed, errs)
+	} else {
+		s.fetchSubredditPosts(ctx, since, feed, errs)
+	}
+}
+
+func (s *SourceSubreddit) fetchSubredditPostsWithRSS(ctx context.Context, _ activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
+	parser := gofeed.NewParser()
+	parser.UserAgent = lib.DefeedUserAgentString
+
+	rssFeed, err := parser.ParseURLWithContext(fmt.Sprintf("https://www.reddit.com/r/%s.rss", s.Subreddit), ctx)
+	if err != nil {
+		errs <- fmt.Errorf("fetch rss feed: %w", err)
+		return
+	}
+
+	if rssFeed == nil {
+		errs <- fmt.Errorf("feed is nil")
+		return
+	}
+
+	if len(rssFeed.Items) == 0 {
+		return
+	}
+
+	for _, item := range rssFeed.Items {
+		if item.PublishedParsed == nil {
+			s.logger.Warn().Msgf("skipping item with no published date: %+v", item)
+			continue
+		}
+
+		postID := strings.TrimPrefix(item.GUID, "t3_")
+
+		feedItem := &Post{
+			Post: &reddit.Post{
+				ID:        postID,
+				Title:     item.Title,
+				URL:       item.Link,
+				Created:   &reddit.Timestamp{Time: *item.PublishedParsed},
+				Permalink: strings.TrimPrefix(item.Link, "https://www.reddit.com"),
+				Score:     -1,
+			},
+			ExternalContent: "",
+			// The Reddit share link returns the default reddit thumbnail for some reason,
+			// so we use a Slack image proxy to get the actual thumbnail.
+			// ThumbnailURL:    fmt.Sprintf("https://share.redd.it/preview/post/%s", postID),
+			ThumbnailURL: fmt.Sprintf("https://slack-imgs.com/?c=1&o1=ro&url=https://share.redd.it/preview/post/%s", postID),
+			SourceTyp:    TypeRedditSubreddit,
+			SourceIDs:    []activitytypes.TypedUID{s.UID()},
+		}
+
+		feed <- feedItem
+	}
 }
 
 func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
