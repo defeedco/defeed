@@ -92,10 +92,12 @@ func (s *SourceTopic) Stream(ctx context.Context, since activitytypes.Activity, 
 func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, _ activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	// minTrendingStars could be set based on the popularity of the topic (more popular topics => higher popularity thresholds)
 	minTrendingStars := 200
+	// maxTrendingStars is set to prevent returning the top starred repos
+	maxTrendingStars := 20000
 	perPage := 200
 	pageLimit := 2
 	// Note: Do not filter by creation date, since popular repositories can be arbitrary old, but only recently gain popularity.
-	query := fmt.Sprintf("topic:%s stars:>%d", s.Topic, minTrendingStars)
+	query := fmt.Sprintf("topic:%s stars:%d..%d", s.Topic, minTrendingStars, maxTrendingStars)
 
 	s.logger.Debug().
 		Str("topic", s.Topic).
@@ -104,13 +106,14 @@ func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, _ activitytype
 
 	page := 1
 	for {
+		// Docs: https://docs.github.com/en/rest/search/search?apiVersion=2022-11-28#search-repositories
 		result, _, err := s.client.Search.Repositories(ctx, query, &github.SearchOptions{
 			ListOptions: github.ListOptions{
 				PerPage: perPage,
 				Page:    page,
 			},
 			Order: "desc",
-			Sort:  "created",
+			Sort:  "updated",
 		})
 		if err != nil {
 			errs <- fmt.Errorf("search repositories: %w", err)
@@ -129,9 +132,8 @@ func (s *SourceTopic) fetchTopicRepositories(ctx context.Context, _ activitytype
 				continue
 			}
 			activity := &Repository{
-				Repository:            repo,
-				SourceIDs:             []activitytypes.TypedUID{s.UID()},
-				PopularityReachedDate: time.Now(),
+				Repository: repo,
+				SourceIDs:  []activitytypes.TypedUID{s.UID()},
 			}
 			feed <- activity
 		}
@@ -171,9 +173,8 @@ func (s *SourceTopic) UnmarshalJSON(data []byte) error {
 
 // Repository represents a repository result as an activity
 type Repository struct {
-	Repository            *github.Repository       `json:"repository"`
-	SourceIDs             []activitytypes.TypedUID `json:"source_ids"`
-	PopularityReachedDate time.Time                `json:"popularity_reached_date"`
+	Repository *github.Repository       `json:"repository"`
+	SourceIDs  []activitytypes.TypedUID `json:"source_ids"`
 }
 
 func NewRepository() *Repository {
@@ -255,7 +256,7 @@ func (a *Repository) ImageURL() string {
 }
 
 func (a *Repository) CreatedAt() time.Time {
-	return a.PopularityReachedDate
+	return a.Repository.GetUpdatedAt().Time
 }
 
 func (a *Repository) UpvotesCount() int {
