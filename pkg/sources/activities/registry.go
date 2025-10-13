@@ -172,7 +172,7 @@ func (r *Registry) Search(ctx context.Context, req SearchRequest) (*types.Search
 		SortBy:            req.SortBy,
 		Period:            req.Period,
 		QueryEmbedding:    queryEmbedding,
-		SocialScoreWeight: 3,
+		SocialScoreWeight: 2,
 		SimilarityWeight:  4,
 		RecencyWeight:     recencyWeight,
 	})

@@ -106,7 +106,6 @@
 			<outline text="AI-powered writing and language tools" title="Grammarly Blog" type="rss" xmlUrl="https://www.grammarly.com/blog/feed/" topics="ai_research,llms" />
 			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="https://evjang.com/feed" topics="ai_research" />
 			<outline text="Amazon's AI and machine learning research" title="Amazon Science Homepage" type="rss" xmlUrl="https://www.amazon.science/index.rss" topics="ai_research" />
-			<outline text="Machine learning community discussions" title="Machine Learning" type="rss" xmlUrl="http://www.reddit.com/r/MachineLearning/.rss" topics="ai_research" />
 			<outline text="AI research paper reviews and explanations" title="Yannic Kilcher" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCCTn7xBfew" topics="ai_research" />
 			<outline text="AI research paper summaries and insights" title="Two Minute Papers" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7l4upoX8nvctg" topics="ai_research" />
 			<outline text="Google's AI developments and news" title="Google AI news" type="rss" xmlUrl="https://blog.google/technology/ai/rss" topics="ai_research" />

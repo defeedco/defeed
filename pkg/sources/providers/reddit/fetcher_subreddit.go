@@ -148,6 +148,12 @@ var popularSubredditSources = []types.Source{
 		SortBy:           "hot",
 		TopPeriod:        "day",
 	},
+	&SourceSubreddit{
+		Subreddit:        "selfhosted",
+		SubredditSummary: "A place to share, discuss, discover, assist with, gain assistance for, and critique self-hosted alternatives to our favorite web apps, web services, and online tools.",
+		SortBy:           "hot",
+		TopPeriod:        "day",
+	},
 }
 
 func (f *SubredditFetcher) FindByID(ctx context.Context, id types2.TypedUID, config *types.ProviderConfig) (types.Source, error) {
