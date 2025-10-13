@@ -179,18 +179,22 @@ func (s *SourceFeed) fetchAndSendNewItems(ctx context.Context, since activitytyp
 		feedItem := &FeedItem{
 			Item:         item,
 			FeedURL:      s.FeedURL,
-			ThumbnailURL: s.IconURL,
+			ThumbnailURL: "",
 			SourceTyp:    TypeRSSFeed,
 			SourceIDs:    []activitytypes.TypedUID{s.UID()},
 		}
 
-		thumbnailURL, err := lib.FetchThumbnailFromURL(ctx, s.logger, item.Link)
-		if err == nil {
-			feedItem.ThumbnailURL = thumbnailURL
+		if item.Image != nil && item.Image.URL != "" {
+			feedItem.ThumbnailURL = item.Image.URL
 		} else {
-			s.logger.Warn().Err(err).
-				Str("link", item.Link).
-				Msgf("fetch rss item thumbnail")
+			thumbnailURL, err := lib.FetchThumbnailFromURL(ctx, s.logger, item.Link)
+			if err == nil {
+				feedItem.ThumbnailURL = thumbnailURL
+			} else {
+				s.logger.Warn().Err(err).
+					Str("link", item.Link).
+					Msgf("fetch rss item thumbnail")
+			}
 		}
 
 		feed <- feedItem
