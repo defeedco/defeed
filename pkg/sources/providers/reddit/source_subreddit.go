@@ -79,9 +79,9 @@ func (s *SourceSubreddit) Topics() []sourcetypes.TopicTag {
 	tags := []sourcetypes.TopicTag{}
 	switch strings.ToLower(s.Subreddit) {
 	case "chatgpt", "local_llama", "localllama", "local_llms", "llama", "openai":
-		tags = append(tags, sourcetypes.TopicLLMs, sourcetypes.TopicAIResearch)
+		tags = append(tags, sourcetypes.TopicLLMs, sourcetypes.TopicAI)
 	case "machinelearning", "deeplearning":
-		tags = append(tags, sourcetypes.TopicAIResearch)
+		tags = append(tags, sourcetypes.TopicAI)
 	case "javascript", "reactjs", "webdev":
 		tags = append(tags, sourcetypes.TopicDevTools, sourcetypes.TopicWebPerformance)
 	case "golang", "rust", "programming":

@@ -179,5 +179,32 @@
 			<outline text="Ideas worth spreading and inspiring talks" title="TED Talks Daily" type="rss" xmlUrl="http://feeds.feedburner.com/tedtalks_video" topics="product_management" />
 			<outline text="Business strategy and management insights" title="HBR.org" type="rss" xmlUrl="http://feeds.harvardbusiness.org/harvardbusiness/" topics="product_management" faviconUrl="https://hbr.org/favicon.ico" />
 		</outline>
+		<!-- Source: https://github.com/bartolomej/awesome-cs-youtube -->
+		<outline text="Awesome CompSci YouTube">
+			<!-- Low level -->
+			<outline text="just a wannabe hacker... making videos about various IT security topics and participating in hacking competitions." title="LiveOverflow" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UClcE-kVhqyiHCcjYwcpfj9w" topics="compsci,security_engineering" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Low-level programming and computer architecture tutorials" title="Low Byte Productions" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC56l7uZA209tlPTVOJiJ8Tw" topics="compsci,systems_programming" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Digital electronics and computer architecture tutorials" title="Ben Eater" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCS0N5baNlQWJCUrhCEo8WlA" topics="compsci,systems_programming" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Web security and hacking concepts explained" title="PwnFunction" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCW6MNdOsqv2E9AjQkv9we7A" topics="compsci,security_engineering" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Systems programming and operating systems concepts" title="Jacob Sorber" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCwd5VFu4KoJNjkWJZMFJGHQ" topics="compsci,systems_programming" faviconUrl="https://www.youtube.com/favicon.ico" />
+
+			<!-- Algorithms & Math -->
+			<outline text="Mathematical concepts and machine learning fundamentals" title="WelchLabs" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UConVfxXodg78Tzh5nNu85Ew" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Computer science and programming concepts" title="SpanningTree" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCDzVUXiTr3hClI-zzCWbYzg" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Mathematical animations and explanations" title="3Blue1Brown" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Computer science concepts explained visually" title="Reducible" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCK8XIGR5kRidIw2fWqwyHRA" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Algorithms and competitive programming" title="vcubingx" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCv0nF8zWevEsSVcmz6mlw6A" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Complex systems and emergent behavior" title="Emergent Garden" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCwBhBDsqiQflTMLy2epbQVw" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Algorithms and data structures tutorials" title="WilliamFiset" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCD8yeTczadqdARzQUp29PJw" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Deep learning and neural networks explained" title="Layerwise Lectures" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCy9T075tKmceX-a-YJGrRgA" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Mathematical concepts and proofs" title="Mathemaniac" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCrlZs71h3mTR45FgQNINfrg" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Database concepts and big data analytics" title="Prof. Dr. Jens Dittrich" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCC9zrtAkl6yY4dpcnWrCHjA" topics="compsci,databases" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Machine learning and computational neuroscience" title="Artem Kirsanov" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCR2uRTQ53V_egXKFflMMaaw" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
+
+			<!-- Software Engineering & System Design -->
+			<outline text="System design and software architecture" title="ByteByteGo" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZgt6AzoyjslHTC9dz0UoTw" topics="compsci,distributed_systems" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Software engineering best practices" title="CodeAesthetic" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCaSCt8s_4nfkRglWCvNSDrg" topics="compsci,devtools" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="System design patterns and practices" title="Coderized" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCrsLPlwxUInDoNubOP85EWQ" topics="compsci,distributed_systems" faviconUrl="https://www.youtube.com/favicon.ico" />
+		</outline>
 	</body>
 </opml>

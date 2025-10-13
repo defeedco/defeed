@@ -5,7 +5,7 @@ package types
 type TopicTag string
 
 const (
-	TopicLLMs                TopicTag = "llms"
+	TopicLLMs                TopicTag = "large_language_models"
 	TopicStartups            TopicTag = "startups"
 	TopicAgenticSystems      TopicTag = "agentic_systems"
 	TopicDevTools            TopicTag = "devtools"
@@ -16,10 +16,11 @@ const (
 	TopicSystemsProgramming  TopicTag = "systems_programming"
 	TopicProductManagement   TopicTag = "product_management"
 	TopicGrowthEngineering   TopicTag = "growth_engineering"
-	TopicAIResearch          TopicTag = "ai_research"
+	TopicAI                  TopicTag = "artificial_intelligence"
 	TopicRobotics            TopicTag = "robotics"
 	TopicOpenSource          TopicTag = "open_source"
 	TopicCloudInfrastructure TopicTag = "cloud_infrastructure"
+	TopicCompsci             TopicTag = "compsci"
 )
 
 // WordToTopic maps a free-form string to a TopicTag when possible.
@@ -48,14 +49,16 @@ func WordToTopic(s string) (TopicTag, bool) {
 		return TopicProductManagement, true
 	case "growth", "growth_engineering", "experimentation", "ab_testing":
 		return TopicGrowthEngineering, true
-	case "ai", "ml", "machine_learning", "ai_research", "research":
-		return TopicAIResearch, true
+	case "ai", "ml", "machine_learning", "ai_research", "artificial_intelligence", "research":
+		return TopicAI, true
 	case "robotics", "robot", "autonomy":
 		return TopicRobotics, true
 	case "oss", "open_source", "opensource":
 		return TopicOpenSource, true
 	case "cloud", "cloud_infrastructure", "kubernetes", "aws", "gcp", "azure":
 		return TopicCloudInfrastructure, true
+	case "compsci", "computer_science", "programming", "algorithms", "data_structures":
+		return TopicCompsci, true
 	}
 	return "", false
 }

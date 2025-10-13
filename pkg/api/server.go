@@ -589,7 +589,7 @@ func deserializeTopicTag(in TopicTag) (sourcetypes.TopicTag, error) {
 	case GrowthEngineering:
 		return sourcetypes.TopicGrowthEngineering, nil
 	case AiResearch:
-		return sourcetypes.TopicAIResearch, nil
+		return sourcetypes.TopicAI, nil
 	case Robotics:
 		return sourcetypes.TopicRobotics, nil
 	case OpenSource:

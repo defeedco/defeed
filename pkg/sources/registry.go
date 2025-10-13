@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"net/url"
 	"sort"
 
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
@@ -196,6 +197,7 @@ func calculateRelevanceScore(source types.Source, query string) float64 {
 
 	name := strings.ToLower(strings.TrimSpace(source.Name()))
 	description := strings.ToLower(strings.TrimSpace(source.Description()))
+	sourceURL := strings.ToLower(strings.TrimSpace(source.URL()))
 
 	// Exact match in title gets highest score
 	if name == query {
@@ -216,6 +218,24 @@ func calculateRelevanceScore(source types.Source, query string) float64 {
 			if similarity > 0.6 { // Only consider if reasonably similar
 				score += 30.0 * similarity
 			}
+		}
+	}
+
+	// Check for URL match
+	if sourceURL != "" {
+		if parsedURL, err := url.Parse(sourceURL); err == nil && parsedURL.Host != "" {
+			host := strings.ToLower(parsedURL.Host)
+			host = strings.TrimPrefix(host, "www.")
+
+			if strings.Contains(host, query) {
+				matchRatio := float64(len(query)) / float64(len(host))
+				score += 40.0 * matchRatio
+			}
+		}
+
+		if strings.Contains(sourceURL, query) {
+			matchRatio := float64(len(query)) / float64(len(sourceURL))
+			score += 25.0 * matchRatio
 		}
 	}
 
