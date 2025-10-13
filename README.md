@@ -18,11 +18,23 @@ Defeed is a personal newspaper that keeps you informed about the updates you gen
 - flexible time periods (all time, week, day)
 - customizable feed views (grid, list, topics)
 
+**Future ideas:**
+- [ ] connect private feeds (e.g. new emails) from a self hosted Defeed instance
+- [ ] activity bookmarking and liking
+- [ ] incorporate past clicks/bookmarks/likes in the recommendation
+- [ ] improved summaries
+- [ ] deduplication across all sources
+- [ ] MCP server
+- [ ] browser extension that renders Defeed in new empty tab
+- [ ] share and follow other people's feeds on the marketplace
+- [ ] new data sources (YouTube, BlueSky, Lemmy, Discourse, HuggingFace, newsletters, podcasts,...)
+
 Missing a feature? [Submit feedback](https://github.com/defeed/defeed/issues/new?labels=enhancement&template=feature_request.md)!
+
 
 ## Demo
 
-<img width="400" alt="Screenshot 2025-10-08 at 12 08 03" src="https://github.com/user-attachments/assets/301e6e29-dd09-48ee-80f1-d049159b2c0f" />
+<img width="400" alt="Screenshot 2025-10-08 at 15 30 02" src="https://github.com/user-attachments/assets/89f58c6b-1ab5-414e-a5fa-b27c86478c51" />
 
 <img width="400" alt="Screenshot 2025-10-08 at 12 08 54" src="https://github.com/user-attachments/assets/821eea6f-65b7-43d6-a1c6-219efde1e4fe" />
 
