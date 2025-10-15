@@ -3,6 +3,7 @@ package rss
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -21,6 +22,9 @@ import (
 //go:embed feeds.opml
 var feedsOPML string
 
+//go:embed faviconmap.json
+var faviconMapJSON string
+
 // FeedFetcher implements preset search functionality for RSS feeds
 type FeedFetcher struct {
 	// Feeds are the most relevant predefined feeds
@@ -29,7 +33,14 @@ type FeedFetcher struct {
 }
 
 func NewFeedFetcher(logger *zerolog.Logger) *FeedFetcher {
-	feeds, err := loadOPMLSources(logger)
+	var faviconMap map[string]string
+	err := json.Unmarshal([]byte(faviconMapJSON), &faviconMap)
+	if err != nil {
+		logger.Error().Err(err).Msg("parse favicon map")
+		return nil
+	}
+
+	feeds, err := loadOPMLSources(logger, faviconMap)
 	if err != nil {
 		logger.Error().Err(err).Msg("load OPML sources")
 		return nil
@@ -62,13 +73,13 @@ func (f *FeedFetcher) Search(ctx context.Context, query string, config *types.Pr
 	return f.Feeds, nil
 }
 
-func loadOPMLSources(logger *zerolog.Logger) ([]types.Source, error) {
+func loadOPMLSources(logger *zerolog.Logger, faviconMap map[string]string) ([]types.Source, error) {
 	opml, err := lib.ParseOPML(feedsOPML)
 	if err != nil {
 		return nil, fmt.Errorf("parse OPML: %w", err)
 	}
 
-	opmlSources, err := opmlToRSSSources(opml)
+	opmlSources, err := opmlToRSSSources(logger, opml, faviconMap)
 	if err != nil {
 		return nil, fmt.Errorf("convert OPML to RSS sources: %w", err)
 	}
@@ -80,7 +91,7 @@ func loadOPMLSources(logger *zerolog.Logger) ([]types.Source, error) {
 	return opmlSources, nil
 }
 
-func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
+func opmlToRSSSources(logger *zerolog.Logger, opml *lib.OPML, faviconMap map[string]string) ([]types.Source, error) {
 	var result []types.Source
 
 	seen := make(map[string]bool)
@@ -99,6 +110,19 @@ func opmlToRSSSources(opml *lib.OPML) ([]types.Source, error) {
 				FeedURL:     outline.XMLUrl,
 				description: outline.Text,
 				IconURL:     outline.FaviconUrl,
+			}
+
+			if source.IconURL == "" {
+				hostName, err := lib.StripURLHost(outline.XMLUrl)
+				if err != nil {
+					logger.Error().Err(err).
+						Str("url", outline.XMLUrl).
+						Msg("invalid url")
+					continue
+				}
+				if faviconURL, ok := faviconMap[hostName]; ok {
+					source.IconURL = faviconURL
+				}
 			}
 
 			if outline.Topics != "" {

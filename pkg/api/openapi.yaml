@@ -322,9 +322,8 @@ components:
       type: string
       description: Specific niche technology/startup interests
       enum:
-        - llms
+        - large_language_models
         - startups
-        - agentic_systems
         - devtools
         - web_performance
         - distributed_systems
@@ -333,11 +332,12 @@ components:
         - systems_programming
         - product_management
         - growth_engineering
-        - ai_research
+        - artificial_intelligence
         - robotics
         - open_source
         - cloud_infrastructure
-
+        - computer_science
+        - science
     SourceType:
       type: string
       enum:

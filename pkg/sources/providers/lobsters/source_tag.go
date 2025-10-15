@@ -60,7 +60,7 @@ func (s *SourceTag) Topics() []sourcetypes.TopicTag {
 	base := []sourcetypes.TopicTag{sourcetypes.TopicDevTools, sourcetypes.TopicOpenSource}
 	switch s.Tag {
 	case "ai", "ml", "compsci":
-		base = append(base, sourcetypes.TopicAI)
+		base = append(base, sourcetypes.TopicArtificialIntelligence)
 	case "web", "performance":
 		base = append(base, sourcetypes.TopicWebPerformance)
 	case "kubernetes", "cloud":

@@ -414,9 +414,8 @@ export type SourceType = typeof SourceType[keyof typeof SourceType];
  */
 
 export const TopicTag = {
-    Llms: 'llms',
+    LargeLanguageModels: 'large_language_models',
     Startups: 'startups',
-    AgenticSystems: 'agentic_systems',
     Devtools: 'devtools',
     WebPerformance: 'web_performance',
     DistributedSystems: 'distributed_systems',
@@ -425,10 +424,12 @@ export const TopicTag = {
     SystemsProgramming: 'systems_programming',
     ProductManagement: 'product_management',
     GrowthEngineering: 'growth_engineering',
-    AiResearch: 'ai_research',
+    ArtificialIntelligence: 'artificial_intelligence',
     Robotics: 'robotics',
     OpenSource: 'open_source',
-    CloudInfrastructure: 'cloud_infrastructure'
+    CloudInfrastructure: 'cloud_infrastructure',
+    ComputerScience: 'computer_science',
+    Science: 'science'
 } as const;
 
 export type TopicTag = typeof TopicTag[keyof typeof TopicTag];

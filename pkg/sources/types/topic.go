@@ -5,22 +5,22 @@ package types
 type TopicTag string
 
 const (
-	TopicLLMs                TopicTag = "large_language_models"
-	TopicStartups            TopicTag = "startups"
-	TopicAgenticSystems      TopicTag = "agentic_systems"
-	TopicDevTools            TopicTag = "devtools"
-	TopicWebPerformance      TopicTag = "web_performance"
-	TopicDistributedSystems  TopicTag = "distributed_systems"
-	TopicDatabases           TopicTag = "databases"
-	TopicSecurityEngineering TopicTag = "security_engineering"
-	TopicSystemsProgramming  TopicTag = "systems_programming"
-	TopicProductManagement   TopicTag = "product_management"
-	TopicGrowthEngineering   TopicTag = "growth_engineering"
-	TopicAI                  TopicTag = "artificial_intelligence"
-	TopicRobotics            TopicTag = "robotics"
-	TopicOpenSource          TopicTag = "open_source"
-	TopicCloudInfrastructure TopicTag = "cloud_infrastructure"
-	TopicCompsci             TopicTag = "compsci"
+	TopicLargeLanguageModels    TopicTag = "large_language_models"
+	TopicStartups               TopicTag = "startups"
+	TopicDevTools               TopicTag = "devtools"
+	TopicWebPerformance         TopicTag = "web_performance"
+	TopicDistributedSystems     TopicTag = "distributed_systems"
+	TopicDatabases              TopicTag = "databases"
+	TopicSecurityEngineering    TopicTag = "security_engineering"
+	TopicSystemsProgramming     TopicTag = "systems_programming"
+	TopicProductManagement      TopicTag = "product_management"
+	TopicGrowthEngineering      TopicTag = "growth_engineering"
+	TopicArtificialIntelligence TopicTag = "artificial_intelligence"
+	TopicRobotics               TopicTag = "robotics"
+	TopicOpenSource             TopicTag = "open_source"
+	TopicCloudInfrastructure    TopicTag = "cloud_infrastructure"
+	TopicComputerScience        TopicTag = "computer_science"
+	TopicScience                TopicTag = "science"
 )
 
 // WordToTopic maps a free-form string to a TopicTag when possible.
@@ -28,11 +28,9 @@ const (
 func WordToTopic(s string) (TopicTag, bool) {
 	switch normalize(s) {
 	case "llm", "llms", "large_language_models", "chatgpt", "gpt", "local_llm", "local_llms":
-		return TopicLLMs, true
+		return TopicLargeLanguageModels, true
 	case "startup", "startups", "founders", "entrepreneurship":
 		return TopicStartups, true
-	case "agent", "agentic", "agentic_systems", "agents":
-		return TopicAgenticSystems, true
 	case "devtools", "developer_tools", "engineering", "software_engineering":
 		return TopicDevTools, true
 	case "webperf", "web_performance", "performance":
@@ -49,8 +47,8 @@ func WordToTopic(s string) (TopicTag, bool) {
 		return TopicProductManagement, true
 	case "growth", "growth_engineering", "experimentation", "ab_testing":
 		return TopicGrowthEngineering, true
-	case "ai", "ml", "machine_learning", "ai_research", "artificial_intelligence", "research":
-		return TopicAI, true
+	case "ai", "ml", "machine_learning", "ai_research", "artificial_intelligence":
+		return TopicArtificialIntelligence, true
 	case "robotics", "robot", "autonomy":
 		return TopicRobotics, true
 	case "oss", "open_source", "opensource":
@@ -58,7 +56,9 @@ func WordToTopic(s string) (TopicTag, bool) {
 	case "cloud", "cloud_infrastructure", "kubernetes", "aws", "gcp", "azure":
 		return TopicCloudInfrastructure, true
 	case "compsci", "computer_science", "programming", "algorithms", "data_structures":
-		return TopicCompsci, true
+		return TopicComputerScience, true
+	case "science", "research", "science_research", "science_news", "science_articles", "science_papers", "science_publications":
+		return TopicScience, true
 	}
 	return "", false
 }

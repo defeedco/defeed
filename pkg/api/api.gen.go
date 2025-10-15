@@ -50,21 +50,22 @@ const (
 
 // Defines values for TopicTag.
 const (
-	AgenticSystems      TopicTag = "agentic_systems"
-	AiResearch          TopicTag = "ai_research"
-	CloudInfrastructure TopicTag = "cloud_infrastructure"
-	Databases           TopicTag = "databases"
-	Devtools            TopicTag = "devtools"
-	DistributedSystems  TopicTag = "distributed_systems"
-	GrowthEngineering   TopicTag = "growth_engineering"
-	Llms                TopicTag = "llms"
-	OpenSource          TopicTag = "open_source"
-	ProductManagement   TopicTag = "product_management"
-	Robotics            TopicTag = "robotics"
-	SecurityEngineering TopicTag = "security_engineering"
-	Startups            TopicTag = "startups"
-	SystemsProgramming  TopicTag = "systems_programming"
-	WebPerformance      TopicTag = "web_performance"
+	ArtificialIntelligence TopicTag = "artificial_intelligence"
+	CloudInfrastructure    TopicTag = "cloud_infrastructure"
+	ComputerScience        TopicTag = "computer_science"
+	Databases              TopicTag = "databases"
+	Devtools               TopicTag = "devtools"
+	DistributedSystems     TopicTag = "distributed_systems"
+	GrowthEngineering      TopicTag = "growth_engineering"
+	LargeLanguageModels    TopicTag = "large_language_models"
+	OpenSource             TopicTag = "open_source"
+	ProductManagement      TopicTag = "product_management"
+	Robotics               TopicTag = "robotics"
+	Science                TopicTag = "science"
+	SecurityEngineering    TopicTag = "security_engineering"
+	Startups               TopicTag = "startups"
+	SystemsProgramming     TopicTag = "systems_programming"
+	WebPerformance         TopicTag = "web_performance"
 )
 
 // ActivitiesListResponse defines model for ActivitiesListResponse.

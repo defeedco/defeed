@@ -566,10 +566,8 @@ func deserializeTopicTags(in []TopicTag) ([]sourcetypes.TopicTag, error) {
 
 func deserializeTopicTag(in TopicTag) (sourcetypes.TopicTag, error) {
 	switch in {
-	case AgenticSystems:
-		return sourcetypes.TopicAgenticSystems, nil
-	case Llms:
-		return sourcetypes.TopicLLMs, nil
+	case LargeLanguageModels:
+		return sourcetypes.TopicLargeLanguageModels, nil
 	case Startups:
 		return sourcetypes.TopicStartups, nil
 	case Devtools:
@@ -588,8 +586,12 @@ func deserializeTopicTag(in TopicTag) (sourcetypes.TopicTag, error) {
 		return sourcetypes.TopicProductManagement, nil
 	case GrowthEngineering:
 		return sourcetypes.TopicGrowthEngineering, nil
-	case AiResearch:
-		return sourcetypes.TopicAI, nil
+	case ArtificialIntelligence:
+		return sourcetypes.TopicArtificialIntelligence, nil
+	case ComputerScience:
+		return sourcetypes.TopicComputerScience, nil
+	case Science:
+		return sourcetypes.TopicScience, nil
 	case Robotics:
 		return sourcetypes.TopicRobotics, nil
 	case OpenSource:

@@ -15,11 +15,11 @@
 		</outline>
 		<outline text="Startup" title="Startup">
 			<outline text="Startup methodology and entrepreneurship" title="Steve Blank" type="rss" xmlUrl="http://steveblank.com/feed/" topics="startups" />
-			<outline text="AI and technology insights from George Hotz" title="The singularity is nearer" type="rss" xmlUrl="https://geohot.github.io/blog/feed.xml" topics="startups,ai_research" faviconUrl="https://avatars.githubusercontent.com/u/72895?v=4" />
+			<outline text="AI and technology insights from George Hotz" title="The singularity is nearer" type="rss" xmlUrl="https://geohot.github.io/blog/feed.xml" topics="startups,artificial_intelligence"  />
 			<outline text="Marketing and entrepreneurship advice" title="Guy Kawasaki" type="rss" xmlUrl="http://guykawasaki.com/feed/" topics="startups,growth_engineering" />
 			<outline text="Technology strategy and market analysis" title="Essays - Benedict Evans" type="rss" xmlUrl="http://ben-evans.com/benedictevans?format=rss" topics="startups,product_management" />
 			<outline text="Startup insights and best practices" title="First Round Review" type="rss" xmlUrl="http://firstround.com/review/feed.xml" topics="startups" />
-			<outline text="AI and startup insights from OpenAI CEO" title="Sam Altman" type="rss" xmlUrl="http://blog.samaltman.com/posts.atom" topics="startups,llms,ai_research" />
+			<outline text="AI and startup insights from OpenAI CEO" title="Sam Altman" type="rss" xmlUrl="http://blog.samaltman.com/posts.atom" topics="startups,llms,artificial_intelligence" />
 			<outline text="Growth marketing and product strategy" title="Andrew Chen" type="rss" xmlUrl="http://andrewchen.co/feed/" topics="startups,growth_engineering,product_management" />
 			<outline text="Venture capital and startup perspectives" title="Both Sides of the Table" type="rss" xmlUrl="https://bothsidesofthetable.com/feed" topics="startups" />
 			<outline text="Product management insights and strategies" title="The Black Box of Product Management" type="rss" xmlUrl="https://medium.com/feed/the-black-box-of-product-management" topics="product_management" />
@@ -28,28 +28,28 @@
 			<!-- https://www.indiehackers.com/post/an-unofficial-feed-of-indie-hackers-2413a17623 -->
 			<!-- Note: community maintained/hosted, might be unreliable. -->
 			<!-- Another alternative to try if this doesn't work well: https://github.com/ahonn/ihrss -->
-			<outline text="Indie entrepreneur posts and discussions" title="Indie Hackers Posts" type="rss" xmlUrl="https://feed.indiehackers.world/posts.rss" topics="startups" faviconUrl="http://indiehackers.com/images/favicons/favicon--32x32.png" />
+			<outline text="Indie entrepreneur posts and discussions" title="Indie Hackers Posts" type="rss" xmlUrl="https://feed.indiehackers.world/posts.rss" topics="startups"  />
 		</outline>
 		<outline text="Tech News" title="Tech News">
-			<outline text="Enterprise technology and business news" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" topics="startups,cloud_infrastructure" faviconUrl="https://venturebeat.com/favicon.ico" />
+			<outline text="Enterprise technology and business news" title="VentureBeat" type="rss" xmlUrl="http://venturebeat.com/feed/" topics="startups,cloud_infrastructure"  />
 			<outline text="Technology, science, art, and culture" title="The Verge" type="rss" xmlUrl="http://www.theverge.com/rss/full.xml" topics="devtools" />
 			<outline text="Asian technology and startup news" title="Tech in Asia" type="rss" xmlUrl="https://feeds2.feedburner.com/PennOlson" topics="startups" />
-			<outline text="Breaking technology and startup news" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" topics="startups" faviconUrl="https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png?w=32" />
-			<outline text="Design and innovation in business" title="Fast Company " type="rss" xmlUrl="http://www.fastcodesign.com/rss.xml" topics="product_management" faviconUrl="https://www.fastcompany.com/favicon.ico" />
-			<outline text="Startup news and funding updates" title="Startups – TechCrunch" type="rss" xmlUrl="https://techcrunch.com/startups/feed/" topics="startups" faviconUrl="https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png?w=32" />
+			<outline text="Breaking technology and startup news" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" topics="startups"  />
+			<outline text="Design and innovation in business" title="Fast Company " type="rss" xmlUrl="http://www.fastcodesign.com/rss.xml" topics="product_management"  />
+			<outline text="Startup news and funding updates" title="Startups – TechCrunch" type="rss" xmlUrl="https://techcrunch.com/startups/feed/" topics="startups"  />
 			<outline text="Leadership and management insights" title="Forbes - Leadership" type="rss" xmlUrl="https://www.forbes.com/leadership/feed/" topics="product_management" />
 			<outline text="Business innovation and design" title="Fast Company" type="rss" xmlUrl="http://feeds.feedburner.com/fastcompany/headlines" topics="product_management" />
 			<outline text="Entrepreneurship and business success" title="Forbes - Entrepreneurs" type="rss" xmlUrl="http://www.forbes.com/entrepreneurs/index.xml" topics="startups" />
 		</outline>
 		<outline text="Products &amp; Ideas" title="Products &amp; Ideas">
-			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" topics="startups,product_management" faviconUrl="https://news.ycombinator.com/favicon.ico" />
+			<outline text="Product launches and announcements" title="Hacker News: Launches" type="rss" xmlUrl="https://hnrss.org/launches" topics="startups,product_management"  />
 			<outline text="Product management and entrepreneurship insights" title="Sachin Rekhi's Blog" type="rss" xmlUrl="http://feeds.feedburner.com/sachinrekhiblog" topics="product_management,startups" />
 		</outline>
 		<outline text="Engineering blogs" title="Engineering blogs">
 			<outline text="Database and collaboration platform engineering" title="The Airtable Engineering Blog" type="rss" xmlUrl="https://medium.com/feed/airtable-eng" topics="databases,devtools" />
-			<outline text="Platform engineering and scaling challenges" title="Medium Engineering - Medium" type="rss" xmlUrl="https://medium.com/feed/medium-eng" topics="devtools,distributed_systems" />
+			<outline text="Platform engineering and scaling challenges" title="Medium Engineering" type="rss" xmlUrl="https://medium.com/feed/medium-eng" topics="devtools,distributed_systems" />
 			<outline text="Payment systems and fintech engineering" title="The PayPal Technology Blog - Medium" type="rss" xmlUrl="https://medium.com/feed/paypal-engineering" topics="devtools,security_engineering" />
-			<outline text="Visual discovery and recommendation systems" title="Pinterest Engineering Blog - Medium" type="rss" xmlUrl="https://medium.com/feed/pinterest-engineering" topics="devtools,ai_research" />
+			<outline text="Visual discovery and recommendation systems" title="Pinterest Engineering Blog - Medium" type="rss" xmlUrl="https://medium.com/feed/pinterest-engineering" topics="devtools,artificial_intelligence" faviconUrl="https://www.pinterest.com/favicon.ico" />
 			<outline text="Southeast Asian superapp engineering" title="Grab Tech" type="rss" xmlUrl="http://engineering.grab.com/feed.xml" topics="devtools,distributed_systems" />
 			<outline text="Workplace communication platform engineering" title="Slack Engineering" type="rss" xmlUrl="https://slack.engineering/feed" topics="devtools,distributed_systems" />
 			<outline text="Git and developer platform engineering" title="Engineering – The GitHub Blog" type="rss" xmlUrl="http://githubengineering.com/atom.xml" topics="devtools,open_source" />
@@ -57,7 +57,6 @@
 			<outline text="Social media platform engineering" title="Facebook Engineering" type="rss" xmlUrl="https://code.facebook.com/posts/rss" topics="devtools,distributed_systems" />
 			<outline text="System design and algorithm insights" title="Grokking Newsletter" type="rss" xmlUrl="http://newsletter.grokking.org/?format=rss" topics="devtools,distributed_systems" />
 			<outline text="E-commerce platform engineering" title="eBay Tech Blog" type="rss" xmlUrl="http://www.ebaytechblog.com/feed/" topics="devtools,distributed_systems" />
-			<outline text="Music streaming and recommendation systems" title="Spotify Engineering" type="rss" xmlUrl="http://labs.spotify.com/feed/" topics="devtools,ai_research" />
 			<outline text="Social media platform engineering" title="Twitter Engineering" type="rss" xmlUrl="https://blog.twitter.com/engineering/en_us/blog.rss" topics="devtools,distributed_systems" />
 			<outline text="Payment infrastructure and fintech" title="Stripe Blog" type="rss" xmlUrl="https://stripe.com/blog/feed.rss" topics="devtools,security_engineering" />
 			<outline text="Photo sharing and social media engineering" title="Instagram Engineering - Medium" type="rss" xmlUrl="https://instagram-engineering.com/feed" topics="devtools,distributed_systems" />
@@ -68,7 +67,7 @@
 			<outline text="File storage and collaboration platform" title="Dropbox Tech" type="rss" xmlUrl="https://dropbox.tech/feed" topics="devtools,cloud_infrastructure" />
 			<outline text="Payment processing and fintech" title="WePay Engineering Blog" type="rss" xmlUrl="https://wecode.wepay.com/feed.xml" topics="devtools,security_engineering" />
 			<outline text="Web browser implementation and standards" title="Web Browser Engineering" type="rss" xmlUrl="https://browser.engineering/rss.xml" topics="devtools,systems_programming" />
-			<outline text="Music streaming and recommendation systems" title="Spotify Engineering" type="rss" xmlUrl="https://engineering.atspotify.com/feed/" topics="devtools,ai_research" />
+			<outline text="Music streaming and recommendation systems" title="Spotify Engineering" type="rss" xmlUrl="https://engineering.atspotify.com/feed/" topics="devtools,artificial_intelligence" />
 			<outline text="Social media and metaverse engineering" title="Engineering at Meta" type="rss" xmlUrl="https://engineering.fb.com/feed/" topics="devtools,distributed_systems" />
 			<outline text="Product management and strategy" title="Mind the Product" type="rss" xmlUrl="https://www.mindtheproduct.com/feed/" topics="product_management" />
 			<outline text="Systems programming and debugging" title="Julia Evans" type="rss" xmlUrl="https://jvns.ca/atom.xml" topics="systems_programming" />
@@ -78,7 +77,7 @@
 			<outline text="E-commerce platform engineering" title="Shopify Engineering - Shopify Engineering" type="rss" xmlUrl="https://shopifyengineering.myshopify.com/blogs/engineering.atom" topics="devtools,distributed_systems" />
 			<outline text="Southeast Asian superapp engineering" title="Grab Tech" type="rss" xmlUrl="https://engineering.grab.com/feed.xml" topics="devtools,distributed_systems" />
 			<outline text="CSS and frontend development" title="Josh Comeau's blog" type="rss" xmlUrl="https://joshwcomeau.com/rss.xml" topics="devtools,web_performance" />
-			<outline text="Transportation and marketplace engineering" title="Uber Engineering Blog" type="rss" xmlUrl="https://eng.uber.com/feed/" topics="devtools,distributed_systems" faviconUrl="https://www.uber.com/favicon.ico" />
+			<outline text="Transportation and marketplace engineering" title="Uber Engineering Blog" type="rss" xmlUrl="https://eng.uber.com/feed/" topics="devtools,distributed_systems"  />
 			<outline text="Engineering leadership and technology strategy" title="Flurries of latent creativity - Stripe CTO blog" type="rss" xmlUrl="https://blog.singleton.io/index.xml" topics="devtools,product_management" />
 			<outline text="React and frontend engineering" title="Sophie Alpert" type="rss" xmlUrl="https://sophiebits.com/atom.xml" topics="devtools,web_performance" />
 			<outline text="Developer tools and coding platforms" title="Amjad Masad" type="rss" xmlUrl="https://amasad.me/rss" topics="devtools" />
@@ -87,28 +86,27 @@
 			<outline text="Engineering management and career advice" title="The Pragmatic Engineer" type="rss" xmlUrl="https://blog.pragmaticengineer.com/rss/" topics="devtools,product_management" />
 		</outline>
 		<outline text="Machine Learning" title="Machine Learning">
-			<outline text="Academic machine learning research and insights" title="Machine Learning Blog | ML@CMU | Carnegie Mellon University" type="rss" xmlUrl="https://blog.ml.cmu.edu/feed/" topics="ai_research" />
-			<outline text="AI research and breakthrough discoveries" title="DeepMind " type="rss" xmlUrl="https://deepmind.com/blog/feed/basic/" topics="ai_research" />
-			<outline text="Visual explanations of machine learning concepts" title="Jay Alammar" type="rss" xmlUrl="https://jalammar.github.io/feed.xml" topics="ai_research" />
-			<outline text="Interactive machine learning explanations" title="Distill" type="rss" xmlUrl="http://distill.pub/rss.xml" topics="ai_research" />
-			<outline text="Deep learning and AI research insights" title="Lil'Log" type="rss" xmlUrl="https://lilianweng.github.io/lil-log/feed.xml" topics="ai_research" />
-			<outline text="AI research news from MIT" title="MIT News - Artificial intelligence" type="rss" xmlUrl="http://news.mit.edu/rss/topic/artificial-intelligence2" topics="ai_research" faviconUrl="https://sts-program.mit.edu/wp-content/uploads/2023/12/mit-favicon-white-on-black-512x512-1.png" />
-			<outline text="AI research and academic insights" title="The Berkeley Artificial Intelligence Research Blog" type="rss" xmlUrl="http://bair.berkeley.edu/blog/feed.xml" topics="ai_research" />
-			<outline text="Deep learning education and tutorials" title="DeepLearningAI" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCcIXc5mJsHVYTZR1maL5l9w" topics="ai_research" />
-			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="http://blog.evjang.com/feeds/posts/default?alt=rss" topics="ai_research" />
-			<outline text="AI research and product updates" title="OpenAI " type="rss" xmlUrl="https://openai.com/news/rss.xml" topics="ai_research,llms" faviconUrl="https://openai.com/favicon.ico" />
-			<outline text="AI research and academic perspectives" title="The Gradient" type="rss" xmlUrl="https://thegradient.pub/rss/" topics="ai_research" />
-			<outline text="AI and machine learning for creative applications" title="Magenta" type="rss" xmlUrl="http://magenta.tensorflow.org/feed.xml" topics="ai_research" />
-			<outline text="Natural language processing research and news" title="NLP News" type="rss" xmlUrl="http://newsletter.ruder.io/?format=rss" topics="ai_research,llms" />
-			<outline text="Google's AI research and developments" title="Google AI Blog" type="rss" xmlUrl="http://googleresearch.blogspot.com/atom.xml" topics="ai_research" />
-			<outline text="Data science and machine learning articles" title="Towards Data Science - Medium" type="rss" xmlUrl="https://towardsdatascience.com/feed" topics="ai_research" />
-			<outline text="AI news and industry insights" title="Unite.AI" type="rss" xmlUrl="https://www.unite.ai/feed/" topics="ai_research" />
-			<outline text="AI-powered writing and language tools" title="Grammarly Blog" type="rss" xmlUrl="https://www.grammarly.com/blog/feed/" topics="ai_research,llms" />
-			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="https://evjang.com/feed" topics="ai_research" />
-			<outline text="Amazon's AI and machine learning research" title="Amazon Science Homepage" type="rss" xmlUrl="https://www.amazon.science/index.rss" topics="ai_research" />
-			<outline text="AI research paper reviews and explanations" title="Yannic Kilcher" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCCTn7xBfew" topics="ai_research" />
-			<outline text="AI research paper summaries and insights" title="Two Minute Papers" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7l4upoX8nvctg" topics="ai_research" />
-			<outline text="Google's AI developments and news" title="Google AI news" type="rss" xmlUrl="https://blog.google/technology/ai/rss" topics="ai_research" />
+			<outline text="Academic machine learning research and insights" title="Machine Learning Blog | ML@CMU | Carnegie Mellon University" type="rss" xmlUrl="https://blog.ml.cmu.edu/feed/" topics="artificial_intelligence" />
+			<outline text="AI research and breakthrough discoveries" title="DeepMind " type="rss" xmlUrl="https://deepmind.com/blog/feed/basic/" topics="artificial_intelligence" />
+			<outline text="Visual explanations of machine learning concepts" title="Jay Alammar" type="rss" xmlUrl="https://jalammar.github.io/feed.xml" topics="artificial_intelligence" />
+			<outline text="Interactive machine learning explanations" title="Distill" type="rss" xmlUrl="http://distill.pub/rss.xml" topics="artificial_intelligence" />
+			<outline text="Deep learning and AI research insights" title="Lil'Log" type="rss" xmlUrl="https://lilianweng.github.io/lil-log/feed.xml" topics="artificial_intelligence" />
+			<outline text="AI research news from MIT" title="MIT News - Artificial intelligence" type="rss" xmlUrl="http://news.mit.edu/rss/topic/artificial-intelligence2" topics="artificial_intelligence"  />
+			<outline text="AI research and academic insights" title="The Berkeley Artificial Intelligence Research Blog" type="rss" xmlUrl="http://bair.berkeley.edu/blog/feed.xml" topics="artificial_intelligence" />
+			<outline text="Deep learning education and tutorials" title="DeepLearningAI" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCcIXc5mJsHVYTZR1maL5l9w" topics="artificial_intelligence" />
+			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="http://blog.evjang.com/feeds/posts/default?alt=rss" topics="artificial_intelligence" />
+			<outline text="AI research and product updates" title="OpenAI " type="rss" xmlUrl="https://openai.com/news/rss.xml" topics="artificial_intelligence,llms"  />
+			<outline text="AI research and academic perspectives" title="The Gradient" type="rss" xmlUrl="https://thegradient.pub/rss/" topics="artificial_intelligence" />
+			<outline text="AI and machine learning for creative applications" title="Magenta" type="rss" xmlUrl="http://magenta.tensorflow.org/feed.xml" topics="artificial_intelligence" />
+			<outline text="Natural language processing research and news" title="NLP News" type="rss" xmlUrl="http://newsletter.ruder.io/?format=rss" topics="artificial_intelligence,llms" />
+			<outline text="Google's AI research and developments" title="Google AI Blog" type="rss" xmlUrl="http://googleresearch.blogspot.com/atom.xml" topics="artificial_intelligence" />
+			<outline text="Data science and machine learning articles" title="Towards Data Science - Medium" type="rss" xmlUrl="https://towardsdatascience.com/feed" topics="artificial_intelligence" />
+			<outline text="AI-powered writing and language tools" title="Grammarly Blog" type="rss" xmlUrl="https://www.grammarly.com/blog/feed/" topics="artificial_intelligence,llms" />
+			<outline text="AI research and machine learning insights" title="Eric Jang" type="rss" xmlUrl="https://evjang.com/feed" topics="artificial_intelligence" />
+			<outline text="Amazon's AI and machine learning research" title="Amazon Science Homepage" type="rss" xmlUrl="https://www.amazon.science/index.rss" topics="artificial_intelligence" />
+			<outline text="AI research paper reviews and explanations" title="Yannic Kilcher" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCCTn7xBfew" topics="artificial_intelligence" />
+			<outline text="AI research paper summaries and insights" title="Two Minute Papers" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7l4upoX8nvctg" topics="artificial_intelligence" />
+			<outline text="Google's AI developments and news" title="Google AI news" type="rss" xmlUrl="https://blog.google/technology/ai/rss" topics="artificial_intelligence" />
 		</outline>
 		<outline text="Design" title="Design">
 			<outline text="User experience design insights and trends" title="UX Planet" type="rss" xmlUrl="https://uxplanet.org/feed" topics="product_management" />
@@ -122,88 +120,98 @@
 			<outline text="CSS techniques and web development" title="CSS-Tricks" type="rss" xmlUrl="https://feeds.feedburner.com/CssTricks" topics="devtools,web_performance" />
 			<outline text="Daily user experience insights" title="UX Daily - User Experience Daily" type="rss" xmlUrl="https://interaction-design.org/rss/site_news.xml" topics="product_management" />
 		</outline>
-		<outline text="Psychology" title="Psychology">
+		<outline text="Science" title="Science">
+			<!-- Psychology -->
 			<outline text="Psychology research and insights" title="PsyBlog" type="rss" xmlUrl="http://feeds.feedburner.com/PsychologyBlog" topics="product_management" />
 			<outline text="Psychology education and resources" title="Psychology Blog" type="rss" xmlUrl="http://www.all-about-psychology.com/psychology.xml" topics="product_management" />
 			<outline text="Global psychology news and research" title="Psychology Headlines Around the World" type="rss" xmlUrl="http://www.socialpsychology.org/headlines.rss" topics="product_management" />
 			<outline text="Science, culture, and philosophy" title="Nautilus" type="rss" xmlUrl="https://nautil.us/rss/all" topics="product_management" />
 			<outline text="Economics and human behavior" title="Freakonomics" type="rss" xmlUrl="http://freakonomics.blogs.nytimes.com/feed/" topics="product_management" />
 			<outline text="Mental health and psychology articles" title="Psychology Today" type="rss" xmlUrl="https://www.psychologytoday.com/intl/rss.xml" topics="product_management" />
-		</outline>
-		<outline text="Neuroscience" title="Neuroscience">
-			<outline text="Brain research and neuroscience discoveries" title="Neuroscience News" type="rss" xmlUrl="http://neurosciencenews.com/feed/" topics="ai_research" />
-			<outline text="Neuroscience research and brain science" title="Neuroscience News -- ScienceDaily" type="rss" xmlUrl="https://sciencedaily.com/rss/mind_brain/neuroscience.xml" topics="ai_research" />
-			<outline text="Brain health and cognitive enhancement" title="SharpBrains" type="rss" xmlUrl="http://www.sharpbrains.com/feed/" topics="ai_research" />
-		</outline>
-		<outline text="Science" title="Science">
-			<outline text="Science, culture, and philosophy" title="Nautilus" type="rss" xmlUrl="http://nautil.us/rss/all" topics="ai_research" />
-			<outline text="Mathematics and physics research" title="Quanta Magazine" type="rss" xmlUrl="http://www.quantamagazine.org/feed/" topics="ai_research" />
-			<outline text="Scientific research and discoveries" title="Nature" type="rss" xmlUrl="http://www.nature.com/nature/current_issue/rss" topics="ai_research" />
-			<outline text="Science, technology, and society research" title="MIT News - Science, Technology, and Society | Technology and society | Program in STS | History of science | History of MIT" type="rss" xmlUrl="https://news.mit.edu/rss/topic/science-technology-and-society" topics="ai_research" faviconUrl="https://sts-program.mit.edu/wp-content/uploads/2023/12/mit-favicon-white-on-black-512x512-1.png" />
-			<outline text="MIT research news and discoveries" title="MIT News" type="rss" xmlUrl="https://news.mit.edu/rss/research" topics="ai_research" faviconUrl="https://sts-program.mit.edu/wp-content/uploads/2023/12/mit-favicon-white-on-black-512x512-1.png" />
-			<outline text="Science news and discoveries" title="ScienceAlert" type="rss" xmlUrl="https://www.sciencealert.com/rss" topics="ai_research" />
-			<outline text="Future technology and innovation" title="Singularity Hub" type="rss" xmlUrl="https://singularityhub.com/feed/" topics="ai_research,robotics" />
+			<!-- Neuroscience -->
+			<outline text="Brain research and neuroscience discoveries" title="Neuroscience News" type="rss" xmlUrl="http://neurosciencenews.com/feed/" topics="science" />
+			<outline text="Neuroscience research and brain science" title="Neuroscience News - ScienceDaily" type="rss" xmlUrl="https://sciencedaily.com/rss/mind_brain/neuroscience.xml" topics="science" />
+			<outline text="Brain health and cognitive enhancement" title="SharpBrains" type="rss" xmlUrl="http://www.sharpbrains.com/feed/" topics="science" />
+			<!-- General -->
+			<outline text="Science, culture, and philosophy" title="Nautilus" type="rss" xmlUrl="http://nautil.us/rss/all" topics="science" />
+			<outline text="Mathematics and physics research" title="Quanta Magazine" type="rss" xmlUrl="http://www.quantamagazine.org/feed/" topics="science" />
+			<outline text="Nature Materials's current issues" title="Nature - Current Issue" type="rss" xmlUrl="http://www.nature.com/nature/current_issue/rss" topics="science" />
+			<outline text="Nature Materials's AOP (Advance Online Publication) articles" title="Nature - AOP Materials" type="rss" xmlUrl="https://www.nature.com/nmat.rss" topics="science" />
+			<outline text="Science, technology, and society research" title="MIT News - Science, Technology, and Society | Technology and society | Program in STS | History of science | History of MIT" type="rss" xmlUrl="https://news.mit.edu/rss/topic/science-technology-and-society" topics="science,computer_science,artificial_intelligence"  />
+			<outline text="MIT research news and discoveries" title="MIT News" type="rss" xmlUrl="https://news.mit.edu/rss/research" topics="science,computer_science,artificial_intelligence" />
+			<outline text="Science news and discoveries" title="ScienceAlert" type="rss" xmlUrl="https://www.sciencealert.com/rss" topics="science" />
+			<outline text="Future technology and innovation" title="Singularity Hub" type="rss" xmlUrl="https://singularityhub.com/feed/" topics="science,robotics" />
 			<outline text="Engineering and technology explanations" title="Lesics" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCqZQJ4600a9wIfMPbYc60OQ" topics="devtools" />
+			<outline text="Cell journal online now articles" title="Cell - Online Now" type="rss" xmlUrl="https://www.cell.com/cell/inpress.rss" topics="science" />
+			<outline text="Cell journal current issue" title="Cell - Current Issue" type="rss" xmlUrl="https://www.cell.com/cell/current.rss" topics="science" />
+			<outline text="Science magazine latest issue" title="Science - Latest Issue" type="rss" xmlUrl="https://www.science.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=science" topics="science" />
+			<outline text="Science magazine latest online articles" title="Science - First Release" type="rss" xmlUrl="https://www.science.org/action/showFeed?type=axatoc&amp;feed=rss&amp;jc=science" topics="science" />
+			<outline text="Science magazine daily news headlines" title="Science - Daily News" type="rss" xmlUrl="https://www.science.org/rss/news_current.xml" topics="science" />
+			<outline text="Science Signaling weekly highlights" title="Science Signaling" type="rss" xmlUrl="https://www.science.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=signaling" topics="science" />
+			<outline text="Science Translational Medicine highlights" title="Science Translational Medicine" type="rss" xmlUrl="https://www.science.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=stm" topics="science" />
+			<outline text="Science Advances latest content" title="Science Advances" type="rss" xmlUrl="https://www.science.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=sciadv" topics="science" />
+			<outline text="Science Immunology latest content" title="Science Immunology" type="rss" xmlUrl="https://www.science.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=sciimmunol" topics="science" />
+			<outline text="Science Robotics latest content" title="Science Robotics" type="rss" xmlUrl="https://www.science.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=scirobotics" topics="science,robotics,computer_science" />
 		</outline>
 		<outline text="Marketing" title="Marketing">
 			<outline text="SEO and digital marketing insights" title="Moz" type="rss" xmlUrl="http://feeds.feedburner.com/seomoz" topics="growth_engineering" />
 			<outline text="Content marketing strategies and best practices" title="Content Marketing Institute" type="rss" xmlUrl="http://feeds.feedburner.com/cmi-content-marketing" topics="growth_engineering" />
 			<outline text="Digital marketing and growth strategies" title="Neil Patel" type="rss" xmlUrl="http://feeds.feedburner.com/KISSmetrics" topics="growth_engineering" />
-			<outline text="Marketing education and insights" title="MarketingProfs " type="rss" xmlUrl="http://rss.marketingprofs.com/marketingprofs/daily" topics="growth_engineering" faviconUrl="https://www.marketingprofs.com/favicon.ico" />
+			<outline text="Marketing education and insights" title="MarketingProfs " type="rss" xmlUrl="http://rss.marketingprofs.com/marketingprofs/daily" topics="growth_engineering"  />
 			<outline text="B2B marketing strategies and tactics" title="Marketo Marketing blog " type="rss" xmlUrl="http://feeds.feedburner.com/modernb2bmarketing" topics="growth_engineering" />
 			<outline text="Digital marketing and SEO insights" title="Quick Sprout" type="rss" xmlUrl="http://www.quicksprout.com/feed/" topics="growth_engineering" />
 			<outline text="Social media marketing strategies" title="Social Media Examiner | Social Media Marketing" type="rss" xmlUrl="http://www.socialmediaexaminer.com/feed/" topics="growth_engineering" />
 			<outline text="Marketing and business insights" title="John Egan" type="rss" xmlUrl="http://jwegan.com/feed/rss/" topics="growth_engineering" />
 			<outline text="Digital marketing and customer experience" title="Convince and Convert " type="rss" xmlUrl="http://www.convinceandconvert.com/feed/" topics="growth_engineering" />
 			<outline text="Inbound marketing and sales strategies" title="Hubspot" type="rss" xmlUrl="http://blog.hubspot.com/CMS/UI/Modules/BizBlogger/rss.aspx?tabid=6307&amp;moduleid=8441&amp;maxcount=25" topics="growth_engineering" />
-			<outline text="Marketing philosophy and business insights" title="Seth Godin's Blog " type="rss" xmlUrl="http://sethgodin.typepad.com/seths_blog/atom.xml" topics="growth_engineering" faviconUrl="https://seths.blog/favicon.ico" />
+			<outline text="Marketing philosophy and business insights" title="Seth Godin's Blog " type="rss" xmlUrl="http://sethgodin.typepad.com/seths_blog/atom.xml" topics="growth_engineering"  />
 			<outline text="SEO strategies and link building" title="Backlinko" type="rss" xmlUrl="http://backlinko.com/feed" topics="growth_engineering" />
 		</outline>
 		<outline text="Scientific Research" title="Scientific Research">
-			<outline text="AI research papers and publications" title="ArXiv AI" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.AI" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
-			<outline text="Machine learning research and papers" title="ArXiv Machine Learning" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.LG" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
-			<outline text="Computer vision and image processing research" title="ArXiv Computer Vision" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CV" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
-			<outline text="Natural language processing research" title="ArXiv Natural Language Processing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CL" topics="ai_research,llms" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
-			<outline text="Cryptography and security research" title="ArXiv Cryptography &amp; Security" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CR" topics="security_engineering" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
-			<outline text="Distributed computing and algorithms" title="ArXiv Distributed Computing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DC" topics="distributed_systems" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
-			<outline text="Database and data mining research" title="ArXiv Databases" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DB" topics="databases" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
-			<outline text="Software engineering research" title="ArXiv Software Engineering" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.SE" topics="devtools" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
-			<outline text="Human-computer interaction research" title="ArXiv Human-Computer Interaction" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.HC" topics="product_management" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
-			<outline text="Information retrieval and search research" title="ArXiv Information Retrieval" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.IR" topics="ai_research" faviconUrl="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" />
+			<outline text="AI research papers and publications" title="ArXiv AI" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.AI" topics="artificial_intelligence"  />
+			<outline text="Machine learning research and papers" title="ArXiv Machine Learning" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.LG" topics="artificial_intelligence"  />
+			<outline text="Computer vision and image processing research" title="ArXiv Computer Vision" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CV" topics="artificial_intelligence"  />
+			<outline text="Natural language processing research" title="ArXiv Natural Language Processing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CL" topics="artificial_intelligence,llms"  />
+			<outline text="Cryptography and security research" title="ArXiv Cryptography &amp; Security" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CR" topics="security_engineering"  />
+			<outline text="Distributed computing and algorithms" title="ArXiv Distributed Computing" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DC" topics="distributed_systems"  />
+			<outline text="Database and data mining research" title="ArXiv Databases" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.DB" topics="databases"  />
+			<outline text="Software engineering research" title="ArXiv Software Engineering" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.SE" topics="devtools"  />
+			<outline text="Human-computer interaction research" title="ArXiv Human-Computer Interaction" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.HC" topics="product_management"  />
+			<outline text="Information retrieval and search research" title="ArXiv Information Retrieval" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.IR" topics="artificial_intelligence"  />
 			<!-- https://huggingface.co/posts/takarajordan/806643001426071 -->
 			<!-- Note: community maintained/hosted, might be unreliable. -->
-			<outline text="Daily AI research papers and summaries" title="HuggingFace Daily Papers" type="rss" xmlUrl="https://papers.takara.ai/api/feed" topics="llms,ai_research" faviconUrl="https://huggingface.co/favicon.ico" />
+			<outline text="Daily AI research papers and summaries" title="HuggingFace Daily Papers" type="rss" xmlUrl="https://papers.takara.ai/api/feed" topics="llms,artificial_intelligence"  />
 		</outline>
 		<outline text="Others" title="Others">
 			<outline text="Ideas worth spreading and inspiring talks" title="TED Talks Daily" type="rss" xmlUrl="http://feeds.feedburner.com/tedtalks_video" topics="product_management" />
-			<outline text="Business strategy and management insights" title="HBR.org" type="rss" xmlUrl="http://feeds.harvardbusiness.org/harvardbusiness/" topics="product_management" faviconUrl="https://hbr.org/favicon.ico" />
+			<outline text="Business strategy and management insights" title="HBR.org" type="rss" xmlUrl="http://feeds.harvardbusiness.org/harvardbusiness/" topics="product_management"  />
 		</outline>
 		<!-- Source: https://github.com/bartolomej/awesome-cs-youtube -->
-		<outline text="Awesome CompSci YouTube">
+		<outline text="Awesome computer_science YouTube">
 			<!-- Low level -->
-			<outline text="just a wannabe hacker... making videos about various IT security topics and participating in hacking competitions." title="LiveOverflow" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UClcE-kVhqyiHCcjYwcpfj9w" topics="compsci,security_engineering" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Low-level programming and computer architecture tutorials" title="Low Byte Productions" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC56l7uZA209tlPTVOJiJ8Tw" topics="compsci,systems_programming" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Digital electronics and computer architecture tutorials" title="Ben Eater" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCS0N5baNlQWJCUrhCEo8WlA" topics="compsci,systems_programming" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Web security and hacking concepts explained" title="PwnFunction" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCW6MNdOsqv2E9AjQkv9we7A" topics="compsci,security_engineering" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Systems programming and operating systems concepts" title="Jacob Sorber" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCwd5VFu4KoJNjkWJZMFJGHQ" topics="compsci,systems_programming" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="just a wannabe hacker... making videos about various IT security topics and participating in hacking competitions." title="LiveOverflow" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UClcE-kVhqyiHCcjYwcpfj9w" topics="computer_science,security_engineering"  />
+			<outline text="Low-level programming and computer architecture tutorials" title="Low Byte Productions" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC56l7uZA209tlPTVOJiJ8Tw" topics="computer_science,systems_programming"  />
+			<outline text="Digital electronics and computer architecture tutorials" title="Ben Eater" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCS0N5baNlQWJCUrhCEo8WlA" topics="computer_science,systems_programming"  />
+			<outline text="Web security and hacking concepts explained" title="PwnFunction" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCW6MNdOsqv2E9AjQkv9we7A" topics="computer_science,security_engineering"  />
+			<outline text="Systems programming and operating systems concepts" title="Jacob Sorber" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCwd5VFu4KoJNjkWJZMFJGHQ" topics="computer_science,systems_programming"  />
 
 			<!-- Algorithms & Math -->
-			<outline text="Mathematical concepts and machine learning fundamentals" title="WelchLabs" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UConVfxXodg78Tzh5nNu85Ew" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Computer science and programming concepts" title="SpanningTree" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCDzVUXiTr3hClI-zzCWbYzg" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Mathematical animations and explanations" title="3Blue1Brown" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Computer science concepts explained visually" title="Reducible" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCK8XIGR5kRidIw2fWqwyHRA" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Algorithms and competitive programming" title="vcubingx" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCv0nF8zWevEsSVcmz6mlw6A" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Complex systems and emergent behavior" title="Emergent Garden" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCwBhBDsqiQflTMLy2epbQVw" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Algorithms and data structures tutorials" title="WilliamFiset" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCD8yeTczadqdARzQUp29PJw" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Deep learning and neural networks explained" title="Layerwise Lectures" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCy9T075tKmceX-a-YJGrRgA" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Mathematical concepts and proofs" title="Mathemaniac" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCrlZs71h3mTR45FgQNINfrg" topics="compsci" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Database concepts and big data analytics" title="Prof. Dr. Jens Dittrich" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCC9zrtAkl6yY4dpcnWrCHjA" topics="compsci,databases" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Machine learning and computational neuroscience" title="Artem Kirsanov" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCR2uRTQ53V_egXKFflMMaaw" topics="compsci,ai_research" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="Mathematical concepts and machine learning fundamentals" title="WelchLabs" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UConVfxXodg78Tzh5nNu85Ew" topics="computer_science,artificial_intelligence"  />
+			<outline text="Computer science and programming concepts" title="SpanningTree" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCDzVUXiTr3hClI-zzCWbYzg" topics="computer_science"  />
+			<outline text="Mathematical animations and explanations" title="3Blue1Brown" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw" topics="computer_science,artificial_intelligence"  />
+			<outline text="Computer science concepts explained visually" title="Reducible" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCK8XIGR5kRidIw2fWqwyHRA" topics="computer_science"  />
+			<outline text="Algorithms and competitive programming" title="vcubingx" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCv0nF8zWevEsSVcmz6mlw6A" topics="computer_science,artificial_intelligence"  />
+			<outline text="Complex systems and emergent behavior" title="Emergent Garden" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCwBhBDsqiQflTMLy2epbQVw" topics="computer_science"  />
+			<outline text="Algorithms and data structures tutorials" title="WilliamFiset" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCD8yeTczadqdARzQUp29PJw" topics="computer_science"  />
+			<outline text="Deep learning and neural networks explained" title="Layerwise Lectures" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCy9T075tKmceX-a-YJGrRgA" topics="computer_science,artificial_intelligence"  />
+			<outline text="Mathematical concepts and proofs" title="Mathemaniac" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCrlZs71h3mTR45FgQNINfrg" topics="computer_science"  />
+			<outline text="Database concepts and big data analytics" title="Prof. Dr. Jens Dittrich" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCC9zrtAkl6yY4dpcnWrCHjA" topics="computer_science,databases"  />
+			<outline text="Machine learning and computational neuroscience" title="Artem Kirsanov" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCR2uRTQ53V_egXKFflMMaaw" topics="computer_science,artificial_intelligence"  />
 
 			<!-- Software Engineering & System Design -->
-			<outline text="System design and software architecture" title="ByteByteGo" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZgt6AzoyjslHTC9dz0UoTw" topics="compsci,distributed_systems" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="Software engineering best practices" title="CodeAesthetic" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCaSCt8s_4nfkRglWCvNSDrg" topics="compsci,devtools" faviconUrl="https://www.youtube.com/favicon.ico" />
-			<outline text="System design patterns and practices" title="Coderized" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCrsLPlwxUInDoNubOP85EWQ" topics="compsci,distributed_systems" faviconUrl="https://www.youtube.com/favicon.ico" />
+			<outline text="System design and software architecture" title="ByteByteGo" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZgt6AzoyjslHTC9dz0UoTw" topics="computer_science,distributed_systems"  />
+			<outline text="Software engineering best practices" title="CodeAesthetic" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCaSCt8s_4nfkRglWCvNSDrg" topics="computer_science,devtools"  />
+			<outline text="System design patterns and practices" title="Coderized" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCrsLPlwxUInDoNubOP85EWQ" topics="computer_science,distributed_systems"  />
 		</outline>
 	</body>
 </opml>
