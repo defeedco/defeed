@@ -21,6 +21,7 @@ const (
 	TopicCloudInfrastructure    TopicTag = "cloud_infrastructure"
 	TopicComputerScience        TopicTag = "computer_science"
 	TopicScience                TopicTag = "science"
+	TopicAutomotive             TopicTag = "automotive"
 )
 
 // WordToTopic maps a free-form string to a TopicTag when possible.
@@ -59,6 +60,8 @@ func WordToTopic(s string) (TopicTag, bool) {
 		return TopicComputerScience, true
 	case "science", "research", "science_research", "science_news", "science_articles", "science_papers", "science_publications":
 		return TopicScience, true
+	case "automotive", "cars", "evs", "electric_vehicles", "auto":
+		return TopicAutomotive, true
 	}
 	return "", false
 }

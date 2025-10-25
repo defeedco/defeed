@@ -51,6 +51,7 @@ const (
 // Defines values for TopicTag.
 const (
 	ArtificialIntelligence TopicTag = "artificial_intelligence"
+	Automotive             TopicTag = "automotive"
 	CloudInfrastructure    TopicTag = "cloud_infrastructure"
 	ComputerScience        TopicTag = "computer_science"
 	Databases              TopicTag = "databases"

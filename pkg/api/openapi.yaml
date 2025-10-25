@@ -368,6 +368,7 @@ components:
         - cloud_infrastructure
         - computer_science
         - science
+        - automotive
     SourceType:
       type: string
       enum:

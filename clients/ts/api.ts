@@ -429,7 +429,8 @@ export const TopicTag = {
     OpenSource: 'open_source',
     CloudInfrastructure: 'cloud_infrastructure',
     ComputerScience: 'computer_science',
-    Science: 'science'
+    Science: 'science',
+    Automotive: 'automotive'
 } as const;
 
 export type TopicTag = typeof TopicTag[keyof typeof TopicTag];

@@ -616,6 +616,8 @@ func deserializeTopicTag(in TopicTag) (sourcetypes.TopicTag, error) {
 		return sourcetypes.TopicOpenSource, nil
 	case CloudInfrastructure:
 		return sourcetypes.TopicCloudInfrastructure, nil
+	case Automotive:
+		return sourcetypes.TopicAutomotive, nil
 	default:
 		return "", fmt.Errorf("unknown topic tag: %s", in)
 	}

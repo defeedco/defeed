@@ -213,5 +213,14 @@
 			<outline text="Software engineering best practices" title="CodeAesthetic" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCaSCt8s_4nfkRglWCvNSDrg" topics="computer_science,devtools"  />
 			<outline text="System design patterns and practices" title="Coderized" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCrsLPlwxUInDoNubOP85EWQ" topics="computer_science,distributed_systems"  />
 		</outline>
+
+		<outline title="Automotive">
+			<outline text="Startups, EVs, autonomy, mobility" title="TechCrunch - Transportation" type="rss" xmlUrl="https://techcrunch.com/tag/transportation/feed/" topics="startups,automotive" />
+    		<outline text="EVs, charging, e-mobility ecosystem" title="Electrek" type="rss" xmlUrl="https://electrek.co/feed/" topics="automotive" />
+    		<outline text="Deep EV coverage, tests, tech" title="InsideEVs" type="rss" xmlUrl="https://insideevs.com/rss/articles/all/" topics="automotive" />
+    		<outline text="Sustainability-minded car tech" title="Green Car Reports" type="rss" xmlUrl="https://www.greencarreports.com/rss" topics="automotive" />
+			<outline text="Product + platform updates" title="Garmin Blog" type="rss" xmlUrl="https://www.garmin.com/en-US/blog/feed/" topics="automotive" />
+			<outline text="Car News, Automotive Trends, and New Model Announcements" title="Car and Driver" type="rss" xmlUrl="https://www.caranddriver.com/rss/all.xml/" topics="automotive" />
+		</outline>
 	</body>
 </opml>
