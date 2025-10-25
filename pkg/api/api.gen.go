@@ -172,6 +172,15 @@ type TopicTag string
 // UpdateFeedRequest defines model for UpdateFeedRequest.
 type UpdateFeedRequest = CreateFeedRequest
 
+// User defines model for User.
+type User struct {
+	// Email User email address (may be empty for some auth providers)
+	Email *string `json:"email,omitempty"`
+
+	// Id User ID
+	Id string `json:"id"`
+}
+
 // ListFeedActivitiesParams defines parameters for ListFeedActivities.
 type ListFeedActivitiesParams struct {
 	// Period Time period to filter activities from. Defaults to 'all' for all time.
@@ -228,6 +237,9 @@ type ServerInterface interface {
 	// Get source by UID
 	// (GET /sources/{uid})
 	GetSource(w http.ResponseWriter, r *http.Request, uid string)
+	// Get authenticated user information
+	// (GET /users/me)
+	GetMe(w http.ResponseWriter, r *http.Request)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -487,6 +499,26 @@ func (siw *ServerInterfaceWrapper) GetSource(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// GetMe operation middleware
+func (siw *ServerInterfaceWrapper) GetMe(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMe(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -614,6 +646,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("GET "+options.BaseURL+"/feeds/{uid}/activities", wrapper.ListFeedActivities)
 	m.HandleFunc("GET "+options.BaseURL+"/sources", wrapper.ListSources)
 	m.HandleFunc("GET "+options.BaseURL+"/sources/{uid}", wrapper.GetSource)
+	m.HandleFunc("GET "+options.BaseURL+"/users/me", wrapper.GetMe)
 
 	return m
 }

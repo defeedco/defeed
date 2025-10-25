@@ -11,6 +11,24 @@ servers:
     description: Production server
 
 paths:
+  /users/me:
+    get:
+      summary: Get authenticated user information
+      operationId: getMe
+      tags:
+        - users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+
   /sources:
     get:
       summary: List available sources
@@ -234,6 +252,18 @@ components:
       description: Bearer token authentication. Include the token in the Authorization header as 'Bearer {token}'.
 
   schemas:
+    User:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: User ID
+        email:
+          type: string
+          description: User email address (may be empty for some auth providers)
+
     UpdateFeedRequest:
       allOf:
         - $ref: '#/components/schemas/CreateFeedRequest'

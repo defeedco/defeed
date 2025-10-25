@@ -466,6 +466,25 @@ export interface UpdateFeedRequest {
      */
     'sourceUids': Array<string>;
 }
+/**
+ * 
+ * @export
+ * @interface User
+ */
+export interface User {
+    /**
+     * User ID
+     * @type {string}
+     * @memberof User
+     */
+    'id': string;
+    /**
+     * User email address (may be empty for some auth providers)
+     * @type {string}
+     * @memberof User
+     */
+    'email'?: string;
+}
 
 /**
  * FeedsApi - axios parameter creator
@@ -1104,6 +1123,111 @@ export class SourcesApi extends BaseAPI {
      */
     public listSources(query?: string, topics?: Array<TopicTag>, options?: RawAxiosRequestConfig) {
         return SourcesApiFp(this.configuration).listSources(query, topics, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * UsersApi - axios parameter creator
+ * @export
+ */
+export const UsersApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Get authenticated user information
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMe: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/users/me`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * UsersApi - functional programming interface
+ * @export
+ */
+export const UsersApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = UsersApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Get authenticated user information
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getMe(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<User>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getMe(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.getMe']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * UsersApi - factory interface
+ * @export
+ */
+export const UsersApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = UsersApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Get authenticated user information
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMe(options?: RawAxiosRequestConfig): AxiosPromise<User> {
+            return localVarFp.getMe(options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * UsersApi - object-oriented interface
+ * @export
+ * @class UsersApi
+ * @extends {BaseAPI}
+ */
+export class UsersApi extends BaseAPI {
+    /**
+     * 
+     * @summary Get authenticated user information
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsersApi
+     */
+    public getMe(options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).getMe(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

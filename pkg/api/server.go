@@ -130,6 +130,24 @@ func (s *Server) Stop() error {
 	return s.http.Close()
 }
 
+func (s *Server) GetMe(w http.ResponseWriter, r *http.Request) {
+	user, err := auth.UserFromContext(r.Context())
+	if err != nil {
+		s.internalError(w, err, "get user from context")
+		return
+	}
+
+	var email *string
+	if user.Email != "" {
+		email = &user.Email
+	}
+
+	s.serializeRes(w, User{
+		Id:    user.UserID,
+		Email: email,
+	})
+}
+
 func (s *Server) ListFeedActivities(w http.ResponseWriter, r *http.Request, uid string, params ListFeedActivitiesParams) {
 	user, err := auth.UserFromContext(r.Context())
 	if err != nil {

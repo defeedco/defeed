@@ -145,6 +145,8 @@ func authMiddleware(config *config.Config) (*auth.RouteAuthMiddleware, error) {
 
 	// Per-route configuration
 	authMiddleware.
+		// User info requires auth
+		SetRouteAuthProvider("GET /users/me", apiKeyProvider, true).
 		// Source info can be fetched from public feeds
 		SetRouteAuthProvider("GET /sources/{uid}", apiKeyProvider, false).
 		// Feeds can be public, so no auth required
