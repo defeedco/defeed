@@ -430,7 +430,9 @@ export const TopicTag = {
     CloudInfrastructure: 'cloud_infrastructure',
     ComputerScience: 'computer_science',
     Science: 'science',
-    Automotive: 'automotive'
+    Automotive: 'automotive',
+    Finance: 'finance',
+    Web3: 'web3'
 } as const;
 
 export type TopicTag = typeof TopicTag[keyof typeof TopicTag];

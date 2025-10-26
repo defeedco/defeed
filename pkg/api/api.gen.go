@@ -57,6 +57,7 @@ const (
 	Databases              TopicTag = "databases"
 	Devtools               TopicTag = "devtools"
 	DistributedSystems     TopicTag = "distributed_systems"
+	Finance                TopicTag = "finance"
 	GrowthEngineering      TopicTag = "growth_engineering"
 	LargeLanguageModels    TopicTag = "large_language_models"
 	OpenSource             TopicTag = "open_source"
@@ -66,6 +67,7 @@ const (
 	SecurityEngineering    TopicTag = "security_engineering"
 	Startups               TopicTag = "startups"
 	SystemsProgramming     TopicTag = "systems_programming"
+	Web3                   TopicTag = "web3"
 	WebPerformance         TopicTag = "web_performance"
 )
 

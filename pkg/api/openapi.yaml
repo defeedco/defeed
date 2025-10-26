@@ -369,6 +369,8 @@ components:
         - computer_science
         - science
         - automotive
+        - finance
+        - web3
     SourceType:
       type: string
       enum:

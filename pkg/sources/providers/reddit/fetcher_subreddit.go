@@ -154,6 +154,24 @@ var popularSubredditSources = []types.Source{
 		SortBy:           "hot",
 		TopPeriod:        "day",
 	},
+	&SourceSubreddit{
+		Subreddit:        "pennystocks",
+		SubredditSummary: "A place to lose money with friends and likewise degenerates.",
+		SortBy:           "hot",
+		TopPeriod:        "day",
+	},
+	&SourceSubreddit{
+		Subreddit:        "WSBAfterHours",
+		SubredditSummary: "Refined WSB community for strategic market analysis.",
+		SortBy:           "hot",
+		TopPeriod:        "day",
+	},
+	&SourceSubreddit{
+		Subreddit:        "10xPennyStocks",
+		SubredditSummary: "Research hub for stocks with 10x potential.",
+		SortBy:           "hot",
+		TopPeriod:        "day",
+	},
 }
 
 func (f *SubredditFetcher) FindByID(ctx context.Context, id types2.TypedUID, config *types.ProviderConfig) (types.Source, error) {

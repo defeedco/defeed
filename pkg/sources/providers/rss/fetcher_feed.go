@@ -42,7 +42,7 @@ func NewFeedFetcher(logger *zerolog.Logger) *FeedFetcher {
 
 	feeds, err := loadOPMLSources(logger, faviconMap)
 	if err != nil {
-		logger.Error().Err(err).Msg("load OPML sources")
+		logger.Fatal().Err(err).Msg("load OPML sources")
 		return nil
 	}
 
@@ -110,6 +110,7 @@ func opmlToRSSSources(logger *zerolog.Logger, opml *lib.OPML, faviconMap map[str
 				FeedURL:     outline.XMLUrl,
 				description: outline.Text,
 				IconURL:     outline.FaviconUrl,
+				topics:      []types.TopicTag{},
 			}
 
 			if source.IconURL == "" {

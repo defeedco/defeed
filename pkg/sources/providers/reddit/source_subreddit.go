@@ -92,6 +92,8 @@ func (s *SourceSubreddit) Topics() []sourcetypes.TopicTag {
 		tags = append(tags, sourcetypes.TopicCloudInfrastructure, sourcetypes.TopicDistributedSystems)
 	case "linux":
 		tags = append(tags, sourcetypes.TopicSystemsProgramming, sourcetypes.TopicOpenSource)
+	case "pennystocks", "wsbafterhours", "10xpennystocks":
+		tags = append(tags, sourcetypes.TopicFinance)
 	}
 	return tags
 }
