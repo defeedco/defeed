@@ -14,6 +14,7 @@ import (
 	sourcetypes "github.com/defeedco/defeed/pkg/sources/types"
 
 	"github.com/defeedco/defeed/pkg/api/auth"
+	mcphandler "github.com/defeedco/defeed/pkg/api/mcp"
 	"github.com/defeedco/defeed/pkg/sources/providers/github"
 	"github.com/defeedco/defeed/pkg/sources/providers/hackernews"
 	"github.com/defeedco/defeed/pkg/sources/providers/lobsters"
@@ -71,6 +72,7 @@ func NewServer(
 
 	HandlerFromMux(server, mux)
 	server.registerApiDocsHandlers(mux)
+	server.registerMCPHandler(mux)
 
 	return server, nil
 }
@@ -119,6 +121,13 @@ func (s *Server) registerApiDocsHandlers(mux *http.ServeMux) {
 		}
 	})
 }
+
+func (s *Server) registerMCPHandler(mux *http.ServeMux) {
+	userID := "" // Empty for now
+	mcpHandler := mcphandler.NewHandler(userID, s.feedRegistry, s.logger)
+	mux.Handle("/mcp", mcpHandler)
+}
+
 func (s *Server) Start() error {
 	if err := s.http.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err

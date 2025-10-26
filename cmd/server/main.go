@@ -145,6 +145,8 @@ func authMiddleware(config *config.Config) (*auth.RouteAuthMiddleware, error) {
 
 	// Per-route configuration
 	authMiddleware.
+		// MCP is public, so no auth required
+		SetRouteAuthProvider("POST /mcp", apiKeyProvider, false).
 		// User info requires auth
 		SetRouteAuthProvider("GET /users/me", apiKeyProvider, true).
 		// Source info can be fetched from public feeds

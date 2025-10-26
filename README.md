@@ -24,7 +24,7 @@ Defeed is a personal newspaper that keeps you informed about the updates you gen
 - [ ] incorporate past clicks/bookmarks/likes in the recommendation
 - [ ] improved summaries
 - [ ] deduplication across all sources
-- [ ] MCP server
+- [x] MCP server
 - [ ] browser extension that renders Defeed in new empty tab
 - [ ] share and follow other people's feeds on the marketplace
 - [ ] new data sources (YouTube, BlueSky, Lemmy, Discourse, HuggingFace, newsletters, podcasts,...)
