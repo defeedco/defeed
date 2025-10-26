@@ -28,9 +28,10 @@ func (f *PostsFetcher) SourceType() string {
 }
 
 var feedSources = []types.Source{
-	&SourcePosts{
-		FeedName: "new",
-	},
+	// There are too many posts on the "new" feed, which can become costly to process.
+	// &SourcePosts{
+	// 	FeedName: "new",
+	// },
 	&SourcePosts{
 		FeedName: "top",
 	},
