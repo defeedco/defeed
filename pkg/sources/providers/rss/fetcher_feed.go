@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	activitytypes "github.com/defeedco/defeed/pkg/sources/activities/types"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/defeedco/defeed/pkg/sources/types"
 
 	"github.com/rs/zerolog"
-	"golang.org/x/sync/errgroup"
 )
 
 // Modified from: https://raw.githubusercontent.com/tuan3w/awesome-tech-rss/refs/heads/main/feeds.opml
@@ -45,8 +43,6 @@ func NewFeedFetcher(logger *zerolog.Logger) *FeedFetcher {
 		logger.Fatal().Err(err).Msg("load OPML sources")
 		return nil
 	}
-
-	fetchIcons(context.Background(), logger, feeds)
 
 	return &FeedFetcher{
 		Feeds:  feeds,
@@ -150,27 +146,4 @@ func opmlToRSSSources(logger *zerolog.Logger, opml *lib.OPML, faviconMap map[str
 	}
 
 	return result, nil
-}
-
-func fetchIcons(ctx context.Context, logger *zerolog.Logger, sources []types.Source) {
-	g, gctx := errgroup.WithContext(ctx)
-	g.SetLimit(len(sources))
-
-	for _, source := range sources {
-		g.Go(func() error {
-			ctx, cancel := context.WithTimeout(gctx, 10*time.Second)
-			defer cancel()
-
-			feedSource := source.(*SourceFeed)
-			if err := feedSource.fetchIcon(ctx, logger); err != nil {
-				logger.Error().Err(err).
-					Str("source", feedSource.UID().String()).
-					Msg("fetch icon for feed source")
-			}
-			return nil
-		})
-	}
-
-	// Ignore errors
-	_ = g.Wait()
 }
