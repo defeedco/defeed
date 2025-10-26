@@ -19,10 +19,8 @@ type Handler struct {
 }
 
 type GetFeedActivitiesInput struct {
-	FeedUID string  `json:"feedUid"`
-	Period  *string `json:"period,omitempty"`
-	Query   *string `json:"query,omitempty"`
-	Limit   *int    `json:"limit,omitempty"`
+	FeedUID string `json:"feedUid"`
+	Limit   *int   `json:"limit,omitempty"`
 }
 
 type GetFeedActivitiesOutput struct {
@@ -30,16 +28,11 @@ type GetFeedActivitiesOutput struct {
 }
 
 type ActivityOutput struct {
-	Title              string   `json:"title" jsonschema:"The title of the activity"`
-	Body               string   `json:"body" jsonschema:"The main content or body text of the activity"`
-	URL                string   `json:"url" jsonschema:"The URL link to the original activity"`
-	ShortSummary       string   `json:"shortSummary" jsonschema:"A brief summary of the activity"`
-	FullSummary        string   `json:"fullSummary" jsonschema:"A comprehensive summary of the activity"`
-	CreatedAt          string   `json:"createdAt" jsonschema:"The timestamp when the activity was created"`
-	UpvotesCount       int      `json:"upvotesCount" jsonschema:"The number of upvotes received by the activity"`
-	CommentsCount      int      `json:"commentsCount" jsonschema:"The number of comments on the activity"`
-	AmplificationCount int      `json:"amplificationCount" jsonschema:"The number of times the activity was amplified or shared"`
-	Similarity         *float32 `json:"similarity,omitempty" jsonschema:"Similarity score of the activity (if available)"`
+	Title        string `json:"title" jsonschema:"The title of the activity"`
+	Body         string `json:"body" jsonschema:"The main content or body text of the activity"`
+	URL          string `json:"url" jsonschema:"The URL link to the original activity"`
+	ShortSummary string `json:"shortSummary" jsonschema:"A brief summary of the activity"`
+	CreatedAt    string `json:"createdAt" jsonschema:"The timestamp when the activity was created"`
 }
 
 type ListFeedsInput struct{}
@@ -83,7 +76,7 @@ func NewHandler(
 		}, h.listFeeds)
 
 		mcp.AddTool(mcpServer, &mcp.Tool{
-			Name:        "get_feed_activities",
+			Name:        "list_feed_activities",
 			Description: "Retrieve activities (posts, articles, etc.) from a specific feed with optional filtering and sorting",
 		}, h.listFeedActivities)
 
@@ -131,11 +124,6 @@ func (h *Handler) listFeedActivities(
 	req *mcp.CallToolRequest,
 	input GetFeedActivitiesInput,
 ) (*mcp.CallToolResult, GetFeedActivitiesOutput, error) {
-	var queryOverride string
-	if input.Query != nil {
-		queryOverride = *input.Query
-	}
-
 	limit := 20
 	if input.Limit != nil {
 		limit = *input.Limit
@@ -147,8 +135,8 @@ func (h *Handler) listFeedActivities(
 		h.userID,
 		activitytypes.SortByWeightedScore,
 		limit,
-		queryOverride,
-		activitytypes.PeriodAll,
+		"",
+		activitytypes.PeriodDay,
 		false,
 	)
 	if err != nil {
@@ -158,14 +146,10 @@ func (h *Handler) listFeedActivities(
 	activities := make([]ActivityOutput, len(out.Results))
 	for i, activity := range out.Results {
 		activities[i] = ActivityOutput{
-			Title:              activity.Activity.Title(),
-			URL:                activity.Activity.URL(),
-			ShortSummary:       activity.Summary.ShortSummary,
-			CreatedAt:          activity.Activity.CreatedAt().Format(time.RFC3339),
-			UpvotesCount:       activity.Activity.UpvotesCount(),
-			CommentsCount:      activity.Activity.CommentsCount(),
-			AmplificationCount: activity.Activity.AmplificationCount(),
-			Similarity:         &activity.Similarity,
+			Title:        activity.Activity.Title(),
+			URL:          activity.Activity.URL(),
+			ShortSummary: activity.Summary.ShortSummary,
+			CreatedAt:    activity.Activity.CreatedAt().Format(time.RFC3339),
 		}
 	}
 
