@@ -266,10 +266,20 @@ func (e *FeedItem) Title() string {
 }
 
 func (e *FeedItem) Body() string {
+	var raw string
 	if e.Item.Content != "" {
-		return e.Item.Content
+		raw = e.Item.Content
 	}
-	return e.Item.Description
+	if e.Item.Description != "" {
+		raw = e.Item.Description
+	}
+	if raw != "" {
+		text, err := lib.HTMLToText(raw)
+		if err == nil {
+			return text
+		}
+	}
+	return raw
 }
 
 func (e *FeedItem) URL() string {

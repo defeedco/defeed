@@ -14,6 +14,11 @@ import (
 	"github.com/tmc/langchaingo/outputparser"
 )
 
+const (
+	shortSummaryMaxWords = 20
+	longSummaryMaxWords  = 200
+)
+
 type Summarizer struct {
 	model  completionModel
 	logger *zerolog.Logger
@@ -36,12 +41,12 @@ type summarizeActivityInput struct {
 	URL   string `json:"url"`
 }
 
-func (sum *Summarizer) SummarizeActivity(
+func (s *Summarizer) SummarizeActivity(
 	ctx context.Context,
 	activity types.Activity,
 ) (*types.ActivitySummary, error) {
 	// Preprocess input to reduce token count
-	processedInput := sum.activityToInput(activity)
+	processedInput := s.activityToInput(activity)
 
 	type result struct {
 		summary string
@@ -52,11 +57,11 @@ func (sum *Summarizer) SummarizeActivity(
 
 	// Generate full and short summary in parallel
 	go func() {
-		fullSummary, err := sum.generateFullSummary(ctx, processedInput)
+		fullSummary, err := s.summarizeWithRetry(ctx, processedInput, s.generateFullSummary, longSummaryMaxWords)
 		fullChan <- result{summary: fullSummary, err: err}
 	}()
 	go func() {
-		shortSummary, err := sum.generateShortSummary(ctx, processedInput)
+		shortSummary, err := s.summarizeWithRetry(ctx, processedInput, s.generateShortSummary, shortSummaryMaxWords)
 		shortChan <- result{summary: shortSummary, err: err}
 	}()
 
@@ -78,61 +83,130 @@ func (sum *Summarizer) SummarizeActivity(
 	}, nil
 }
 
-func (sum *Summarizer) generateFullSummary(ctx context.Context, input summarizeActivityInput) (string, error) {
-	prompt := fmt.Sprintf(`You are a summarizer. Summarize the provided JSON faithfully and concisely.
+func (s *Summarizer) summarizeWithRetry(
+	ctx context.Context,
+	input summarizeActivityInput,
+	summarizer func(ctx context.Context, input string) (string, error),
+	maxWords int,
+) (string, error) {
+
+	out := s.formatActivityInput(input)
+	for range 3 {
+		curr, err := summarizer(ctx, out)
+		if err != nil {
+			return "", fmt.Errorf("summarizer: %w", err)
+		}
+
+		prevWords := wordCount(out)
+		currWords := wordCount(curr)
+
+		if currWords <= maxWords {
+			return curr, nil
+		}
+
+		s.logger.Debug().
+			Int("previous_words", prevWords).
+			Int("current_words", currWords).
+			Int("max_words", maxWords).
+			Msg("summary too long, retrying")
+
+		if currWords < prevWords {
+			out = curr
+		}
+	}
+
+	// fallback to the last summary
+	return out, nil
+}
+
+func wordCount(s string) int {
+	return len(strings.Split(s, " "))
+}
+
+func (s *Summarizer) generateFullSummary(ctx context.Context, input string) (string, error) {
+	prompt := fmt.Sprintf(`You are a summarizer.
 
 Rules:
-- Use **bold** for key terms, `+"`code`"+` for identifiers, hyperlinks for URLs.
-- Max 80 words.
-- Format as Markdown with Context/Key Points/Why it matters structure (titles formatted with ###).
+- Be faithful to the input.
+- Do NOT add new information.
+- Use Markdown exactly as shown.
+- Output ONLY the Markdown.
+- Keep it under %d words.
+
+Summarize the input in Markdown using EXACTLY these document sections:
+
+<document>
+### Context
+(1-3 sentences)
+
+### Key Points
+- point 1
+- point 2
+- point 3
+
+### Why it matters
+(1-2 sentences)
+</document>
 
 Input:
 %s
 
-Output only the summary text, no JSON formatting.`, sum.formatActivityInput(input))
+Output:
+`, longSummaryMaxWords, input)
 
-	out, err := sum.model.Call(
+	out, err := s.model.Call(
 		ctx,
 		prompt,
 		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
 		llms.WithTemperature(1.0),
 	)
 	if err != nil {
-		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating full summary completion")
+		logGenerateCompletionError(s.logger, err, prompt, out, "Error generating full summary completion")
 		return "", fmt.Errorf("generate full summary completion: %w", err)
 	}
 
-	return strings.TrimSpace(out), nil
+	return trimMarkdown(out), nil
 }
 
-func (sum *Summarizer) generateShortSummary(ctx context.Context, input summarizeActivityInput) (string, error) {
-	prompt := fmt.Sprintf(`You are a summarizer. Create a concise summary of the provided JSON.
+func trimMarkdown(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.ReplaceAll(s, "```markdown", "")
+	s = strings.ReplaceAll(s, "```", "")
+	return s
+}
+
+func (s *Summarizer) generateShortSummary(ctx context.Context, input string) (string, error) {
+	prompt := fmt.Sprintf(`You are a summarizer.
+
+Write ONE sentence of MAX %d WORDS about the input.
 
 Rules:
-- Max 20 words.
-- Plain text, no Markdown.
-- Capture the essence.
+- %d words or fewer.
+- Plain text only.
+- No explanations.
+- If unsure, make it shorter.
 
 Input:
 %s
 
-Output only the summary text, no JSON formatting.`, sum.formatActivityInput(input))
+Output:
+`, shortSummaryMaxWords, shortSummaryMaxWords, input)
 
-	out, err := sum.model.Call(
+	out, err := s.model.Call(
 		ctx,
 		prompt,
 		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
-		llms.WithTemperature(1.0),
+		llms.WithTemperature(0.0),
 	)
 	if err != nil {
-		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating short summary completion")
+		logGenerateCompletionError(s.logger, err, prompt, out, "Error generating short summary completion")
 		return "", fmt.Errorf("generate short summary completion: %w", err)
 	}
 
 	return strings.TrimSpace(out), nil
 }
 
-func (sum *Summarizer) formatActivityInput(input summarizeActivityInput) string {
+func (s *Summarizer) formatActivityInput(input summarizeActivityInput) string {
 	inputJSON, err := json.MarshalIndent(input, "", "  ")
 	if err != nil {
 		return fmt.Sprintf(`{"title": "%s", "body": "%s", "url": "%s"}`,
@@ -141,7 +215,7 @@ func (sum *Summarizer) formatActivityInput(input summarizeActivityInput) string 
 	return string(inputJSON)
 }
 
-func (sum *Summarizer) activityToInput(activity types.Activity) summarizeActivityInput {
+func (s *Summarizer) activityToInput(activity types.Activity) summarizeActivityInput {
 	return summarizeActivityInput{
 		Title: activity.Title(),
 		Body:  activity.Body(),
@@ -159,7 +233,7 @@ type topicSummaryActivitiesInput struct {
 	Activities []topicSummaryActivityInput `json:"activities"`
 }
 
-func (sum *Summarizer) SummarizeTopic(ctx context.Context, topic *TopicQueryGroup, activities []*types.DecoratedActivity) (string, error) {
+func (s *Summarizer) SummarizeTopic(ctx context.Context, topic *TopicQueryGroup, activities []*types.DecoratedActivity) (string, error) {
 	if len(activities) == 0 {
 		return "", nil
 	}
@@ -192,14 +266,14 @@ Topic activities: %s
 
 Activity summary:`, topic.Name, string(activitiesJSON))
 
-	out, err := sum.model.Call(
+	out, err := s.model.Call(
 		ctx,
 		prompt,
 		// Note: Fixed temperature of 1 must be applied for gpt-5-mini
 		llms.WithTemperature(1.0),
 	)
 	if err != nil {
-		logGenerateCompletionError(sum.logger, err, prompt, out, "Error generating topic summary completion")
+		logGenerateCompletionError(s.logger, err, prompt, out, "Error generating topic summary completion")
 		return "", fmt.Errorf("generate topic summary completion: %w", err)
 	}
 
