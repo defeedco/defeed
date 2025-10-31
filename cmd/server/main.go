@@ -11,12 +11,12 @@ import (
 	"github.com/defeedco/defeed/pkg/sources/activities"
 	"github.com/defeedco/defeed/pkg/sources/nlp"
 	"github.com/rs/zerolog"
-	"github.com/tmc/langchaingo/llms/openai"
 
 	"github.com/defeedco/defeed/pkg/api"
 	"github.com/defeedco/defeed/pkg/api/auth"
 	"github.com/defeedco/defeed/pkg/config"
 	"github.com/defeedco/defeed/pkg/lib/log"
+	"github.com/defeedco/defeed/pkg/llms"
 	"github.com/defeedco/defeed/pkg/storage/postgres"
 	"github.com/joho/godotenv"
 )
@@ -64,33 +64,24 @@ func initServer(ctx context.Context, logger *zerolog.Logger, config *config.Conf
 		return nil, fmt.Errorf("connect to database: %w", err)
 	}
 
-	usageTracker := lib.NewUsageTracker(logger)
-	limiter := lib.NewOpenAILimiterWithTracker(logger, usageTracker)
-
-	completionModel, err := openai.New(
-		openai.WithModel("gpt-5-nano-2025-08-07"),
-		openai.WithHTTPClient(limiter),
-	)
+	completionModel, err := llms.NewCompletionModel(&config.LLMs, logger)
 	if err != nil {
-		return nil, fmt.Errorf("create summarizer model: %w", err)
+		return nil, fmt.Errorf("create completion model: %w", err)
 	}
 
-	embeddingModel, err := openai.New(
-		openai.WithEmbeddingModel("text-embedding-3-large"),
-		openai.WithHTTPClient(limiter),
-	)
+	embeddingModel, err := llms.NewEmbeddingModel(&config.LLMs, logger)
 	if err != nil {
 		return nil, fmt.Errorf("create embedder model: %w", err)
 	}
 
 	llmCache := lib.NewCache(2*time.Hour, logger)
-	cachedEmbeddingModel := nlp.NewCachedModel(embeddingModel, llmCache)
-	cachedCompletionModel := nlp.NewCachedModel(completionModel, llmCache)
+	cachedEmbeddingModel := llms.NewCachedEmbedderModel(embeddingModel, llmCache)
+	cachedCompletionModel := llms.NewCachedCompletionModel(completionModel, llmCache)
 
 	// Cache will help mostly with request-time LLM computations like query-rewrites
 	summarizer := nlp.NewSummarizer(cachedCompletionModel, logger)
 	queryRewriter := nlp.NewQueryRewriter(cachedCompletionModel, logger)
-	embedder := nlp.NewEmbedder(cachedEmbeddingModel)
+	embedder := nlp.NewActivityEmbedder(cachedEmbeddingModel)
 
 	activityRepo := postgres.NewActivityRepository(db, logger)
 	sourceRepo := postgres.NewSourceRepository(db)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/defeedco/defeed/pkg/api"
 	"github.com/defeedco/defeed/pkg/lib/log"
+	"github.com/defeedco/defeed/pkg/llms"
 	"github.com/defeedco/defeed/pkg/storage/postgres"
 	"github.com/joeshaw/envdecode"
 )
@@ -21,7 +22,7 @@ type Config struct {
 	Feeds           feeds.Config               `env:""`
 	Sources         sources.Config             `env:""`
 	SourceProviders sourcetypes.ProviderConfig `env:""`
-
+	LLMs            llms.Config                `env:""`
 	// Dev-only variables
 
 	// SourceInitialization true if the scheduler should not be initialized to process existing sources.

@@ -18,7 +18,7 @@ type embedderModel interface {
 	CreateEmbedding(ctx context.Context, texts []string) ([][]float32, error)
 }
 
-func NewEmbedder(model embedderModel) *ActivityEmbedder {
+func NewActivityEmbedder(model embedderModel) *ActivityEmbedder {
 	embedder, _ := embeddings.NewEmbedder(model)
 	return &ActivityEmbedder{
 		embedder: embedder,

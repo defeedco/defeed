@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 
 	"github.com/alitto/pond/v2"
+	"github.com/defeedco/defeed/pkg/llms"
 	"github.com/defeedco/defeed/pkg/sources/activities"
 
 	appconfig "github.com/defeedco/defeed/pkg/config"
@@ -18,7 +19,6 @@ import (
 	"github.com/defeedco/defeed/pkg/sources/nlp"
 	"github.com/defeedco/defeed/pkg/storage/postgres"
 	"github.com/joho/godotenv"
-	"github.com/tmc/langchaingo/llms/openai"
 )
 
 type Config struct {
@@ -86,29 +86,19 @@ func run(ctx context.Context, config Config) error {
 		return fmt.Errorf("connect to database: %w", err)
 	}
 
-	// Initialize OpenAI models
-	usageTracker := lib.NewUsageTracker(logger)
-	limiter := lib.NewOpenAILimiterWithTracker(logger, usageTracker)
-
-	completionModel, err := openai.New(
-		openai.WithModel("gpt-5-nano-2025-08-07"),
-		openai.WithHTTPClient(limiter),
-	)
+	completionModel, err := llms.NewCompletionModel(&cfg.LLMs, logger)
 	if err != nil {
-		return fmt.Errorf("create summarizer model: %w", err)
+		return fmt.Errorf("create completion model: %w", err)
 	}
 
-	embeddingModel, err := openai.New(
-		openai.WithEmbeddingModel("text-embedding-3-large"),
-		openai.WithHTTPClient(limiter),
-	)
+	embeddingModel, err := llms.NewEmbeddingModel(&cfg.LLMs, logger)
 	if err != nil {
 		return fmt.Errorf("create embedder model: %w", err)
 	}
 
 	summarizer := nlp.NewSummarizer(completionModel, logger)
 
-	embedder := nlp.NewEmbedder(embeddingModel)
+	embedder := nlp.NewActivityEmbedder(embeddingModel)
 
 	activityRepo := postgres.NewActivityRepository(db, logger)
 	activityRegistry := activities.NewRegistry(logger, activityRepo, summarizer, embedder)

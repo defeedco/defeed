@@ -1,4 +1,4 @@
-package nlp
+package llms
 
 import (
 	"context"
@@ -8,24 +8,23 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
-type CachedModel struct {
-	model model
+type CachedEmbedderModel struct {
+	model embedderModel
 	cache *lib.Cache
 }
 
-type model interface {
-	completionModel
-	embedderModel
+type embedderModel interface {
+	CreateEmbedding(ctx context.Context, texts []string) ([][]float32, error)
 }
 
-func NewCachedModel(model model, cache *lib.Cache) *CachedModel {
-	return &CachedModel{
+func NewCachedEmbedderModel(model embedderModel, cache *lib.Cache) *CachedEmbedderModel {
+	return &CachedEmbedderModel{
 		model: model,
 		cache: cache,
 	}
 }
 
-func (cm *CachedModel) CreateEmbedding(ctx context.Context, texts []string) ([][]float32, error) {
+func (cm *CachedEmbedderModel) CreateEmbedding(ctx context.Context, texts []string) ([][]float32, error) {
 	// Cache each text element separately
 	results := make([][]float32, len(texts))
 	uncachedIndices := make([]int, 0)
@@ -69,7 +68,23 @@ func (cm *CachedModel) CreateEmbedding(ctx context.Context, texts []string) ([][
 	return results, nil
 }
 
-func (cm *CachedModel) Call(ctx context.Context, prompt string, options ...llms.CallOption) (string, error) {
+type CachedCompletionModel struct {
+	model completionModel
+	cache *lib.Cache
+}
+
+type completionModel interface {
+	Call(ctx context.Context, prompt string, options ...llms.CallOption) (string, error)
+}
+
+func NewCachedCompletionModel(model completionModel, cache *lib.Cache) *CachedCompletionModel {
+	return &CachedCompletionModel{
+		model: model,
+		cache: cache,
+	}
+}
+
+func (cm *CachedCompletionModel) Call(ctx context.Context, prompt string, options ...llms.CallOption) (string, error) {
 	key := completionCacheKey(prompt)
 
 	if response, found := cm.cache.Get(key); found {
