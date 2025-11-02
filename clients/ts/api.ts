@@ -394,6 +394,7 @@ export const SourceType = {
     MastodonTag: 'mastodonTag',
     HackernewsPosts: 'hackernewsPosts',
     RedditSubreddit: 'redditSubreddit',
+    RedditPostComments: 'redditPostComments',
     LobstersTag: 'lobstersTag',
     LobstersFeed: 'lobstersFeed',
     RssFeed: 'rssFeed',

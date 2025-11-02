@@ -15,6 +15,11 @@ type Activity interface {
 	// Example: a Hacker News post can be from both "show HN" and "best of HN" sources.
 	// Idea: In the future, we can group duplicated activities across different sources.
 	SourceUIDs() []TypedUID
+	// ParentUID is the UID of the parent activity, if this is a child activity (e.g. comment).
+	// Returns nil if this is a top-level activity.
+	ParentUID() *TypedUID
+	// ChildUIDs are the UIDs of child activities (e.g. comments on a post).
+	ChildUIDs() []TypedUID
 	Title() string
 	Body() string
 	URL() string

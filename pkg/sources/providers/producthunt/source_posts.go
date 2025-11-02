@@ -114,6 +114,14 @@ func (p *Post) SourceUIDs() []activitytypes.TypedUID {
 	return p.SourceIDs
 }
 
+func (p *Post) ParentUID() *activitytypes.TypedUID {
+	return nil
+}
+
+func (p *Post) ChildUIDs() []activitytypes.TypedUID {
+	return []activitytypes.TypedUID{}
+}
+
 func (p *Post) Title() string {
 	return p.Product.Name
 }

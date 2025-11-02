@@ -705,6 +705,7 @@ func sourceTypeToTopicKey(in string) (topicKey, error) {
 	case hackernews.TypeHackerNewsPosts:
 		return newTopicKey("🧑‍💻", "HackerNews"), nil
 	case reddit.TypeRedditSubreddit:
+	case reddit.TypeRedditPostComments:
 		return newTopicKey("🔥", "Reddit"), nil
 	case lobsters.TypeLobstersTag, lobsters.TypeLobstersFeed:
 		return newTopicKey("🐙", "Lobsters"), nil

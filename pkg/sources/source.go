@@ -39,6 +39,8 @@ func NewSource(sourceType string) (sourcestypes.Source, error) {
 		s = hackernews.NewSourcePosts()
 	case reddit.TypeRedditSubreddit:
 		s = reddit.NewSourceSubreddit()
+	case reddit.TypeRedditPostComments:
+		s = reddit.NewSourcePostComments()
 	case lobsters.TypeLobstersTag:
 		s = lobsters.NewSourceTag()
 	case lobsters.TypeLobstersFeed:

@@ -258,6 +258,14 @@ func (e *FeedItem) SourceUIDs() []activitytypes.TypedUID {
 	return e.SourceIDs
 }
 
+func (e *FeedItem) ParentUID() *activitytypes.TypedUID {
+	return nil
+}
+
+func (e *FeedItem) ChildUIDs() []activitytypes.TypedUID {
+	return []activitytypes.TypedUID{}
+}
+
 func (e *FeedItem) Title() string {
 	if e.Item.Title != "" {
 		return html.UnescapeString(e.Item.Title)
