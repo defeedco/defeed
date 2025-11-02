@@ -211,6 +211,9 @@
 			<outline text="System design and software architecture" title="ByteByteGo" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZgt6AzoyjslHTC9dz0UoTw" topics="computer_science,distributed_systems"  />
 			<outline text="Software engineering best practices" title="CodeAesthetic" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCaSCt8s_4nfkRglWCvNSDrg" topics="computer_science,devtools"  />
 			<outline text="System design patterns and practices" title="Coderized" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCrsLPlwxUInDoNubOP85EWQ" topics="computer_science,distributed_systems"  />
+
+			<!-- Game Dev -->
+			<outline text="Low-level systems, hardware hacks, game-reverse-engineering and tactile tech projects." title="Inkbox" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCBciYThS5hOiuQ4aOxw4hHg" topics="computer_science,systems_programming" />
 		</outline>
 
 		<outline title="Automotive">
