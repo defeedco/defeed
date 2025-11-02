@@ -167,14 +167,6 @@ func (r *Release) SourceUIDs() []activitytypes.TypedUID {
 	return result
 }
 
-func (r *Release) ParentUID() *activitytypes.TypedUID {
-	return nil
-}
-
-func (r *Release) ChildUIDs() []activitytypes.TypedUID {
-	return []activitytypes.TypedUID{}
-}
-
 func (r *Release) Title() string {
 	return r.Release.GetName()
 }

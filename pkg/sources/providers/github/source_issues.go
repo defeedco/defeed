@@ -136,14 +136,6 @@ func (i *Issue) SourceUIDs() []activitytypes.TypedUID {
 	return result
 }
 
-func (i *Issue) ParentUID() *activitytypes.TypedUID {
-	return nil
-}
-
-func (i *Issue) ChildUIDs() []activitytypes.TypedUID {
-	return []activitytypes.TypedUID{}
-}
-
 func (i *Issue) Title() string {
 	return i.Issue.GetTitle()
 }

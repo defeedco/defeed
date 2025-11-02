@@ -233,14 +233,6 @@ func (a *Repository) SourceUIDs() []activitytypes.TypedUID {
 	return a.SourceIDs
 }
 
-func (a *Repository) ParentUID() *activitytypes.TypedUID {
-	return nil
-}
-
-func (a *Repository) ChildUIDs() []activitytypes.TypedUID {
-	return []activitytypes.TypedUID{}
-}
-
 func (a *Repository) Title() string {
 	if a.Repository.FullName != nil {
 		return *a.Repository.FullName

@@ -138,9 +138,9 @@ func (r *ActivityRepository) Search(ctx context.Context, req types.SearchRequest
 				b.Arg(fmt.Sprintf(`["%s"]`, uid))
 			})
 		}
-		// query = query.Where(func(s *sql.Selector) {
-		// 	s.Where(sql.Or(predicates...))
-		// })
+		query = query.Where(func(s *sql.Selector) {
+			s.Where(sql.Or(predicates...))
+		})
 	}
 
 	if len(req.ActivityUIDs) > 0 {

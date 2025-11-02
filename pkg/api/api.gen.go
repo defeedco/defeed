@@ -44,7 +44,6 @@ const (
 	MastodonAccount        SourceType = "mastodonAccount"
 	MastodonTag            SourceType = "mastodonTag"
 	ProductHuntPosts       SourceType = "productHuntPosts"
-	RedditPostComments     SourceType = "redditPostComments"
 	RedditSubreddit        SourceType = "redditSubreddit"
 	RssFeed                SourceType = "rssFeed"
 )

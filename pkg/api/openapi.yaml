@@ -378,7 +378,6 @@ components:
         - mastodonTag
         - hackernewsPosts
         - redditSubreddit
-        - redditPostComments
         - lobstersTag
         - lobstersFeed
         - rssFeed

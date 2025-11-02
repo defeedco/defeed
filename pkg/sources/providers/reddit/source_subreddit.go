@@ -28,7 +28,6 @@ type SourceSubreddit struct {
 	Search           string `json:"search"`
 	client           *reddit.Client
 	logger           *zerolog.Logger
-	sourceConfig     *sourcetypes.ProviderConfig
 }
 
 func NewSourceSubreddit() *SourceSubreddit {
@@ -105,7 +104,6 @@ type Post struct {
 	ExternalContent string                   `json:"external_content"`
 	SourceIDs       []activitytypes.TypedUID `json:"source_ids"`
 	SourceTyp       string                   `json:"source_type"`
-	ChildrenUIDs    []activitytypes.TypedUID `json:"children_uids"`
 }
 
 func NewPost() *Post {
@@ -155,14 +153,6 @@ func (p *Post) UID() activitytypes.TypedUID {
 
 func (p *Post) SourceUIDs() []activitytypes.TypedUID {
 	return p.SourceIDs
-}
-
-func (p *Post) ParentUID() *activitytypes.TypedUID {
-	return nil
-}
-
-func (p *Post) ChildUIDs() []activitytypes.TypedUID {
-	return p.ChildrenUIDs
 }
 
 func (p *Post) Title() string {
@@ -242,7 +232,6 @@ func (s *SourceSubreddit) Initialize(logger *zerolog.Logger, config *sourcetypes
 	s.client = client
 
 	s.logger = logger
-	s.sourceConfig = config
 
 	return nil
 }
@@ -302,10 +291,7 @@ func (s *SourceSubreddit) fetchSubredditPostsWithRSS(ctx context.Context, _ acti
 			SourceIDs:    []activitytypes.TypedUID{s.UID()},
 		}
 
-		s.fetchAndEmitComments(ctx, feedItem, feed, errs)
-
 		feed <- feedItem
-
 	}
 }
 
@@ -436,33 +422,6 @@ func (s *SourceSubreddit) fetchByCurrentTimeline(ctx context.Context, opts *redd
 	}
 
 	return nil, nil, fmt.Errorf("invalid sort by: %s", s.SortBy)
-}
-
-func (s *SourceSubreddit) fetchAndEmitComments(ctx context.Context, post *Post, feed chan<- activitytypes.Activity, errs chan<- error) []activitytypes.TypedUID {
-	commentSource := &SourcePostComments{
-		PostPermalink: post.Post.Permalink,
-	}
-
-	// TODO: should we initialize child sources here?
-	if err := commentSource.Initialize(s.logger, s.sourceConfig); err != nil {
-		s.logger.Warn().Err(err).Msg("failed to initialize comment source")
-		return []activitytypes.TypedUID{}
-	}
-
-	childFeed := make(chan activitytypes.Activity, 100)
-	go func() {
-		defer close(childFeed)
-		contextWithParentUID := context.WithValue(ctx, "parent_uid", post.UID())
-		commentSource.Stream(contextWithParentUID, nil, childFeed, errs)
-	}()
-
-	childUIDs := []activitytypes.TypedUID{}
-	for child := range childFeed {
-		feed <- child
-		childUIDs = append(childUIDs, child.UID())
-	}
-
-	return childUIDs
 }
 
 func (s *SourceSubreddit) MarshalJSON() ([]byte, error) {

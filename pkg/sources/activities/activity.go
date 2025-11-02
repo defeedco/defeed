@@ -25,8 +25,6 @@ func NewActivity(sourceType string) (types.Activity, error) {
 		a = hackernews.NewPost()
 	case reddit.TypeRedditSubreddit:
 		a = reddit.NewPost()
-	case reddit.TypeRedditPostComments:
-		a = reddit.NewComment()
 	case lobsters.TypeLobstersTag:
 		a = lobsters.NewPost()
 	case lobsters.TypeLobstersFeed:

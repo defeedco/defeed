@@ -67,14 +67,6 @@ func (p *Post) SourceUIDs() []types.TypedUID {
 	return p.SourceIDs
 }
 
-func (p *Post) ParentUID() *types.TypedUID {
-	return nil
-}
-
-func (p *Post) ChildUIDs() []types.TypedUID {
-	return []types.TypedUID{}
-}
-
 func (p *Post) Title() string {
 	return p.Post.Title
 }

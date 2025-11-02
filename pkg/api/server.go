@@ -557,8 +557,6 @@ func serializeSourceType(in string) (SourceType, error) {
 		return HackernewsPosts, nil
 	case reddit.TypeRedditSubreddit:
 		return RedditSubreddit, nil
-	case reddit.TypeRedditPostComments:
-		return RedditPostComments, nil
 	case lobsters.TypeLobstersTag:
 		return LobstersTag, nil
 	case lobsters.TypeLobstersFeed:
