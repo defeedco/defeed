@@ -142,6 +142,10 @@ func (p *Post) SocialScore() float64 {
 		(providers.NormSocialScore(replies, maxReplies) * repliesWeight)
 }
 
+func (p *Post) Comments() []*types.Comment {
+	return nil
+}
+
 func extractTextFromHTML(htmlStr string) string {
 	doc, err := html.Parse(strings.NewReader(htmlStr))
 	if err != nil {

@@ -104,6 +104,7 @@ type Post struct {
 	ExternalContent string                   `json:"external_content"`
 	SourceIDs       []activitytypes.TypedUID `json:"source_ids"`
 	SourceTyp       string                   `json:"source_type"`
+	comments        []*activitytypes.Comment
 }
 
 func NewPost() *Post {
@@ -118,8 +119,10 @@ func (p *Post) MarshalJSON() ([]byte, error) {
 	type Alias Post
 	return json.Marshal(&struct {
 		*Alias
+		Comments []*activitytypes.Comment `json:"comments"`
 	}{
-		Alias: (*Alias)(p),
+		Alias:    (*Alias)(p),
+		Comments: p.comments,
 	})
 }
 
@@ -127,7 +130,8 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	type Alias Post
 	aux := &struct {
 		*Alias
-		SourceIDs []*lib.TypedUID `json:"source_ids"`
+		SourceIDs []*lib.TypedUID            `json:"source_ids"`
+		Comments  []*activitytypes.Comment `json:"comments"`
 	}{
 		Alias: (*Alias)(p),
 	}
@@ -143,6 +147,8 @@ func (p *Post) UnmarshalJSON(data []byte) error {
 	for i, uid := range aux.SourceIDs {
 		p.SourceIDs[i] = uid
 	}
+
+	p.comments = aux.Comments
 
 	return nil
 }
@@ -210,6 +216,10 @@ func (p *Post) SocialScore() float64 {
 
 	return (providers.NormSocialScore(score, maxScore) * scoreWeight) +
 		(providers.NormSocialScore(comments, maxComments) * commentsWeight)
+}
+
+func (p *Post) Comments() []*activitytypes.Comment {
+	return p.comments
 }
 
 func (s *SourceSubreddit) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
@@ -291,8 +301,72 @@ func (s *SourceSubreddit) fetchSubredditPostsWithRSS(ctx context.Context, _ acti
 			SourceIDs:    []activitytypes.TypedUID{s.UID()},
 		}
 
+		comments, err := s.fetchPostCommentsFromRSS(ctx, item.Link)
+		if err != nil {
+			s.logger.Warn().Err(err).Msgf("failed to fetch comments for post %s", postID)
+		} else {
+			feedItem.comments = comments
+		}
+
 		feed <- feedItem
 	}
+}
+
+func (s *SourceSubreddit) fetchPostCommentsFromRSS(ctx context.Context, postURL string) ([]*activitytypes.Comment, error) {
+	parser := gofeed.NewParser()
+	parser.UserAgent = lib.DefeedUserAgentString
+
+	rssURL := postURL + ".rss"
+	rssFeed, err := parser.ParseURLWithContext(rssURL, ctx)
+	if err != nil {
+		return nil, fmt.Errorf("fetch comments rss feed: %w", err)
+	}
+
+	if rssFeed == nil || len(rssFeed.Items) == 0 {
+		return nil, nil
+	}
+
+	comments := make([]*activitytypes.Comment, 0)
+	for _, item := range rssFeed.Items {
+		if item.GUID == "" || item.PublishedParsed == nil {
+			continue
+		}
+
+		var commentID string
+		if strings.HasPrefix(item.GUID, "t1_") {
+			commentID = strings.TrimPrefix(item.GUID, "t1_")
+		} else if strings.HasPrefix(item.GUID, "t3_") {
+			continue
+		} else {
+			continue
+		}
+
+		if commentID == "" {
+			continue
+		}
+
+		author := ""
+		upvotes := 0
+		downvotes := -1
+
+		if item.Author != nil {
+			author = item.Author.Name
+		}
+
+		comment := &activitytypes.Comment{
+			UID:       lib.NewTypedUID("redditcomment", commentID),
+			Author:    author,
+			Body:      html.UnescapeString(item.Description),
+			CreatedAt: *item.PublishedParsed,
+			Upvotes:   upvotes,
+			Downvotes: downvotes,
+			Replies:   []*activitytypes.Comment{},
+		}
+
+		comments = append(comments, comment)
+	}
+
+	return comments, nil
 }
 
 func (s *SourceSubreddit) fetchSubredditPosts(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {

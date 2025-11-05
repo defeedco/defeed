@@ -341,6 +341,10 @@ func (e *FeedItem) SocialScore() float64 {
 	return -1
 }
 
+func (e *FeedItem) Comments() []*activitytypes.Comment {
+	return nil
+}
+
 func (e *FeedItem) Categories() []string {
 	categories := make([]string, 0, len(e.Item.Categories))
 	for _, category := range e.Item.Categories {

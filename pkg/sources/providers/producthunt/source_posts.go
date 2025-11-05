@@ -171,6 +171,10 @@ func (p *Post) SocialScore() float64 {
 		(providers.NormSocialScore(comments, maxUpvotes) * commentsWeight)
 }
 
+func (p *Post) Comments() []*activitytypes.Comment {
+	return nil
+}
+
 func (p *Post) CreatedAt() time.Time {
 	return p.Product.CreatedAt
 }

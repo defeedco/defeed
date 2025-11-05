@@ -213,6 +213,10 @@ func (r *Release) SocialScore() float64 {
 	return -1
 }
 
+func (r *Release) Comments() []*activitytypes.Comment {
+	return nil
+}
+
 func (s *SourceRelease) fetchGithubReleases(ctx context.Context, since activitytypes.Activity, feed chan<- activitytypes.Activity, errs chan<- error) {
 	sinceTime := time.Now().Add(-1 * time.Hour)
 	if since != nil {

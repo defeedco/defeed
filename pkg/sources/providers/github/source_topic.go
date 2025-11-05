@@ -292,3 +292,7 @@ func (a *Repository) SocialScore() float64 {
 		(providers.NormSocialScore(forks, maxForks) * forksWeight) +
 		(providers.NormSocialScore(issues, maxIssues) * issuesWeight)
 }
+
+func (a *Repository) Comments() []*activitytypes.Comment {
+	return nil
+}

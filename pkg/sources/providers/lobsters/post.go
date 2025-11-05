@@ -123,3 +123,7 @@ func (p *Post) SocialScore() float64 {
 	return (providers.NormSocialScore(upvotes, maxUpvotes) * scoreWeight) +
 		(providers.NormSocialScore(comments, maxComments) * commentsWeight)
 }
+
+func (p *Post) Comments() []*types.Comment {
+	return nil
+}

@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+type Comment struct {
+	UID       TypedUID   `json:"uid"`
+	Author    string     `json:"author"`
+	Body      string     `json:"body"`
+	CreatedAt time.Time  `json:"created_at"`
+	Upvotes   int        `json:"upvotes"`
+	Downvotes int        `json:"downvotes"`
+	Replies   []*Comment `json:"replies"`
+}
+
 type Activity interface {
 	json.Marshaler
 	json.Unmarshaler
@@ -31,6 +41,8 @@ type Activity interface {
 	// SocialScore is a source-specific score to measure the activity's social engagement.
 	// Range is 0-1. -1 if not available.
 	SocialScore() float64
+	// Comments returns a tree of comments for this activity. Returns nil if comments are not available.
+	Comments() []*Comment
 }
 
 // TypedUID is a semi-structured ID format for easy resource type extraction.

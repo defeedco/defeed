@@ -192,6 +192,10 @@ func (i *Issue) SocialScore() float64 {
 		(providers.NormSocialScore(comments, maxComments) * commentsWeight)
 }
 
+func (i *Issue) Comments() []*activitytypes.Comment {
+	return nil
+}
+
 func (s *SourceIssues) Initialize(logger *zerolog.Logger, config *sourcetypes.ProviderConfig) error {
 	if err := lib.ValidateStruct(s); err != nil {
 		return err
